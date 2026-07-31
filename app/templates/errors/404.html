@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="error-page">
+  <h1 class="display">Trang không tìm thấy</h1>
+  <p>Trang bạn đang tìm không tồn tại hoặc đã bị di chuyển.</p>
+  <a href="{{ url_for('public.home') }}">Quay lại trang chủ</a>
+</div>
+{% endblock %}

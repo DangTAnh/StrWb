@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="flash-zone">
@@ -19,6 +20,9 @@
       </div>
     {% endif %}
   {% endwith %}
-  {% block content %}{% endblock %}
+  <main id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="container">© {{ current_year }} Cửa hàng</footer>
 </body>
 </html>

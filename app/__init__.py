@@ -1,8 +1,8 @@
 import os
 import sqlite3
-from datetime import timedelta
+from datetime import datetime, timedelta
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 from sqlalchemy import event
@@ -57,11 +57,24 @@ def create_app():
 
     app.cli.add_command(init_db_command, name='init-db')
 
+    @app.context_processor
+    def inject_year():
+        return {'current_year': datetime.utcnow().year}
+
     from .public import public_bp
     from .auth import auth_bp
     from .admin import admin_bp
     app.register_blueprint(public_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(e):
+        db.session.rollback()
+        return render_template('errors/500.html'), 500
 
     return app

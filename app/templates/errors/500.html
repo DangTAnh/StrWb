@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="error-page">
+  <h1 class="display">Đã có lỗi xảy ra</h1>
+  <p>Đã có lỗi xảy ra, vui lòng thử lại</p>
+  <a href="{{ url_for('public.home') }}">Quay lại trang chủ</a>
+</div>
+{% endblock %}
