@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-wrapper">
+  <div class="login-card">
+    <h1>Đăng nhập quản trị</h1>
+    <form method="post" action="{{ url_for('auth.login') }}">
+      <label for="username">Tên đăng nhập</label>
+      <input type="text" name="username" id="username" required>
+      <label for="password">Mật khẩu</label>
+      <input type="password" name="password" id="password" required>
+      <button type="submit">Đăng nhập</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
