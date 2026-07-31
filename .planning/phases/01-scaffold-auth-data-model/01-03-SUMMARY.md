@@ -65,3 +65,5 @@ None - plan executed exactly as written.
 - `flask --app wsgi run` serves all pages; smoke test confirms login -> dashboard -> logout round trip
 - Every page carries `<html lang="vi">` + `<meta charset="utf-8">` (PLAT-01)
 - Unknown URL -> 404 `Trang không tìm thấy`, no `Traceback`
+
+## Self-Check: PASSED

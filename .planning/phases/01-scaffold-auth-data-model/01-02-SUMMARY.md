@@ -80,3 +80,5 @@ Plan 02 Task 3 verify expected the unauthenticated /admin/ Location to contain `
 - Error flow: wrong password 200 + generic VN flash
 - Redirect-back: /admin/ unauth -> /login?next=/admin/ -> login -> /admin/
 - Tables: admin_users, products, product_images all created by init-db
+
+## Self-Check: PASSED

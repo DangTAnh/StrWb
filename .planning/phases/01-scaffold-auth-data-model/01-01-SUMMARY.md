@@ -70,3 +70,5 @@ None - plan executed exactly as written.
 - `pip install -r requirements.txt` exits 0
 - Task 2 verify prints INIT_DB_OK, REJECTS_PLACEHOLDER_OK, REJECTS_SHORT_OK
 - Task 3 verify prints PAGES_OK
+
+## Self-Check: PASSED
