@@ -12,3 +12,39 @@ class AdminUser(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Product(db.Model):
+    __tablename__ = 'products'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    price = db.Column(db.Integer, nullable=False)  # VND, Integer only (D-05; never Float)
+    brand = db.Column(db.String(100), nullable=True)
+    measurements = db.Column(db.Text, nullable=True)  # D-07 free text, e.g. "60x40x2cm" or "M / L / XL"
+    description = db.Column(db.Text, nullable=True)
+    quantity = db.Column(db.Integer, default=0, nullable=False)
+    discontinued = db.Column(db.Boolean, default=False, nullable=False)  # D-08 override
+    sku = db.Column(db.String(100), nullable=True)          # D-06 optional
+    sort_order = db.Column(db.Integer, default=0, nullable=False)  # D-06 optional
+    admin_note = db.Column(db.Text, nullable=True)          # D-06 optional, admin-only
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    images = db.relationship('ProductImage', backref='product', lazy='dynamic')
+
+    @property
+    def status(self):
+        """D-08: discontinued overrides; else available if in stock, else out_of_stock."""
+        if self.discontinued:
+            return 'discontinued'
+        return 'available' if self.quantity > 0 else 'out_of_stock'
+
+
+class ProductImage(db.Model):
+    __tablename__ = 'product_images'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    is_primary = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
