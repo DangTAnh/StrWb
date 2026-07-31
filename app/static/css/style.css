@@ -19,15 +19,33 @@ body {
   background: var(--bg);
 }
 
-h1 { font-size: 24px; font-weight: 600; line-height: 1.2; }
-.display { font-size: 32px; font-weight: 600; line-height: 1.1; }
-label { font-size: 14px; }
-
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  padding: 8px 16px;
+  background: var(--card);
+  z-index: 100;
+}
+.skip-link:focus { left: 0; }
+
 .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
 
+/* Typography */
+h1 { font-size: 24px; font-weight: 600; line-height: 1.2; }
+h1.display { font-size: 32px; line-height: 1.1; }
+label { font-size: 14px; }
+
+/* Flash zone */
+.flash-zone { max-width: 1200px; margin: 0 auto; padding: 16px 16px 0; }
+.flash { padding: 8px 16px; margin-bottom: 8px; border-radius: 4px; }
+.flash-error { color: var(--destructive); }
+.flash-success { color: var(--success); }
+
+/* Public coming-soon */
 .coming-soon {
   min-height: 100vh;
   display: flex;
@@ -35,9 +53,11 @@ a:hover { text-decoration: underline; }
   justify-content: center;
   align-items: center;
   text-align: center;
+  gap: 16px;
   padding: 16px;
 }
 
+/* Login */
 .login-wrapper {
   min-height: 100vh;
   display: flex;
@@ -45,7 +65,6 @@ a:hover { text-decoration: underline; }
   justify-content: center;
   padding: 16px;
 }
-
 .login-card {
   background: var(--card);
   max-width: 360px;
@@ -54,11 +73,8 @@ a:hover { text-decoration: underline; }
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
-
 .login-card h1 { margin-bottom: 16px; }
-
-.login-card label { display: block; margin: 8px 0 4px; }
-
+.login-card label { display: block; margin: 12px 0 4px; }
 .login-card input {
   width: 100%;
   padding: 8px;
@@ -66,20 +82,17 @@ a:hover { text-decoration: underline; }
   border-radius: 4px;
   min-height: 44px;
 }
-
-.login-card button {
-  width: 100%;
+.login-card input[type="submit"] {
   margin-top: 16px;
-  padding: 8px;
-  min-height: 44px;
   background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: 4px;
-  font-size: 16px;
   cursor: pointer;
+  font-size: 16px;
 }
+.login-card input[type="submit"]:hover { background: #1d4ed8; }
 
+/* Admin */
 .admin-card {
   background: var(--card);
   max-width: 720px;
@@ -87,16 +100,50 @@ a:hover { text-decoration: underline; }
   padding: 16px;
   border-radius: 8px;
 }
+.admin-card h1 { margin-bottom: 16px; }
+.nav-list { display: flex; flex-direction: column; gap: 8px; }
+.nav-group { margin-top: 16px; }
+.nav-group .badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.nav-group .logout-form { margin-top: 16px; }
+.nav-group button {
+  padding: 8px 16px;
+  min-height: 44px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--destructive);
+  cursor: pointer;
+  font-size: 16px;
+}
+.nav-group button:hover { background: var(--bg); }
 
-.flash { padding: 8px 16px; margin-bottom: 16px; border-radius: 4px; }
-.flash-error { color: var(--destructive); }
-.flash-success { color: var(--success); }
+/* Error pages */
+.error-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 16px;
+}
 
+/* Responsive */
 @media (max-width: 768px) {
-  .admin-card { max-width: 100%; }
+  .admin-card { max-width: 100%; margin-top: 16px; }
 }
 
 @media (max-width: 480px) {
   .login-card { padding: 16px; }
-  .container { padding: 0 16px; }
+  .container, .flash-zone { padding-left: 16px; padding-right: 16px; }
 }
