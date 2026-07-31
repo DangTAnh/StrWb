@@ -9,10 +9,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Quản trị (Admin Auth)
 
-- [ ] **AUTH-01**: Admin đăng nhập bằng tài khoản duy nhất (username + mật khẩu đã băm)
-- [ ] **AUTH-02**: Phiên đăng nhập admin duy trì qua nhiều request (Flask-Login)
-- [ ] **AUTH-03**: Admin đăng xuất được
-- [ ] **AUTH-04**: Mọi trang quản trị bị chặn nếu chưa đăng nhập
+- [x] **AUTH-01**: Admin đăng nhập bằng tài khoản duy nhất (username + mật khẩu đã băm)
+- [x] **AUTH-02**: Phiên đăng nhập admin duy trì qua nhiều request (Flask-Login)
+- [x] **AUTH-03**: Admin đăng xuất được
+- [x] **AUTH-04**: Mọi trang quản trị bị chặn nếu chưa đăng nhập
 
 ### Quản lý sản phẩm (Admin CRUD)
 
@@ -51,10 +51,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Nền tảng & Ngôn ngữ
 
-- [ ] **PLAT-01**: Giao diện toàn tiếng Việt, `lang="vi"` + charset utf-8
-- [ ] **PLAT-02**: SECRET_KEY từ môi trường (không hardcode, không debug=True trong production)
-- [ ] **PLAT-03**: SQLite dùng WAL mode + busy_timeout tránh lỗi database locked
-- [ ] **PLAT-04**: Có script/CLI khởi tạo database và tạo tài khoản admin đầu tiên
+- [x] **PLAT-01**: Giao diện toàn tiếng Việt, `lang="vi"` + charset utf-8
+- [x] **PLAT-02**: SECRET_KEY từ môi trường (không hardcode, không debug=True trong production)
+- [x] **PLAT-03**: SQLite dùng WAL mode + busy_timeout tránh lỗi database locked
+- [x] **PLAT-04**: Có script/CLI khởi tạo database và tạo tài khoản admin đầu tiên
 
 ## v2 Requirements
 
@@ -96,10 +96,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | 1 | Pending |
-| AUTH-02 | 1 | Pending |
-| AUTH-03 | 1 | Pending |
-| AUTH-04 | 1 | Pending |
+| AUTH-01 | 1 | Complete |
+| AUTH-02 | 1 | Complete |
+| AUTH-03 | 1 | Complete |
+| AUTH-04 | 1 | Complete |
 | PROD-01 | 2 | Pending |
 | PROD-02 | 2 | Pending |
 | PROD-03 | 2 | Pending |
@@ -120,10 +120,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRCH-01 | 3 | Pending |
 | CONT-01 | 3 | Pending |
 | CONT-02 | 3 | Pending |
-| PLAT-01 | 1 | Pending |
-| PLAT-02 | 1 | Pending |
-| PLAT-03 | 1 | Pending |
-| PLAT-04 | 1 | Pending |
+| PLAT-01 | 1 | Complete |
+| PLAT-02 | 1 | Complete |
+| PLAT-03 | 1 | Complete |
+| PLAT-04 | 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 28 total

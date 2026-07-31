@@ -13,7 +13,7 @@ Vietnamese product catalog web (Flask, single admin, SQLite, self-hosted). Custo
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Scaffold + Auth + Data Model** - Foundation: app skeleton, secure config, admin login/logout, Vietnamese interface, SQLite WAL mode, DB init CLI
+- [x] **Phase 1: Scaffold + Auth + Data Model** - Foundation: app skeleton, secure config, admin login/logout, Vietnamese interface, SQLite WAL mode, DB init CLI (completed 2026-07-31)
 - [ ] **Phase 2: Admin CRUD + Images** - Admin creates/edits/deletes products with image upload, validation, UUID naming, thumbnails, and stock management
 - [ ] **Phase 3: Public Catalog + Search + Contact** - Customers browse product listing and detail pages with gallery, search by name/description, and Messenger contact links
 - [ ] **Phase 4: Polish + Deploy** - Responsive mobile layout, out-of-stock de-emphasis, production WSGI deployment with reverse proxy and hardened config
@@ -40,15 +40,15 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold, config, WAL, init-db, 3 blueprints, Vietnamese base template
+- [x] 01-01-PLAN.md — Walking Skeleton: scaffold, config, WAL, init-db, 3 blueprints, Vietnamese base template
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — Data model + admin auth: Product/ProductImage, Flask-Login, login/logout, admin protection
+- [x] 01-02-PLAN.md — Data model + admin auth: Product/ProductImage, Flask-Login, login/logout, admin protection
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-03-PLAN.md — Admin UI + Vietnamese polish: dashboard, login, coming-soon, error pages
+- [x] 01-03-PLAN.md — Admin UI + Vietnamese polish: dashboard, login, coming-soon, error pages
 
 ### Phase 2: Admin CRUD + Images
 
@@ -126,7 +126,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold + Auth + Data Model | 0/3 | Not started | - |
+| 1. Scaffold + Auth + Data Model | 3/3 | Complete   | 2026-07-31 |
 | 2. Admin CRUD + Images | 0/3 | Not started | - |
 | 3. Public Catalog + Search + Contact | 0/3 | Not started | - |
 | 4. Polish + Deploy | 0/2 | Not started | - |
