@@ -3,10 +3,15 @@ import sqlite3
 from datetime import timedelta
 
 from flask import Flask
+from flask_login import LoginManager
+from flask_wtf import CSRFProtect
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
 from .db import db, init_db_command
+
+login_manager = LoginManager()
+csrf = CSRFProtect()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -43,6 +48,12 @@ def create_app():
 
     db.init_app(app)
     from . import models  # noqa: F401
+
+    csrf.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Vui lòng đăng nhập để truy cập trang này.'
+    login_manager.login_message_category = 'error'
 
     app.cli.add_command(init_db_command, name='init-db')
 
