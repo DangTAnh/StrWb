@@ -30,8 +30,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. All admin routes redirect to login page when accessed without authentication
   4. Application renders with Vietnamese interface (lang="vi", charset utf-8)
   5. Database initializes via CLI script and creates the first admin account
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold, config, WAL, init-db, 3 blueprints, Vietnamese base template
+- [ ] 01-02-PLAN.md — Data model + admin auth: Product/ProductImage, Flask-Login, login/logout, admin protection
+- [ ] 01-03-PLAN.md — Admin UI + Vietnamese polish: dashboard, login, coming-soon, error pages
 
 ### Phase 2: Admin CRUD + Images
 **Goal**: Admin can fully manage product listings including images, stock, and pricing
@@ -44,8 +49,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Uploaded images are saved with UUID filenames and thumbnails are generated for listing views
   4. Price is stored as integer VND with no precision loss
   5. All admin forms have CSRF protection and validate submitted data
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold, config, WAL, init-db, 3 blueprints, Vietnamese base template
+- [ ] 01-02-PLAN.md — Data model + admin auth: Product/ProductImage, Flask-Login, login/logout, admin protection
+- [ ] 01-03-PLAN.md — Admin UI + Vietnamese polish: dashboard, login, coming-soon, error pages
 
 ### Phase 3: Public Catalog + Search + Contact
 **Goal**: Customers can browse products, search, and contact the seller via Messenger
@@ -58,8 +68,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Customers can search products by name or description and see matching results
   4. Customers see a visible Messenger contact link on both the homepage and product detail pages
   5. Product detail page displays an image gallery with all product images
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold, config, WAL, init-db, 3 blueprints, Vietnamese base template
+- [ ] 01-02-PLAN.md — Data model + admin auth: Product/ProductImage, Flask-Login, login/logout, admin protection
+- [ ] 01-03-PLAN.md — Admin UI + Vietnamese polish: dashboard, login, coming-soon, error pages
 
 ### Phase 4: Polish + Deploy
 **Goal**: Application is production-ready with polished UX and secure deployment
@@ -72,8 +87,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Application is deployed with a production WSGI server behind a reverse proxy with HTTPS
   4. SECRET_KEY is loaded from environment variable and debug mode is disabled in production
   5. Error pages display gracefully without exposing stack traces
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold, config, WAL, init-db, 3 blueprints, Vietnamese base template
+- [ ] 01-02-PLAN.md — Data model + admin auth: Product/ProductImage, Flask-Login, login/logout, admin protection
+- [ ] 01-03-PLAN.md — Admin UI + Vietnamese polish: dashboard, login, coming-soon, error pages
 
 ## Progress
 
