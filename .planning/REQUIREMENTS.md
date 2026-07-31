@@ -96,40 +96,41 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 |  | Pending |
-| AUTH-02 |  | Pending |
-| AUTH-03 |  | Pending |
-| AUTH-04 |  | Pending |
-| PROD-01 |  | Pending |
-| PROD-02 |  | Pending |
-| PROD-03 |  | Pending |
-| PROD-04 |  | Pending |
-| PROD-05 |  | Pending |
-| PROD-06 |  | Pending |
-| PROD-07 |  | Pending |
-| IMG-01 |  | Pending |
-| IMG-02 |  | Pending |
-| IMG-03 |  | Pending |
-| IMG-04 |  | Pending |
-| CAT-01 |  | Pending |
-| CAT-02 |  | Pending |
-| CAT-03 |  | Pending |
-| CAT-04 |  | Pending |
-| CAT-05 |  | Pending |
-| CAT-06 |  | Pending |
-| SRCH-01 |  | Pending |
-| CONT-01 |  | Pending |
-| CONT-02 |  | Pending |
-| PLAT-01 |  | Pending |
-| PLAT-02 |  | Pending |
-| PLAT-03 |  | Pending |
-| PLAT-04 |  | Pending |
+| AUTH-01 | 1 | Pending |
+| AUTH-02 | 1 | Pending |
+| AUTH-03 | 1 | Pending |
+| AUTH-04 | 1 | Pending |
+| PROD-01 | 2 | Pending |
+| PROD-02 | 2 | Pending |
+| PROD-03 | 2 | Pending |
+| PROD-04 | 2 | Pending |
+| PROD-05 | 2 | Pending |
+| PROD-06 | 2 | Pending |
+| PROD-07 | 2 | Pending |
+| IMG-01 | 2 | Pending |
+| IMG-02 | 2 | Pending |
+| IMG-03 | 2 | Pending |
+| IMG-04 | 2 | Pending |
+| CAT-01 | 3 | Pending |
+| CAT-02 | 3 | Pending |
+| CAT-03 | 3 | Pending |
+| CAT-04 | 4 | Pending |
+| CAT-05 | 3 | Pending |
+| CAT-06 | 4 | Pending |
+| SRCH-01 | 3 | Pending |
+| CONT-01 | 3 | Pending |
+| CONT-02 | 3 | Pending |
+| PLAT-01 | 1 | Pending |
+| PLAT-02 | 1 | Pending |
+| PLAT-03 | 1 | Pending |
+| PLAT-04 | 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 28 total
-- Mapped to phases: 0
-- Unmapped: 28 ⚠️
+- Mapped to phases: 28
+- Unmapped: 0 ✓
 
 ---
+
 *Requirements defined: 2026-07-31*
 *Last updated: 2026-07-31 after initial definition*
