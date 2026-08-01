@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-header">
+    <h1>Sản phẩm</h1>
+    <a class="btn btn-primary" href="{{ url_for('admin.new_product') }}">Thêm sản phẩm</a>
+  </div>
+  <div class="admin-card admin-card--wide">
+    {% if products %}
+    <div class="table-scroll">
+      <table class="data-table">
+        <caption class="visually-hidden">Danh sách sản phẩm</caption>
+        <thead>
+          <tr>
+            <th scope="col">Ảnh</th>
+            <th scope="col">Tên</th>
+            <th scope="col">SKU</th>
+            <th scope="col">Giá</th>
+            <th scope="col">Tồn kho</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td><span class="thumb-placeholder" aria-label="Chưa có ảnh">—</span></td>
+            <td class="product-name">{{ p.name }}</td>
+            <td>{{ p.sku or '—' }}</td>
+            <td class="price-cell">{{ p.price | format_price }}</td>
+            <td class="{% if p.quantity == 0 %}qty-muted{% endif %}">{{ p.quantity }}</td>
+            <td>
+              {% if p.status == 'available' %}
+              <span class="badge badge-available">Còn hàng</span>
+              {% elif p.status == 'out_of_stock' %}
+              <span class="badge badge-out_of_stock">Hết hàng</span>
+              {% else %}
+              <span class="badge badge-discontinued">Ngừng bán</span>
+              {% endif %}
+            </td>
+            <td class="actions-cell">
+              <a href="{{ url_for('admin.edit_product', product_id=p.id) }}">Sửa</a>
+              <a class="link-danger" href="{{ url_for('admin.delete_product', product_id=p.id) }}">Xóa</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+      {% if pagination.has_prev %}
+      <a href="{{ url_for('admin.products', page=pagination.prev_num) }}">Trước</a>
+      {% else %}
+      <span class="disabled" aria-disabled="true">Trước</span>
+      {% endif %}
+      <span class="page-indicator">Trang {{ pagination.page }} / {{ pagination.pages }}</span>
+      {% if pagination.has_next %}
+      <a href="{{ url_for('admin.products', page=pagination.next_num) }}">Sau</a>
+      {% else %}
+      <span class="disabled" aria-disabled="true">Sau</span>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+      <h2>Chưa có sản phẩm nào</h2>
+      <p>Bấm “Thêm sản phẩm” để tạo sản phẩm đầu tiên.</p>
+      <a class="btn btn-primary" href="{{ url_for('admin.new_product') }}">Thêm sản phẩm</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
