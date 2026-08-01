@@ -1,0 +1,12 @@
+{% extends "public/base.html" %}
+{% block title %}Tìm kiếm — Cửa hàng{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 class="page-heading">Kết quả tìm kiếm</h1>
+  <div class="empty-state">
+    <h2>Tìm kiếm sản phẩm</h2>
+    <p>Vui lòng nhập từ khóa để tìm kiếm.</p>
+    <a class="btn btn-primary" href="{{ url_for('public.home') }}">Xem tất cả sản phẩm</a>
+  </div>
+</div>
+{% endblock %}
