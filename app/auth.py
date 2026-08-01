@@ -27,7 +27,7 @@ def login():
         user = AdminUser.query.filter_by(username=form.username.data.strip()).first()
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=True)
-            next_url = request.args.get('next')
+            next_url = request.values.get('next')
             if not next_url or not next_url.startswith('/') or next_url.startswith('//'):
                 next_url = url_for('admin.dashboard')
             return redirect(next_url)
