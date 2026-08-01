@@ -115,3 +115,20 @@ Code-only audit (no dev server at 3000/5173/8080/5000/8000) plus a Flask test-cl
 ---
 
 **Overall verdict:** Highly spec-faithful and functionally verified (20/24) — the Phase 3 frontend renders exactly to contract across all four routes, all three responsive tiers, and all grid/search/error states. No HIGH or blocking findings; the outstanding items are one genuine state-presentation flaw (prompt heading), one design-token miss (placeholder color), and a small cluster of spacing/a11y polish. All non-blocking; this UI is safe to inherit by Phase 4.
+
+---
+
+## Fix Applied
+
+All 5 in-scope findings fixed; each verified with a Flask test_client render probe against an isolated temp DB (real `data/app.db` untouched). Deferred Phase 4 items unchanged.
+
+| Finding | Commit | Status |
+|---------|--------|--------|
+| UI-01 | `5304eb6` | fixed — search h1 is conditional: "Tìm kiếm sản phẩm" for the prompt state, "Kết quả tìm kiếm" only after a query runs; duplicate empty-state h2 dropped |
+| UI-02 | `3904490` | fixed — `.search-form input::placeholder { color: #6B7280; opacity: 1; }` pins the spec token |
+| UI-03 | `c0c38a9` | fixed — `.contact-strip p` margin-bottom 16px → 24px per spec §Spacing |
+| UI-04 | `d2389a1` | fixed — visually-hidden h2 "Danh sách sản phẩm" before the grid on `index.html` and `search.html` restores h1→h2→h3 |
+| UI-05 | `d02c4ba` | fixed — nav search input uses the route-stripped `q` (single source); raw `request.args` fallback only when `q` is undefined |
+
+_Fixed: 2026-08-01T15:26:28Z_
+_Fixer: Claude (gsd-code-fixer)_
