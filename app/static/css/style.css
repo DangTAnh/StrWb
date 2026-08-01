@@ -350,3 +350,21 @@ label { font-size: 14px; }
   .login-card { padding: 16px; }
   .container, .flash-zone { padding-left: 16px; padding-right: 16px; }
 }
+
+/* ============ Phase 3: Public header + search ============ */
+.site-header { position: sticky; top: 0; z-index: 10; background: #FFFFFF; border-bottom: 1px solid #E5E7EB; }
+.site-header__inner { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; padding-bottom: 8px; }
+.brand { font-size: 16px; font-weight: 600; color: #1F2937; }
+.brand:hover { color: #2563EB; text-decoration: none; }
+.search-form { display: flex; gap: 8px; flex: 1; }
+.search-form input[type="search"] {
+  flex: 1; height: 44px; padding: 0 12px; /* 12px padding: UI-SPEC declared exception */
+  border: 1px solid #D1D5DB; border-radius: 8px; font-size: 16px; font-family: inherit; color: #1F2937; background: #FFFFFF;
+}
+.search-form input[type="search"]:focus-visible { outline: 2px solid #2563EB; outline-offset: 0; border-color: #2563EB; }
+.search-form .btn { flex-shrink: 0; }
+.page-heading { margin-bottom: 16px; }
+@media (min-width: 768px) {
+  .site-header__inner { flex-direction: row; align-items: center; gap: 16px; }
+  .search-form { max-width: 480px; margin-left: auto; }
+}
