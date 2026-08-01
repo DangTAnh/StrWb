@@ -2,7 +2,7 @@
 {% block title %}{{ product.name }} — Cửa hàng{% endblock %}
 {% block content %}
 <div class="container">
-  <a class="back-link" href="{% if request.referrer and request.referrer.startswith(request.host_url) %}{{ request.referrer }}{% else %}{{ url_for('public.home') }}{% endif %}">Quay lại</a>
+  <a class="back-link" href="{{ back_url or url_for('public.home') }}">Quay lại</a>
   <div class="product-detail">
     <div class="product-gallery">
       <div class="main-image-box">

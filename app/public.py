@@ -1,5 +1,6 @@
 import unicodedata
 from types import SimpleNamespace
+from urllib.parse import urlsplit
 
 from flask import Blueprint, render_template, request, abort, redirect, url_for
 
@@ -46,7 +47,15 @@ def product_detail(product_id):
     if product is None:
         abort(404)
     images = product.images.order_by(ProductImage.sort_order.asc()).all()
-    return render_template('public/product_detail.html', product=product, images=images)
+    referrer = request.referrer
+    back_url = (
+        referrer
+        if referrer and urlsplit(referrer).hostname == request.host.split(':')[0]
+        else None
+    )
+    return render_template(
+        'public/product_detail.html', product=product, images=images, back_url=back_url
+    )
 
 
 @public_bp.route('/search', methods=['GET'])
