@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import LoginManager
@@ -35,9 +35,10 @@ def create_app():
         SQLALCHEMY_ENGINE_OPTIONS={'connect_args': {'timeout': 30}},
         MAX_CONTENT_LENGTH=16 * 1024 * 1024,
         PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+        REMEMBER_COOKIE_DURATION=timedelta(days=30),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax',
-        SESSION_COOKIE_SECURE=(os.environ.get('FLASK_ENV') == 'production'),
+        SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', '').lower() in ('1', 'true', 'yes'),
         DEBUG=(os.environ.get('FLASK_DEBUG', '0') == '1'),
         MESSENGER_URL=os.environ.get('MESSENGER_URL', 'https://m.me/yourpage'),
     )
@@ -52,14 +53,12 @@ def create_app():
     csrf.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
-    login_manager.login_message = 'Vui lòng đăng nhập để truy cập trang này.'
-    login_manager.login_message_category = 'error'
 
     app.cli.add_command(init_db_command, name='init-db')
 
     @app.context_processor
     def inject_year():
-        return {'current_year': datetime.utcnow().year}
+        return {'current_year': datetime.now(timezone.utc).year}
 
     @app.template_filter('format_price')
     def format_price(value):

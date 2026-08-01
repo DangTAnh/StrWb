@@ -114,7 +114,7 @@ label { font-size: 14px; }
   border: 1px solid var(--border);
   border-radius: 999px;
 }
-.nav-group .logout-form { margin-top: 16px; }
+.nav-group.logout-form { margin-top: 16px; }
 .nav-group button {
   padding: 8px 16px;
   min-height: 44px;

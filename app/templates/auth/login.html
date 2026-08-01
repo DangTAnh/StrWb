@@ -5,6 +5,7 @@
     <h1>Đăng nhập quản trị</h1>
     <form method="post" action="{{ url_for('auth.login') }}">
       {{ form.hidden_tag() }}
+      <input type="hidden" name="next" value="{{ request.args.get('next') or '' }}">
       {{ form.username.label }}
       {{ form.username() }}
       {{ form.password.label }}
