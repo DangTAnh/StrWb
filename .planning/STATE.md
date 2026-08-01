@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 02-admin-crud-images (3/3 plans, smoke test passed)
-last_updated: "2026-08-01T08:14:28.448Z"
+stopped_at: Completed 03-public-catalog-search-contact (3/3 plans, smoke test passed)
+last_updated: "2026-08-01T14:25:00Z"
 last_activity: 2026-08-01
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 50
+  completed_phases: 3
+  total_plans: 9
+  completed_plans: 9
+  percent: 75
 ---
 
 # Project State
@@ -21,11 +21,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-31)
 
 **Core value:** Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admin dễ dàng quản lý sản phẩm.
-**Current focus:** Phase 2 — Admin CRUD + Images
+**Current focus:** Phase 3 — Public Catalog + Search + Contact
 
 ## Current Position
 
-Phase: 2 (Admin CRUD + Images) — EXECUTING
+Phase: 3 (Public Catalog + Search + Contact) — EXECUTING
 Plan: 3 of 3
 Status: Phase complete — ready for verification
 Last activity: 2026-08-01
@@ -61,6 +61,9 @@ Progress: [██████████] 100%
 | Phase 2 P1 | 22min | 3 tasks | 8 files |
 | Phase 2 P2 | 13min | 3 tasks | 6 files |
 | Phase 2 P3 | 24min | 3 tasks | 6 files |
+| Phase 3 P1 | 5min | 3 tasks | 8 files |
+| Phase 3 P2 | 4min | 2 tasks | 3 files |
+| Phase 3 P3 | 12min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -75,6 +78,10 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 1 complete: Flask factory + init-db CLI + 3 blueprints + login/logout + admin protection + VN UI
 - [Phase 2]: Phase 2 complete: admin CRUD with validated multi-image galleries, UUID files, thumbnails, delete-orphan cascade, batch-aware uploads
 - [Phase 2]: InputRequired for price/quantity so quantity=0 (Hết hàng) products validate (DataRequired rejects 0)
+- [Phase 3]: Phase 3 complete: public catalog grid + detail gallery + diacritic-insensitive search + Messenger contact strip/CTA
+- [Phase 3]: Search normalization in-Python (NFD+strip Mn+casefold) over name OR description — no stored column, no SQL LIKE (UI-SPEC flagged decision 7)
+- [Phase 3]: Search result count uses pagination.total (phase-wide total), not products|length (current page) — required by multi-page verify
+- [Phase 3]: Verify-harness fix: Flask-SQLAlchemy 3.1.1 creates engines eagerly in init_app; setting SQLALCHEMY_DATABASE_URI after create_app is ineffective — harness must dispose+rebuild the engine to isolate a temp DB
 
 ### Pending Todos
 
@@ -92,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-01T13:57:32.703Z
-Stopped at: Resumed from handoff (1f75d32) — dispatched Phase 3 execute agent (3 waves), pipeline active
-Resume file: .planning/HANDOFF.json (was deleted on resume)
+Last session: 2026-08-01T14:25:00Z
+Stopped at: Completed 03-public-catalog-search-contact (3/3 plans, smoke test passed)
+Resume file: None
