@@ -57,3 +57,49 @@ def validate_image_upload(file_storage):
     if w > MAX_DIMENSION or h > MAX_DIMENSION:
         return (False, f'Ảnh quá lớn ({w}x{h}px). Tối đa {MAX_DIMENSION}x{MAX_DIMENSION}px')
     return (True, '')
+
+
+def save_image_file(file_storage):
+    """Re-encode the upload to JPEG, save full-size + thumbnail under a UUID name.
+
+    Returns (filesystem_name, original_filename).
+    """
+    original_filename = (file_storage.filename or '').strip()
+    uuid_name = uuid.uuid4().hex  # IMG-02: UUID filesystem name, never the user's name
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    file_storage.stream.seek(0)
+    img = Image.open(file_storage.stream)
+    img.load()
+    img = img.convert('RGB')  # re-encode strips EXIF/payloads, normalizes alpha (Pitfall 7 step 3)
+    if img.width > MAX_DIMENSION or img.height > MAX_DIMENSION:
+        img.thumbnail((MAX_DIMENSION, MAX_DIMENSION))  # belt-and-suspenders after validation
+    full_name = uuid_name + '.jpg'
+    img.save(os.path.join(UPLOAD_DIR, full_name), 'JPEG', quality=85)
+    thumb = img.copy()
+    thumb.thumbnail(THUMBNAIL_SIZE)
+    thumb_name = uuid_name + '_thumb.jpg'
+    thumb.save(os.path.join(UPLOAD_DIR, thumb_name), 'JPEG', quality=82)
+    return (full_name, original_filename)
+
+
+def delete_image_files(filename):
+    """Remove a saved image and its thumbnail from disk.
+
+    Returns (deleted_count, failed_count). Missing files are treated as
+    already-removed (not a failure); locked/permission errors are counted
+    as failures so the caller can surface a D-09 warning without blocking.
+    """
+    deleted = 0
+    failed = 0
+    files = [filename]
+    if filename and filename.endswith('.jpg'):
+        files.append(filename[:-4] + '_thumb.jpg')
+    for f in files:
+        try:
+            os.remove(os.path.join(UPLOAD_DIR, f))
+            deleted += 1
+        except FileNotFoundError:
+            deleted += 1  # already gone -> not a failure
+        except OSError:
+            failed += 1
+    return (deleted, failed)
