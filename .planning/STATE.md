@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
+status: Awaiting next milestone
 stopped_at: Completed Phase 4 (polish+deploy) — 3 plans, all success criteria verified
-last_updated: "2026-08-01T18:06:06.578Z"
-last_activity: 2026-08-01
+last_updated: "2026-08-01T19:37:06.658Z"
+last_activity: 2026-08-01 — Milestone v1.0 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
@@ -25,12 +25,10 @@ See: .planning/PROJECT.md (updated 2026-07-31)
 
 ## Current Position
 
-Phase: 4 (Polish + Deploy) — COMPLETE
-Plan: 3 of 3
-Status: Milestone v1.0 complete — all 12 plans done, all success criteria verified
-Last activity: 2026-08-01
-
-Progress: [██████████] 100%
+Phase: Milestone v1.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-01 — Milestone v1.0 completed and archived
 
 ## Performance Metrics
 
@@ -104,12 +102,18 @@ None yet.
 
 ## Deferred Items
 
-| Category | Item | Status | Deferred At |
-|----------|------|--------|-------------|
-| *(none)* | | | |
+Items acknowledged and deferred at milestone close on 2026-08-02:
+
+| Category | Item | Status |
+|----------|------|--------|
+| verification_gap | 02-VERIFICATION.md human_needed (Phase 2 visual UAT, 3 items) | pending |
 
 ## Session Continuity
 
 Last session: 2026-08-01T18:06:06.565Z
 Stopped at: Completed Phase 4 (polish+deploy) — 3 plans, all success criteria verified
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
