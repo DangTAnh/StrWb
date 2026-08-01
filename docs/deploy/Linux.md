@@ -133,7 +133,9 @@ Cron hàng ngày:
 ```bash
 sudo crontab -e
 # 2:00 sáng mỗi ngày
-0 2 * * * sqlite3 /srv/storewweb/data/app.db ".backup '/srv/backups/app-$(date +%F).db'" && find /srv/backups -name 'app-*.db' -mtime +14 -delete
+# LƯU Ý (WR-04): trong crontab, % bị thay bằng newline — phải escape thành %% để `date +%%F`
+# ra đúng ngày. Dòng dưới đã escape; đừng sửa thành %F kẻo backup âm thầm không chạy.
+0 2 * * * sqlite3 /srv/storewweb/data/app.db ".backup '/srv/backups/app-$(date +%%F).db'" && find /srv/backups -name 'app-*.db' -mtime +14 -delete
 ```
 
 Giữ backup 14 ngày. Nếu muốn backup thư mục upload, thêm `rsync -a /srv/storewweb/app/static/uploads /srv/backups/uploads/`.
