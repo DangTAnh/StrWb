@@ -118,3 +118,26 @@ No shadcn, no components.json, no third-party registries (Flask + hand-written C
 ---
 
 **Overall verdict:** Structurally sound and highly spec-faithful (19/24) — the outstanding issues are concentrated in one functional gap (gallery order persistence on mixed existing+new reorders) and a scattered focus-state accessibility shortfall, neither of which blocks the Phase 2 feature set but both of which should be fixed before this UI is inherited by Phase 3.
+
+---
+
+## Fix Applied
+
+Fixed on 2026-08-01 by `gsd-code-review --fix` (worktree branch `gsd-reviewfix/02-1756`, merged to `master`).
+
+| Finding | Severity | Status | Commit |
+|---------|----------|--------|--------|
+| Gallery reorder does not persist displayed order (Top Fix 1, D-12/D-13) | HIGH | Fixed — `syncOrder` now serializes the full on-screen gallery (existing ids + `new:<i>` tokens for uploads); `_process_image_batch` parses that stream, re-sorts existing images by their submitted id and inserts new uploads at their displayed position, so a newly uploaded image can become primary on an existing product by moving it up | `12c9729` |
+| "Ảnh chính" badge stale on reorder (Top Fix 2) | MEDIUM | Fixed — `updatePrimaryBadge()` removes and re-renders the badge on the first displayed item after every reorder (`moveExisting`/`moveNew`/file add); server-side `loop.first` remains the initial state | `12161a1` |
+| Focus-visible ring missing on links/reorder/checkbox; input focus is a 20%-alpha shadow (Top Fix 3) | MEDIUM | Fixed — added `a:focus-visible`, `.reorder-btn:focus-visible`, checkbox `:focus-visible` (2px accent ring, matches `.btn:focus-visible`); input focus now a solid 2px accent outline + accent border, dropping the `outline: none` that suppressed the default indicator | `b763980` |
+| Hành động column left-aligned (Pillar 5) | MEDIUM | Fixed — `.actions-cell` now `text-align: right` | `fde188c` |
+| Accent bleeds onto pagination links (Pillar 2) | LOW | Fixed — `.pagination a` uses neutral `#6B7280`; accent stays reserved for the 5 declared elements | `fde188c` |
+| Price/quantity number inputs missing `min`/`step` (Pillar 6) | LOW | Fixed — price `min="0" step="1"`, quantity `min="0" step="1"` | `fde188c` |
+| Reorder arrows at 18px, a 5th size off the scale (Pillar 3) | LOW | Fixed — 18px → 16px (token scale) | `fde188c` |
+| `.btn:disabled` states absent (Pillar 5) | LOW | Fixed — spec matrix applied: primary `#93C5FD`, destructive `#FCA5A5`, secondary `#9CA3AF`, plus `cursor: not-allowed` | `fde188c` |
+| `.admin-card--wide` missing `overflow: hidden` (Pillar 5) | LOW | Fixed — added `overflow: hidden` so the table/pagination clip to the card's 8px radius | `fde188c` |
+| Thumbnail asset downsizing (400px into 48px/96px boxes) | LOW | Deferred to Phase 4 — not touched | — |
+| ₫ (U+20AB) glyph verification | LOW | Deferred to Phase 4 — not touched | — |
+| Gallery idle-state affordance polish | LOW | Deferred to Phase 4 — not touched | — |
+
+**Verification:** Flask test client (no production server started). Created a product with 2 uploaded images (first = primary, `sort_order` [0,1]); edited it with a reorder + 1 new upload so the new image sat first → it became primary and existing A/B followed in order; reordered to [B,C,A] (persisted, B primary); deleted A → [B,C] kept, B primary. Edit page GET renders the initial `image_order` stream and exactly one Ảnh chính badge. Unauth `GET /admin/` still → `302 /login?next=/admin/`. All checks passed.
