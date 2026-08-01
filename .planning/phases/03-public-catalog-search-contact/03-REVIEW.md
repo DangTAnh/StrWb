@@ -152,3 +152,21 @@ next_num = page + 1 if page < pages else None,
 _Reviewed: 2026-08-01T15:10:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: deep_
+
+---
+
+## Fix Applied
+
+All 6 findings fixed; each verified with a Flask test_client probe against an isolated temp DB (WR-05 also confirmed admin 404/500 remain unchanged).
+
+| Finding | Commit | Status |
+|---------|--------|--------|
+| WR-01 | `fcf67f1` | fixed — home clamps `page > last` to last page (302 redirect), no false empty-store state |
+| WR-02 | `9cd089a` | fixed — search prompt state keyed on `products is none`, not raw `q` |
+| WR-03 | `52110b1` | fixed — scheme-agnostic same-site check (hostname) for "Quay lại" back link |
+| WR-04 | `d03f188` | fixed — orphaned `.coming-soon` CSS rule deleted |
+| WR-05 | `aa628a0` | fixed — public 404/500 extend the public layout (brand + search); admin errors unchanged |
+| WR-06 | `5b220de` | fixed — `_manual_pagination` returns `None` for `prev_num`/`next_num` at boundaries |
+
+_Fixed: 2026-08-01T21:58:00Z_
+_Fixer: Claude (gsd-code-fixer)_
