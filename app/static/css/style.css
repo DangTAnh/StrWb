@@ -47,18 +47,6 @@ label { font-size: 14px; }
 .flash-success, .flash.success { color: var(--success); }
 .flash-warning, .flash.warning { color: #D97706; }
 
-/* Public coming-soon */
-.coming-soon {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  gap: 16px;
-  padding: 16px;
-}
-
 /* Login */
 .login-wrapper {
   min-height: 100vh;
