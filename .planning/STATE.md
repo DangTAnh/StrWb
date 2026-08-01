@@ -18,10 +18,10 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-31)
+See: .planning/PROJECT.md (updated 2026-08-02)
 
 **Core value:** Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admin dễ dàng quản lý sản phẩm.
-**Current focus:** Phase 4 complete — Milestone v1.0 done (polish + deploy + verification)
+**Current focus:** Milestone v1.0 shipped — awaiting next milestone
 
 ## Current Position
 
@@ -110,8 +110,8 @@ Items acknowledged and deferred at milestone close on 2026-08-02:
 
 ## Session Continuity
 
-Last session: 2026-08-01T18:06:06.565Z
-Stopped at: Completed Phase 4 (polish+deploy) — 3 plans, all success criteria verified
+Last session: 2026-08-02
+Stopped at: Milestone v1.0 archived (complete-milestone) — shipped, awaiting next milestone
 Resume file: None
 
 ## Operator Next Steps
