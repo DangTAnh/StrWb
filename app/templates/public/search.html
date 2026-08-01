@@ -2,10 +2,9 @@
 {% block title %}Tìm kiếm — Cửa hàng{% endblock %}
 {% block content %}
 <div class="container">
-  <h1 class="page-heading">Kết quả tìm kiếm</h1>
+  <h1 class="page-heading">{% if products is none %}Tìm kiếm sản phẩm{% else %}Kết quả tìm kiếm{% endif %}</h1>
   {% if products is none %}
   <div class="empty-state">
-    <h2>Tìm kiếm sản phẩm</h2>
     <p>Vui lòng nhập từ khóa để tìm kiếm.</p>
     <a class="btn btn-primary" href="{{ url_for('public.home') }}">Xem tất cả sản phẩm</a>
   </div>
