@@ -25,8 +25,8 @@ def _manual_pagination(page, per_page, total):
     return SimpleNamespace(
         page=page, pages=pages, per_page=per_page, total=total,
         has_prev=page > 1, has_next=page < pages,
-        prev_num=page - 1 if page > 1 else 1,
-        next_num=page + 1 if page < pages else pages,
+        prev_num=page - 1 if page > 1 else None,
+        next_num=page + 1 if page < pages else None,
     )
 
 
