@@ -16,20 +16,20 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Quản lý sản phẩm (Admin CRUD)
 
-- [ ] **PROD-01**: Admin tạo sản phẩm mới với tên, giá, thương hiệu, số đo, mô tả
-- [ ] **PROD-02**: Admin sửa mọi thông tin sản phẩm
-- [ ] **PROD-03**: Admin xóa sản phẩm (qua POST để an toàn CSRF)
-- [ ] **PROD-04**: Admin đặt trạng thái Còn hàng / Hết hàng / Ngừng bán
-- [ ] **PROD-05**: Admin nhập số lượng tồn kho; sản phẩm tồn = 0 tự xem là hết hàng
-- [ ] **PROD-06**: Giá lưu dạng số nguyên (VND), không mất chính xác
-- [ ] **PROD-07**: Form admin có CSRF protection và validate dữ liệu
+- [x] **PROD-01**: Admin tạo sản phẩm mới với tên, giá, thương hiệu, số đo, mô tả
+- [x] **PROD-02**: Admin sửa mọi thông tin sản phẩm
+- [x] **PROD-03**: Admin xóa sản phẩm (qua POST để an toàn CSRF)
+- [x] **PROD-04**: Admin đặt trạng thái Còn hàng / Hết hàng / Ngừng bán
+- [x] **PROD-05**: Admin nhập số lượng tồn kho; sản phẩm tồn = 0 tự xem là hết hàng
+- [x] **PROD-06**: Giá lưu dạng số nguyên (VND), không mất chính xác
+- [x] **PROD-07**: Form admin có CSRF protection và validate dữ liệu
 
 ### Ảnh sản phẩm
 
-- [ ] **IMG-01**: Admin upload ảnh sản phẩm, được validate (magic bytes, kích thước, giới hạn dung lượng)
-- [ ] **IMG-02**: Ảnh lưu trên filesystem với tên file UUID (không mất ký tự tiếng Việt)
-- [ ] **IMG-03**: Mỗi sản phẩm hỗ trợ nhiều ảnh (gallery)
-- [ ] **IMG-04**: Ảnh được resize tạo thumbnail cho danh sách
+- [x] **IMG-01**: Admin upload ảnh sản phẩm, được validate (magic bytes, kích thước, giới hạn dung lượng)
+- [x] **IMG-02**: Ảnh lưu trên filesystem với tên file UUID (không mất ký tự tiếng Việt)
+- [x] **IMG-03**: Mỗi sản phẩm hỗ trợ nhiều ảnh (gallery)
+- [x] **IMG-04**: Ảnh được resize tạo thumbnail cho danh sách
 
 ### Catalog công khai
 
@@ -100,17 +100,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-02 | 1 | Complete |
 | AUTH-03 | 1 | Complete |
 | AUTH-04 | 1 | Complete |
-| PROD-01 | 2 | Pending |
-| PROD-02 | 2 | Pending |
-| PROD-03 | 2 | Pending |
-| PROD-04 | 2 | Pending |
-| PROD-05 | 2 | Pending |
-| PROD-06 | 2 | Pending |
-| PROD-07 | 2 | Pending |
-| IMG-01 | 2 | Pending |
-| IMG-02 | 2 | Pending |
-| IMG-03 | 2 | Pending |
-| IMG-04 | 2 | Pending |
+| PROD-01 | 2 | Complete |
+| PROD-02 | 2 | Complete |
+| PROD-03 | 2 | Complete |
+| PROD-04 | 2 | Complete |
+| PROD-05 | 2 | Complete |
+| PROD-06 | 2 | Complete |
+| PROD-07 | 2 | Complete |
+| IMG-01 | 2 | Complete |
+| IMG-02 | 2 | Complete |
+| IMG-03 | 2 | Complete |
+| IMG-04 | 2 | Complete |
 | CAT-01 | 3 | Pending |
 | CAT-02 | 3 | Pending |
 | CAT-03 | 3 | Pending |

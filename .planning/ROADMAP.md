@@ -14,7 +14,7 @@ Vietnamese product catalog web (Flask, single admin, SQLite, self-hosted). Custo
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Scaffold + Auth + Data Model** - Foundation: app skeleton, secure config, admin login/logout, Vietnamese interface, SQLite WAL mode, DB init CLI (completed 2026-07-31)
-- [ ] **Phase 2: Admin CRUD + Images** - Admin creates/edits/deletes products with image upload, validation, UUID naming, thumbnails, and stock management
+- [x] **Phase 2: Admin CRUD + Images** - Admin creates/edits/deletes products with image upload, validation, UUID naming, thumbnails, and stock management (completed 2026-08-01)
 - [ ] **Phase 3: Public Catalog + Search + Contact** - Customers browse product listing and detail pages with gallery, search by name/description, and Messenger contact links
 - [ ] **Phase 4: Polish + Deploy** - Responsive mobile layout, out-of-stock de-emphasis, production WSGI deployment with reverse proxy and hardened config
 
@@ -127,6 +127,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Scaffold + Auth + Data Model | 3/3 | Complete   | 2026-07-31 |
-| 2. Admin CRUD + Images | 0/3 | Not started | - |
+| 2. Admin CRUD + Images | 3/3 | Complete   | 2026-08-01 |
 | 3. Public Catalog + Search + Contact | 0/3 | Not started | - |
 | 4. Polish + Deploy | 0/2 | Not started | - |
