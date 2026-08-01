@@ -69,9 +69,9 @@ Plans:
 
 Plans:
 
-- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold, config, WAL, init-db, 3 blueprints, Vietnamese base template
-- [ ] 01-02-PLAN.md — Data model + admin auth: Product/ProductImage, Flask-Login, login/logout, admin protection
-- [ ] 01-03-PLAN.md — Admin UI + Vietnamese polish: dashboard, login, coming-soon, error pages
+- [x] 02-01-PLAN.md — Admin product CRUD core: list table, create/edit forms, price format, POST delete with confirmation
+- [x] 02-02-PLAN.md — Image upload pipeline: magic-byte validation, Pillow verify/re-encode, UUID storage, 400px thumbnails
+- [x] 02-03-PLAN.md — Image gallery management + Vietnamese polish: form gallery, reorder, delete-on-save, thumbnails
 
 ### Phase 3: Public Catalog + Search + Contact
 
@@ -92,9 +92,9 @@ Plans:
 
 Plans:
 
-- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold, config, WAL, init-db, 3 blueprints, Vietnamese base template
-- [ ] 01-02-PLAN.md — Data model + admin auth: Product/ProductImage, Flask-Login, login/logout, admin protection
-- [ ] 01-03-PLAN.md — Admin UI + Vietnamese polish: dashboard, login, coming-soon, error pages
+- [ ] 03-01-PLAN.md — Public foundation + home catalog grid (header/search form, grid 2/3/4, pagination, contact strip)
+- [ ] 03-02-PLAN.md — Product detail (gallery + thumbnail swap, info order, Messenger CTA, back link)
+- [ ] 03-03-PLAN.md — Search (diacritic-insensitive normalization, results page, empty states)
 
 ### Phase 4: Polish + Deploy
 
@@ -115,9 +115,9 @@ Plans:
 
 Plans:
 
-- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold, config, WAL, init-db, 3 blueprints, Vietnamese base template
-- [ ] 01-02-PLAN.md — Data model + admin auth: Product/ProductImage, Flask-Login, login/logout, admin protection
-- [ ] 01-03-PLAN.md — Admin UI + Vietnamese polish: dashboard, login, coming-soon, error pages
+- [ ] 04-01-PLAN.md — Polish: responsive mobile layout, out-of-stock de-emphasis, empty/error state review
+- [ ] 04-02-PLAN.md — Deployment: WSGI server (waitress/gunicorn), reverse proxy, hardened config
+- [ ] 04-03-PLAN.md — Production hardening + verification: HTTPS, SECRET_KEY env, error-page audit
 
 ## Progress
 
