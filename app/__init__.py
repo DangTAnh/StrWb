@@ -61,6 +61,10 @@ def create_app():
     def inject_year():
         return {'current_year': datetime.utcnow().year}
 
+    @app.template_filter('format_price')
+    def format_price(value):
+        return f'{int(value):,}'.replace(',', '.') + '₫'
+
     from .public import public_bp
     from .auth import auth_bp
     from .admin import admin_bp
