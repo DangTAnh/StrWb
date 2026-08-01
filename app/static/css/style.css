@@ -252,7 +252,7 @@ label { font-size: 14px; }
 .form-field { margin-bottom: 16px; }
 .form-row-2 { display: flex; gap: 16px; }
 .form-row-2 .form-field { flex: 1; }
-.form-field label { display: block; margin-bottom: 4px; color: var(--text); }
+.form-field label { display: inline-block; margin-bottom: 4px; color: var(--text); }
 .form-field .required { color: var(--destructive); }
 .form-field input:not([type="checkbox"]), .form-field textarea {
   width: 100%;

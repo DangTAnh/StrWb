@@ -100,6 +100,12 @@ None yet.
 
 None yet.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260802-4eb | Fix dấu sao (*) required form sản phẩm xuống dòng — hiển thị cùng dòng với label | 2026-08-01 | | [260802-4eb-fix-ui-dau-sao-required-o-form-san-pham-](./quick/260802-4eb-fix-ui-dau-sao-required-o-form-san-pham-/) |
+
 ## Deferred Items
 
 Items acknowledged and deferred at milestone close on 2026-08-02:
