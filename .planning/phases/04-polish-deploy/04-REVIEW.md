@@ -191,3 +191,23 @@ to webroot mode this silently 404s. Harmless for the documented flow, but mislea
 _Reviewed: 2026-08-02T01:13:09+07:00_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
+
+---
+
+## Fix Applied
+
+| Finding | Severity | Commit | Status |
+|---------|----------|--------|--------|
+| CR-01 — nginx rate limit misses `/login`; 429 claim wrong | Critical | `a676902` | fixed |
+| WR-01 — `http2 on;` breaks `nginx -t` on nginx < 1.25.1 | Warning | `e71882b` | fixed |
+| WR-02 — cert referenced before it exists; flow deadlocks | Warning | `f385d2e` | fixed |
+| WR-03 — Linux.md omits `init-db`; fresh deploy 500s | Warning | `3557be9` | fixed |
+| WR-04 — cron backup `%F` unescaped, silently never runs | Warning | `a914577` | fixed |
+| IN-01 — `/static/` drops server security headers | Info | `c40d66e` | fixed |
+| IN-02 — vestigial `.well-known/acme-challenge` webroot | Info | `c40d66e` | fixed |
+
+All 7 findings fixed (4 in-scope Warning/Critical + both Info, the latter judged trivially
+fixable in the same nginx.conf file). No findings skipped.
+
+_Fixed: 2026-08-02_
+_Fixer: Claude (gsd-code-fixer)_
