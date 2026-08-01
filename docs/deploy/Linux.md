@@ -44,6 +44,17 @@ sudo nano /srv/storewweb/.env
 
 Phân quyền: `sudo chown storeweb:storeweb /srv/storewweb/.env && sudo chmod 600 /srv/storewweb/.env`.
 
+Khởi tạo database + tài khoản admin **trước khi chạy app** (WR-03 — thiếu bước này thì mọi
+truy vấn 500 vì chưa có bảng `products`):
+
+```bash
+cd /srv/storewweb && sudo -u storeweb venv/bin/flask --app wsgi init-db
+```
+
+Chạy bằng user `storeweb` (user của systemd service) để `data/app.db` do `storeweb` sở hữu —
+không bị root sở hữu khiến service không ghi được. Lệnh tạo bảng + upsert admin từ `.env`
+(`ADMIN_PASSWORD` phải đặt trước — xem bước `.env` ở trên).
+
 ## 3. Gunicorn workers
 
 Công thức **2×CPU+1** dựa trên `nproc`:
