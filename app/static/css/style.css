@@ -350,6 +350,7 @@ label { font-size: 14px; }
   border: 1px solid #D1D5DB; border-radius: 8px; font-size: 16px; font-family: inherit; color: #1F2937; background: #FFFFFF;
 }
 .search-form input[type="search"]:focus-visible { outline: 2px solid #2563EB; outline-offset: 0; border-color: #2563EB; }
+.search-form input::placeholder { color: #6B7280; opacity: 1; }
 .search-form .btn { flex-shrink: 0; }
 .page-heading { margin-bottom: 16px; }
 @media (min-width: 768px) {
