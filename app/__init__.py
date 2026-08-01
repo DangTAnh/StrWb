@@ -38,7 +38,7 @@ def create_app():
         REMEMBER_COOKIE_DURATION=timedelta(days=30),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax',
-        SESSION_COOKIE_SECURE=(os.environ.get('FLASK_ENV') == 'production'),
+        SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', '').lower() in ('1', 'true', 'yes'),
         DEBUG=(os.environ.get('FLASK_DEBUG', '0') == '1'),
         MESSENGER_URL=os.environ.get('MESSENGER_URL', 'https://m.me/yourpage'),
     )
