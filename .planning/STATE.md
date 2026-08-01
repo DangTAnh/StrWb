@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 03-public-catalog-search-contact (3/3 plans, smoke test passed)
-last_updated: "2026-08-01T14:25:00Z"
+stopped_at: Closed 03-public-catalog-search-contact (verified passed 5/5, code review 6/6, ui review 20/24 -> 5 fixed)
+last_updated: "2026-08-01T15:29:39Z"
 last_activity: 2026-08-01
 progress:
   total_phases: 4
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-07-31)
 
 ## Current Position
 
-Phase: 3 (Public Catalog + Search + Contact) — EXECUTING
+Phase: 3 (Public Catalog + Search + Contact) — CLOSED
 Plan: 3 of 3
-Status: Phase complete — ready for verification
+Status: Verified passed 5/5, code review 6/6 fixed, UI review 20/24 (5 fixed)
 Last activity: 2026-08-01
 
 Progress: [██████████] 100%
@@ -82,6 +82,7 @@ Recent decisions affecting current work:
 - [Phase 3]: Search normalization in-Python (NFD+strip Mn+casefold) over name OR description — no stored column, no SQL LIKE (UI-SPEC flagged decision 7)
 - [Phase 3]: Search result count uses pagination.total (phase-wide total), not products|length (current page) — required by multi-page verify
 - [Phase 3]: Verify-harness fix: Flask-SQLAlchemy 3.1.1 creates engines eagerly in init_app; setting SQLALCHEMY_DATABASE_URI after create_app is ineffective — harness must dispose+rebuild the engine to isolate a temp DB
+- [Phase 3]: Phase 3 closed — verified passed 5/5 (49 checks), code review 0 HIGH/1 MED/5 LOW all fixed, UI review 20/24 -> 5 findings fixed, 6 polish deferred to Phase 4 (spec-sync min-width, contrast token, 2x-DPR thumbs, ₫ glyph, search-clamp-vs-redirect cosmetic)
 
 ### Pending Todos
 
@@ -99,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-01T14:25:00Z
-Stopped at: Completed 03-public-catalog-search-contact (3/3 plans, smoke test passed)
+Last session: 2026-08-01T15:29:39Z
+Stopped at: Phase 3 closed (verify passed, reviews fixed) — next: Phase 4 discuss (Polish + Deploy)
 Resume file: None
