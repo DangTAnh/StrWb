@@ -1,0 +1,9 @@
+{% extends "public/base.html" %}
+{% block title %}{{ product.name }} — Cửa hàng{% endblock %}
+{% block content %}
+<div class="container">
+  <a class="back-link" href="{{ url_for('public.home') }}">Quay lại</a>
+  <h1>{{ product.name }}</h1>
+  <p class="product-price">{{ product.price | format_price }}</p>
+</div>
+{% endblock %}
