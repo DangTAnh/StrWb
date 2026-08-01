@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "public/base.html" if not (request.path.startswith('/admin/') or request.path.startswith('/auth/')) else "base.html" %}
 {% block content %}
 <div class="error-page">
   <h1 class="display">Đã có lỗi xảy ra</h1>
