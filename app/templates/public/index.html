@@ -3,6 +3,7 @@
 <div class="container">
   <h1 class="page-heading">Sản phẩm</h1>
   {% if products %}
+  <h2 class="visually-hidden">Danh sách sản phẩm</h2>
   <div class="product-grid">
     {% for p in products %}{% include "public/_product_card.html" %}{% endfor %}
   </div>
