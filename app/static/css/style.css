@@ -381,7 +381,7 @@ label { font-size: 14px; }
 .pagination a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 8px; }
 .contact-strip { margin-top: 64px; background: #FFFFFF; padding: 32px; border-radius: 8px; text-align: center; }
 .contact-strip h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-.contact-strip p { color: #6B7280; margin-bottom: 16px; }
+.contact-strip p { color: #6B7280; margin-bottom: 24px; }
 .contact-strip .btn { min-width: 200px; }
 
 /* ============ Phase 3: Product detail ============ */
