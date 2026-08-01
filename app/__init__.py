@@ -2,7 +2,7 @@ import os
 import sqlite3
 from datetime import datetime, timedelta
 
-from flask import Flask, render_template
+from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 from sqlalchemy import event
@@ -80,5 +80,10 @@ def create_app():
     def internal_error(e):
         db.session.rollback()
         return render_template('errors/500.html'), 500
+
+    @app.errorhandler(413)
+    def too_large(e):
+        flash('Tập tin quá lớn. Tối đa 16MB cho mỗi lần tải ảnh.', 'error')
+        return redirect(request.referrer or url_for('admin.products'))
 
     return app

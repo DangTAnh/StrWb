@@ -127,9 +127,21 @@ def delete_product(product_id):
         return redirect(url_for('admin.products'))
     if request.method == 'POST':
         name = product.name
-        image_count = product.images.count()
+        images = list(product.images.all())
+        image_count = len(images)
         db.session.delete(product)
-        db.session.commit()
-        flash(f'Đã xóa sản phẩm “{name}”', 'success')
+        db.session.commit()  # D-06: DB row first, then files
+        deleted_total = 0
+        failed_total = 0
+        for img in images:  # D-05: remove files with the product
+            d, f = delete_image_files(img.filename)
+            deleted_total += d
+            failed_total += f
+        msg = f'Đã xóa sản phẩm “{name}”'
+        if image_count > 0:
+            msg += f' và {image_count} ảnh đã xóa'  # D-07
+        flash(msg, 'success')
+        if failed_total > 0:  # D-09: cleanup failure never blocks the delete
+            flash(f'Cảnh báo: sản phẩm đã xóa nhưng không xóa được {failed_total} file ảnh trên đĩa.', 'warning')
         return redirect(url_for('admin.products'))
     return render_template('admin/products/delete.html', product=product)

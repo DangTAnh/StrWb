@@ -30,7 +30,7 @@ class Product(db.Model):
     admin_note = db.Column(db.Text, nullable=True)          # D-06 optional, admin-only
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    images = db.relationship('ProductImage', backref='product', lazy='dynamic')
+    images = db.relationship('ProductImage', backref='product', lazy='dynamic', cascade='all, delete-orphan')
 
     @property
     def status(self):
