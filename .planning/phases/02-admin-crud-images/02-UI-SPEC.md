@@ -109,7 +109,7 @@ Base palette inherited unchanged from Phase 1. Phase 2 adds a **semantic status 
 **Accent reserved for (specific elements only):**
 1. Primary button background (#2563EB, white text) — "Thêm sản phẩm", "Lưu sản phẩm"
 2. "Sửa" action link in table
-3. "Quay lại" / "Hủy to" back navigation links to the product list
+3. "Quay lại" / "Hủy" back navigation links to the product list
 4. Input focus ring + focus border
 5. "Ảnh chính" badge background
 
@@ -207,7 +207,7 @@ All copy in Vietnamese (PLAT-01). Inherited Phase 1 standard: page `lang="vi"`, 
 | Update success | "Đã cập nhật sản phẩm “{tên}”" |
 | Delete success (D-07) | "Đã xóa sản phẩm “{tên}”" + (nếu có ảnh) " và {N} ảnh đã xóa" |
 | Delete image-cleanup warning (D-09) | "Cảnh báo: sản phẩm đã xóa nhưng không xóa được {N} file ảnh trên đĩa." (warning, does not block flow) |
-| Upload batch blocked (D-17) | "Không thể lưu ảnh: file “{tên}” không hợp lệ ({lý do}). Chưa ảnh nào được lưu." (error) |
+| Upload batch blocked (D-17) | "Không thể lưu ảnh: file “{tên}” không hợp lệ ({lý do}). Chưa có ảnh nào được lưu." (error) |
 | Product not found | "Không tìm thấy sản phẩm." (error, with link "Quay lại danh sách sản phẩm") |
 | Form validation failed | "Vui lòng kiểm tra lại các trường nhập." (error, plus field-level messages) |
 
@@ -449,11 +449,11 @@ All POST forms include Flask-WTF CSRF token (PROD-07, PITFALLS security: CSRF on
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: FLAG — two minor copy nits (non-blocking): (1) prose typo "Hủy to" in the Accent reserved list (should read "Hủy"); (2) flash copy "Chưa ảnh nào được lưu" reads awkwardly — recommend "Không ảnh nào được lưu" or "Chưa có ảnh nào được lưu".
+- [x] Dimension 2 Visuals: PASS — visual hierarchy established via accent reservation (primary CTA is the sole filled-accent element), layout contract + type roles.
+- [x] Dimension 3 Color: PASS — accent reserved for specific elements only; 60/30/10 split declared; destructive + semantic status palette justified and scoped.
+- [x] Dimension 4 Typography: PASS — 4 sizes (14/16/24/32), 2 weights (400/600), body line-height 1.5; hierarchy clear.
+- [x] Dimension 5 Spacing: FLAG — badge vertical padding 2px (not a multiple of 4) and input/textarea padding 12px (outside token set) are declared inline but not added to the Exceptions list; recommend documenting both as exceptions (non-blocking).
+- [x] Dimension 6 Registry Safety: PASS — no third-party registries, no shadcn, all components hand-rolled.
 
-**Approval:** pending
+**Approval:** flagged
