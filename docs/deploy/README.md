@@ -27,7 +27,9 @@ xem template [`nginx.conf`](./nginx.conf). Admin chỉ bảo vệ bằng app log
    đầu tiên từ `.env`, PLAT-04).
 4. **nginx.conf:** thay mọi `YOUR_DOMAIN` bằng domain thật của bạn (D-03 — không deploy
    placeholder), rồi copy vào `/etc/nginx/sites-available/storeweb`.
-5. **HTTPS:** `certbot --nginx -d YOUR_DOMAIN` — tự cấp + auto-gia-hạn (certbot.timer).
+5. **HTTPS:** cấp chứng chỉ **trước khi** `nginx -t`:
+   `sudo certbot certonly --standalone -d YOUR_DOMAIN` (cần port 80 trống; tự gia-hạn qua
+   certbot.timer — xem Linux.md §5).
 6. **Verify sau go-live:** xem mục "Verify production" bên dưới.
 
 ---

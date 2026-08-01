@@ -77,6 +77,22 @@ Sửa số workers trong `ExecStart` thành `2×CPU+1` thực tế nếu khác m
 
 ## 5. nginx + HTTPS (certbot)
 
+> **Thứ tự quan trọng (WR-02):** template `nginx.conf` tham chiếu
+> `/etc/letsencrypt/live/YOUR_DOMAIN/{fullchain.pem,privkey.pem}`. Chứng chỉ PHẢI được cấp
+> **trước** khi chạy `nginx -t` — nếu không nginx báo `[emerg] cannot load certificate`.
+> Vì vậy cấp cert bằng `certbot certonly --standalone` trước, cài config sau.
+
+Cấp chứng chỉ trước (cần port 80 trống — `--pre-hook` tự tạm dừng nginx nếu đang chạy):
+
+```bash
+sudo certbot certonly --standalone -d YOUR_DOMAIN --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx"
+```
+
+(certbot hỏi email + đồng ý điều khoản lần đầu.) Chứng chỉ lưu tại
+`/etc/letsencrypt/live/YOUR_DOMAIN/` — đúng đường dẫn `nginx.conf` tham chiếu. Các hook
+`--pre-hook/--post-hook` được certbot ghi vào renewal config để tự tạm dừng/khởi động nginx
+quanh lúc gia hạn.
+
 Copy template site và sửa domain thật (thay mọi `YOUR_DOMAIN`):
 
 ```bash
@@ -84,12 +100,6 @@ sudo cp /srv/storewweb/docs/deploy/nginx.conf /etc/nginx/sites-available/storewe
 sudo nano /etc/nginx/sites-available/storeweb
 sudo ln -s /etc/nginx/sites-available/storeweb /etc/nginx/sites-enabled/storeweb
 sudo nginx -t && sudo systemctl reload nginx
-```
-
-Cấp chứng chỉ Let's Encrypt (certbot tự sửa nginx.conf để thêm SSL):
-
-```bash
-sudo certbot --nginx -d YOUR_DOMAIN
 ```
 
 Auto-gia-hạn: certbot đã cài systemd timer khi cài package —
