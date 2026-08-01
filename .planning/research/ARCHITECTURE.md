@@ -1,378 +1,482 @@
-# Architecture Research
+# Architecture Research: Order Placement + Order Tracking + Stats
 
-**Domain:** Product catalog web app (Flask, single admin, SQLite, self-hosted, Vietnamese)
-**Researched:** 2026-07-31
-**Confidence:** HIGH
+**Domain:** Flask product catalog (single admin, SQLite, self-hosted, Vietnamese) — extending existing v1.0 with buy-system features
+**Researched:** 2026-08-02
+**Confidence:** HIGH (based on codebase inspection: app/__init__.py, admin.py, public.py, models.py, forms.py, templates)
 
-## System Overview
+## Executive Summary
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                             Internet / Client                                │
-├──────────────────────────────────────────────────────────────────────────────┤
-│  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │                          Nginx (port 80/443)                          │  │
-│  │  - Serves /static and /uploads directly (files, no Python overhead)   │  │
-│  │  - Proxies all other requests to gunicorn via 127.0.0.1:8000          │  │
-│  └────────────────────────────────────────────────────────────────────────┘  │
-├──────────────────────────────────────────────────────────────────────────────┤
-│  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │                    Gunicorn (WSGI server, sync workers)                │  │
-│  │  - Imports `wsgi:app` entry point                                    │  │
-│  │  - Runs the Flask application factory → returns app object           │  │
-│  └────────────────────────────────────────────────────────────────────────┘  │
-├──────────────────────────────────────────────────────────────────────────────┤
-│  │                        Flask Application (app/)                        │  │
-│  │                                                                        │  │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌────────────────────────┐  │  │
-│  │  │   public_bp     │  │   admin_bp      │  │        auth.py         │  │  │
-│  │  │ (Blueprint)     │  │ (Blueprint)     │  │  Flask-Login manager   │  │  │
-│  │  │                 │  │                 │  │  login/logout routes   │  │  │
-│  │  │ - /              │  │ - /admin/      │  │  login_required        │  │  │
-│  │  │ - /product/<id>  │  │ - /admin/products/                           │  │  │
-│  │  │ - /contact       │  │ - /admin/products/new                       │  │  │
-│  │  │                   │  │ - /admin/products/<id>/edit                │  │  │
-│  │  └────────┬─────────┘  │ - /admin/products/<id>/delete                │  │  │
-│  │           │             │                                           │  │  │
-│  │           │             └────────┬─────────┘                        │  │
-│  │           │                      │                                   │  │
-│  │           ├──────────────────────┤                                   │  │
-│  │           │                      │                                   │  │
-│  │  ┌────────┴──────────────────────┴────┐   ┌──────────────────────┐ │  │
-│  │  │              models.py             │   │        db.py        │ │  │
-│  │  │  (SQLAlchemy models)               │   │  (db object + init)  │ │  │
-│  │  │                                     │   │                      │ │  │
-│  │  │  Product(id, name, price, brand,    │   │  db = SQLAlchemy()   │ │  │
-│  │  │    measurements, description,       │   │  init_db command    │ │  │
-│  │  │    status, stock, image_path)       │   │                     │ │  │
-│  │  │  Admin(id, username, password_hash) │   │                      │ │  │
-│  │  └──────────────────────────────────────┘   └──────────────────────┘ │  │
-│  └────────────────────────────────────────────────────────────────────────┘  │
-├──────────────────────────────────────────────────────────────────────────────┤
-│  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │                       SQLite Database (data/app.db)                   │  │
-│  │  Tables: products, admin_users, (schema.sql for init)                 │  │
-│  └────────────────────────────────────────────────────────────────────────┘  │
-│                                                                               │
-│  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │        Filesystem: app/static/uploads/ (product images)               │  │
-│  │  Served by nginx at /uploads/<filename>                                │  │
-│  └────────────────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+The existing codebase is a clean Flask app-factory with 3 blueprints (`public`, `admin`, `auth`) and a flat SQLAlchemy model layer (`Product`, `ProductImage`, `AdminUser`). Adding the v1.1 buy-system features requires:
 
-### Component Responsibilities
+1. **Two new models** — `Order` (header: customer name, phone, address, product ref, quantity, note, status, timestamps) and `OrderStatus` (enum-like lookup or inline choices).
+2. **One new optional column** — `cost_price` on `Product` (nullable Integer, admin-only visibility).
+3. **Two new route clusters** — public order-placement on the product detail page (unauthenticated, public_bp) and admin order-tracking + stats dashboard (authenticated, admin_bp).
+4. **Two new forms** — `OrderForm` (public, no CSRF needed for unauthenticated user but CSRFProtect is global so it applies; use Flask-WTF and render `csrf_token`) and `OrderStatusForm` (admin, small form to advance an order's status).
+5. **A schema-migration strategy** — `db.create_all()` won't add the `cost_price` column or the new tables to existing deployments; the safest lightweight path is an idempotent `ALTER TABLE` + `CREATE TABLE IF NOT EXISTS` in a CLI command, with flask-migrate reserved for later schema churn.
 
-| Component | Responsibility | Implementation |
-|-----------|---------------|----------------|
-| `app/__init__.py` | Application factory, extension registration, blueprint registration | `create_app(config)` function |
-| `app/models.py` | SQLAlchemy models (Product, AdminUser) | Declarative model classes on shared `db` |
-| `app/db.py` | Database object + CLI init command | `db = SQLAlchemy()`, `init_db` click command |
-| `app/public.py` (blueprint) | Public-facing routes: catalog list, product detail, contact | `@bp.route` decorators, `render_template` |
-| `app/admin.py` (blueprint) | Admin CRUD routes: product list, create, edit, delete | `@bp.route` + `@login_required` |
-| `app/auth.py` (blueprint) | Login form, session management, logout | Flask-Login `login_user`/`logout_user` |
-| `app/templates/` | Jinja2 templates (base + public + admin partials) | Inherited via `{% extends %}` |
-| `app/static/` | CSS, JS, uploaded images | Served by Flask in dev / nginx in prod |
-| `wsgi.py` | WSGI entry point for gunicorn | `from app import create_app; app = create_app()` |
-| `data/app.db` | SQLite database file | Initialized via `flask init-db` |
+**Integration approach:** everything slots into the existing patterns. The public blueprint gets a `POST /products/<id>/order` route that mirrors how `public_bp.product_detail` already renders. The admin blueprint gets `/admin/orders`, `/admin/orders/<id>`, `/admin/stats`, and the dashboard nav gains links. Models gain no new imports beyond what `db` and `utcnow` already provide. Forms follow the Flask-WTF + Jinja `wtf` macro pattern already established by `ProductForm`.
 
-## Recommended Project Structure
+## Existing Architecture Review
+
+### Current File Layout (v1.0, shipped)
 
 ```
-storewweb/
-├── app/
-│   ├── __init__.py          # create_app() factory, init extensions, register blueprints
-│   ├── db.py                 # db = SQLAlchemy(), init_db() CLI command, schema.sql loader
-│   ├── models.py             # Product, AdminUser SQLAlchemy models
-│   ├── auth.py               # auth_bp: login, logout routes + Flask-Login setup
-│   ├── public.py             # public_bp: / , /product/<id>, /contact
-│   ├── admin.py              # admin_bp: /admin/ CRUD for products
-│   ├── templates/
-│   │   ├── base.html         # shared layout: navbar, flash messages, {% block content %}
-│   │   ├── public/
-│   │   │   ├── index.html    # product list with thumbnails
-│   │   │   ├── product.html  # single product detail
-│   │   │   └── contact.html  # contact + Messenger link
-│   │   └── admin/
-│   │       ├── login.html    # login form
-│   │       ├── products.html # product list + links to create/edit
-│   │       ├── product_form.html # create/edit form
-│   │       └── layout.html   # minimal admin wrapper (or extend base.html)
-│   └── static/
-│       ├── css/style.css     # single stylesheet for public + admin
-│       └── uploads/          # product images (gitignored)
-├── data/
-│   └── app.db               # SQLite (production), or .gitkeep
-├── wsgi.py                  # gunicorn entry point: `app = create_app()`
-├── requirements.txt
-└── .flaskenv               # FLASK_APP=app FLASK_DEBUG=1 (dev only)
+app/
+├── __init__.py        # create_app(): config, WAL pragma, extensions, 3 blueprints, format_price filter
+├── db.py              # db = SQLAlchemy(), init-db CLI (create_all + upsert admin)
+├── models.py          # AdminUser(UserMixin), Product, ProductImage — single base class `db.Model`
+├── forms.py           # LoginForm, ProductForm — Flask-WTF, VN labels
+├── auth.py            # auth_bp: /login, /logout, login_manager.user_loader
+├── admin.py           # admin_bp @ /admin: /, /products, /products/new, /products/<id>/edit, /products/<id>/delete
+├── public.py          # public_bp @ /: /, /products/<id>, /search — normalize_search_text, _manual_pagination
+├── image_utils.py     # validate_image_upload, save_image_file (Pillow), delete_image_files
+└── templates/
+    ├── base.html         # <html lang="vi">, flash zone, {% block content %}
+    ├── public/
+    │   ├── _nav.html     # brand + search form
+    │   ├── base.html     # extends base, {% block header %} = _nav
+    │   ├── index.html    # product-grid (2/3/4 cols), contact-strip (Messenger)
+    │   ├── product_detail.html  # gallery + price + status + Messenger CTA
+    │   └── search.html
+    └── admin/
+        ├── dashboard.html
+        └── products/{list,form,delete}.html
 ```
 
-### Structure Rationale
+### Current Data Model (models.py — v1.0)
 
-- **`app/` package with factory pattern** — Required because the user self-hosts with gunicorn (needs `wsgi:app` importable). The factory pattern (`create_app()`) lets you load config from environment variables or instance files without circular imports. This is the official Flask-recommended structure for any app deployed beyond `flask run` in development.
-- **Blueprints split public vs admin vs auth** — Even with ~8 screens, blueprints keep route definitions in focused files. Public routes get no auth; admin routes get `@login_required`; auth routes handle session lifecycle. Each blueprint's routes live in one file (~150-200 lines max).
-- **No Flask-Admin** — The admin interface is only ~5 screens (login, product list, create, edit, delete) and the user wants simple CRUD with a single admin account. Flask-Admin adds a heavy dependency, a full Bootstrap theme, and a non-Vietnamese-first admin UI. Custom blueprints with hand-written forms are ~200 fewer lines of dependency and give full control over the Vietnamese labels.
-- **Templates in subfolders matching blueprints** — `templates/public/`, `templates/admin/` keeps them organized. A single `base.html` at the root provides the shared layout.
-- **`data/` folder for SQLite** — Separates the database file from source code, makes backup/cleaner gitignore trivial.
-
-## Architectural Patterns
-
-### Pattern 1: Application Factory (Flask standard)
-
-**What:** A `create_app(config_name)` function in `app/__init__.py` that creates the Flask instance, loads config, initializes extensions, registers blueprints, and returns the app.
-
-**When to use:** Always for self-hosted deployment (gunicorn/uwsgi import the app object). Standard Flask pattern since 2.0.
-
-**Trade-offs:** Slight indirection vs single-file `app = Flask(__name__)`, but zero downside for any deployment beyond `flask run`.
-
-**Example:**
 ```python
-def create_app(test_config=None):
-    app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY=os.environ.get('SECRET_KEY', 'dev-insecure-change-me'),
-        SQLALCHEMY_DATABASE_URI='sqlite:///app.db',
-        UPLOAD_FOLDER='app/static/uploads',
-        MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB upload cap
-    )
-    db.init_app(app)
-    login_manager.init_app(app)
-    app.register_blueprint(public_bp)
-    app.register_blueprint(admin_bp)
-    app.register_blueprint(auth_bp)
-    return app
+class AdminUser(UserMixin, db.Model):  # admin_users
+    id, username(unique), password_hash, created_at
+
+class Product(db.Model):  # products
+    id, name, price(Integer VND), brand, measurements(Text), description(Text),
+    quantity(default=0), discontinued(Boolean default=False), sku, sort_order,
+    admin_note, created_at, updated_at
+    status @property  -> 'discontinued' | 'available' | 'out_of_stock'
+    primary_image @property -> images.order_by(sort_order).first()
+    images = relationship(ProductImage, cascade='all, delete-orphan')
+
+class ProductImage(db.Model):  # product_images
+    id, filename(UUID), original_filename, product_id(FK), is_primary, sort_order, created_at
+    thumb_filename @property -> filename[:-4] + '_thumb.jpg'
 ```
 
-### Pattern 2: Blueprint-based route isolation
+### Current Blueprint + Route Topology
 
-**What:** Each functional area (public catalog, admin CRUD, auth) is a `Blueprint` registered in the factory. Routes are defined with `@bp.route(...)` inside each blueprint module.
+| Blueprint | Routes | Auth | Notes |
+|-----------|--------|------|-------|
+| `public_bp` | `/` (home, paginated 12/grid) | none | `normalize_search_text`, manual pagination |
+| `public_bp` | `/products/<int:product_id>` (GET detail) | none | gallery, price, status, Messenger CTA |
+| `public_bp` | `/search?q=` (GET) | none | NFD+casefold in-Python over all products |
+| `admin_bp` | `/` (dashboard) | `@before_request login_required` | products_count |
+| `admin_bp` | `/products` (GET list) | required | pagination 20, table with status badges |
+| `admin_bp` | `/products/new` (GET/POST) | required | ProductForm + image batch processing |
+| `admin_bp` | `/products/<id>/edit` (GET/POST) | required | ProductForm(obj=product) + image batch |
+| `admin_bp` | `/products/<id>/delete` (GET/POST) | required | confirmation page, file deletion |
+| `auth_bp` | `/login` (GET/POST) | none | Flask-Login login_user, remember=True |
+| `auth_bp` | `/logout` (POST) | `@login_required` | logout_user |
 
-**When to use:** Any Flask app with more than 3 routes. Even for ~8 screens, blueprints prevent a 300-line `app.py`.
+### Current Config (app/__init__.py)
 
-**Trade-offs:** One extra layer (`.py` file per blueprint), but route logic stays isolated and testable.
+- `SQLALCHEMY_DATABASE_URI` = `sqlite:///` + `data/app.db`
+- `SQLALCHEMY_ENGINE_OPTIONS={'connect_args': {'timeout': 30}}` + `_set_sqlite_pragma` event: `journal_mode=WAL`, `busy_timeout=30000`
+- `MAX_CONTENT_LENGTH = 16MB`
+- `format_price` Jinja filter: `f'{int(value):,}'.replace(',', '.') + '₫'`
+- CSRF via `CSRFProtect()` global (all POST routes protected)
+- `MESSENGER_URL` config var drives the public Messenger CTA
 
-**Example:**
+## How New Features Integrate
+
+### 1. New Models
+
+**Order model** — single table, one order per product (no OrderItem needed; the requirement is "each order = 1 product").
+
 ```python
-from flask import Blueprint, render_template
-from .models import Product
-
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
-
-@admin_bp.route('/products')
-@login_required
-def product_list():
-    products = Product.query.order_by(Product.created_at.desc()).all()
-    return render_template('admin/products.html', products=products)
-```
-
-### Pattern 3: SQLAlchemy models with Flask-Login UserMixin
-
-**What:** Database models are plain SQLAlchemy declarative classes. The admin user model inherits `UserMixin` from Flask-Login to satisfy `is_authenticated`, `is_active`, `get_id`.
-
-**When to use:** Always for session-based auth in Flask. Flask-Login is the de-facto standard.
-
-**Trade-offs:** Adds one dependency, but provides `login_required`, session management, and `current_user` for free.
-
-**Example:**
-```python
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
-
-class AdminUser(UserMixin, db.Model):
+class Order(db.Model):
+    __tablename__ = 'orders'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return AdminUser.query.get(int(user_id))
+    product_id = db.Column(db.ForeignKey('products.id'), nullable=False)
+    product_name = db.Column(db.String(200), nullable=False)       # snapshot at order time
+    price_at_order = db.Column(db.Integer, nullable=False)        # snapshot: revenue calc
+    cost_price_at_order = db.Column(db.Integer, nullable=True)     # snapshot: profit calc
+    quantity = db.Column(db.Integer, default=1, nullable=False)
+    customer_name = db.Column(db.String(200), nullable=False)
+    customer_phone = db.Column(db.String(30), nullable=False)
+    customer_address = db.Column(db.Text, nullable=False)
+    note = db.Column(db.Text, nullable=True)
+    status = db.Column(db.Integer, default=1, nullable=False)     # FK to status_lookup OR enum int
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+    product = db.relationship('Product', backref='orders')
 ```
 
-### Pattern 4: Filesystem image storage with path in DB
+**Schema decisions:**
+- `product_name`, `price_at_order`, `cost_price_at_order` are **snapshots**. The product may be deleted or price-changed after an order is placed. Revenue/profit stats must reflect the price at order time, not the current product price.
+- `quantity` defaults to 1; validator caps at `product.quantity` (can't order more than stock — though admin may choose to accept backorders; defer that nuance).
+- `status` as a small-integer enum (see below) is simplest for SQLite + avoids a join table.
 
-**What:** Uploaded product images are saved to `app/static/uploads/` with `werkzeug.utils.secure_filename`. The `image_path` column on `Product` stores the filename (e.g. `abc123.jpg`). Public templates render `<img src="/static/uploads/{{ product.image_path }}">`.
+**Order status enum** — keep it simple, no lookup table:
 
-**When to use:** Always for self-hosted apps without a blob store. Filesystem is simpler than blob storage and works with nginx static serving.
-
-**Trade-offs:** File lifecycle (deletion on product removal) must be handled manually. Scaling to multiple servers requires shared storage, but that is not a concern here.
-
-**Example:**
 ```python
-import os, uuid
-from werkzeug.utils import secure_filename
+# In models.py, as module-level constants or a Python enum mapped to integers
+ORDER_STATUS_PENDING   = 1   # 'Chờ xác nhận' — just placed
+ORDER_STATUS_PACKED    = 2   # 'Đã gói'
+ORDER_STATUS_SHIPPED   = 3   # 'Đã gửi'
+ORDER_STATUS_DELIVERED = 4   # 'Đã nhận'
+ORDER_STATUS_CANCELLED = 0   # 'Đã hủy' — edge case, admin-only
 
-def save_product_image(file):
-    ext = file.filename.rsplit('.', 1)[-1].lower()
-    if ext not in {'png', 'jpg', 'jpeg', 'gif'}:
-        raise ValueError('Invalid file type')
-    filename = f'{uuid.uuid4().hex}.{ext}'
-    file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-    return filename
+ORDER_STATUSES = [
+    (ORDER_STATUS_CANCELLED, 'Đã hủy'),
+    (ORDER_STATUS_PENDING, 'Chờ xác nhận'),
+    (ORDER_STATUS_PACKED, 'Đã gói'),
+    (ORDER_STATUS_SHIPPED, 'Đã gửi'),
+    (ORDER_STATUS_DELIVERED, 'Đã nhận'),
+]
 ```
 
-## Data Flow
+> Rationale: The v1.1 milestone specifies only "đã gói → đã gửi → đã nhận" as the active flow. A "cancelled" bucket is included for data hygiene (orders can't be hard-deleted if stats are cumulative), but it is admin-only and out of the public view. No `OrderStatus` lookup table — adds a join for no benefit at this scale. Integer enum maps cleanly to SQLite and is trivial to query (`WHERE status >= 2`).
 
-### Public Catalog Request Flow
+**Cost price on Product** — nullable Integer:
 
-```
-Browser → nginx (static) or Flask (dynamic) → public_bp route → models.py query → templates/public/*.html → Browser
-```
-
-1. User navigates to `/`
-2. Nginx proxies to gunicorn → `public_bp.index()`
-3. Route calls `Product.query.filter_by(status='available').all()`
-4. `index.html` template loops over products, renders `<img src="/static/uploads/{{ p.image_path }}">`
-5. Browser requests image file directly from nginx (no Python overhead)
-
-### Admin CRUD Flow
-
-```
-Browser → nginx → gunicorn → admin_bp route → models.py → db.session commit → SQLite → redirect → public_bp route → template → Browser
+```python
+# Add to existing Product model
+cost_price = db.Column(db.Integer, nullable=True)  # VND, optional, admin-only
 ```
 
-1. Admin logs in via `auth_bp.login()` → Flask-Login `login_user()` → session cookie set
-2. Admin navigates to `/admin/products` → `admin_bp.product_list()` → `@login_required` check → `Product.query.all()` → `products.html` renders
-3. Admin clicks "Edit" → `admin_bp.product_edit(id)` → form pre-filled → POST updates `Product` via `db.session.commit()`
-4. Image upload: `request.files['image']` → `save_product_image()` → filename stored in `product.image_path` → `db.session.commit()`
-5. After save → redirect to `/admin/products` → list shows updated row
+> Rationale: Integer matches `price` (VND, no subunit). Nullable because not all products have a recorded cost. Admin-only visibility enforced in templates (never render to public).
 
-### Authentication Flow
+### 2. New Forms (forms.py)
 
-```
-Browser → nginx → gunicorn → auth_bp.login() → Flask-Login → session cookie → Browser (cookie on all subsequent requests)
-```
-
-1. POST `/login` with username/password → `check_password_hash` → `login_user(admin)` → Flask-Login sets `session["_user_id"]` (signed cookie)
-2. Browser sends cookie on next request → Flask-Login `user_loader` callback → `load_user(user_id)` → `AdminUser.query.get(id)` → `current_user` populated
-3. `@login_required` decorator checks `current_user.is_authenticated`; if False, redirects to `login_manager.login_view`
-4. Logout → `logout_user()` → session cleared
-
-### Key Data Flows
-
-1. **Product image upload:** Browser POST → nginx → Flask `request.files` → `secure_filename` + `uuid` → `file.save()` to filesystem → filename stored in `product.image_path` → SQLite commit → redirect.
-2. **Product creation/edit:** Form POST → `admin_bp` route → `form.populate_obj(product)` or manual field assignment → `db.session.add()` + `commit()` → redirect to list.
-3. **Public rendering:** `Product.query` → Jinja2 `for product in products` → `<img src="/static/uploads/..." >` → browser fetches image from nginx.
-
-## Component Boundaries
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| `public_bp` ↔ `models.py` | Direct import (`from .models import Product`) | Public routes read products only; no writes. |
-| `admin_bp` ↔ `models.py` | Direct import (`from .models import Product`) | Admin routes do full CRUD; `@login_required` enforced per route. |
-| `auth.py` ↔ `models.py` | Direct import (`from .models import AdminUser`) | Auth loads user via `user_loader` callback using the model. |
-| `admin_bp` ↔ `auth` | Flask-Login `login_required` decorator + `current_user` | Admin blueprint does not import auth routes; relies on decorator + session cookie. |
-| Flask app ↔ SQLite | SQLAlchemy ORM | All DB access goes through `db.session`; no raw SQL except `init_db` schema loading. |
-| Flask app ↔ filesystem | `file.save()` / `os.path` | Image uploads go to `UPLOAD_FOLDER`; deletions require manual `os.remove()`. |
-| Nginx ↔ Flask | HTTP reverse proxy | Nginx forwards all non-static requests to gunicorn at `127.0.0.1:8000`. |
-| Nginx ↔ filesystem | Direct file serving | `/static/` and `/uploads/` served by nginx, bypassing Python entirely. |
-
-## Build Order (Dependencies)
-
-The following sequence minimizes blocking and ensures each phase builds on verified foundations:
-
-```
-1. Project skeleton → 2. DB + models → 3. Auth → 4. Admin CRUD → 5. Public catalog → 6. Image upload → 7. Styling → 8. Deployment
+```python
+class OrderForm(FlaskForm):
+    name = StringField('Họ và tên', validators=[DataRequired('Vui lòng nhập họ tên'), Length(max=200)])
+    phone = StringField('Số điện thoại', validators=[DataRequired('Vui lòng nhập số điện thoại'), Length(max=30)])
+    address = TextAreaField('Địa chỉ giao hàng', validators=[DataRequired('Vui lòng nhập địa chỉ'), Length(max=2000)])
+    quantity = IntegerField('Số lượng', default=1, validators=[DataRequired('Vui lòng chọn số lượng'), NumberRange(min=1)])
+    note = TextAreaField('Ghi chú', validators=[Optional(), Length(max=1000)])
+    submit = SubmitField('Đặt hàng')
 ```
 
-| Step | Component | Depends On | Output |
-|------|-----------|-----------|--------|
-| 1 | `app/__init__.py`, `requirements.txt`, `wsgi.py` | Flask installed | `create_app()` returns empty Flask app, server starts |
-| 2 | `models.py`, `db.py` + `schema.sql` | Step 1 | `flask init-db` creates SQLite tables; `db` object importable |
-| 3 | `auth.py` (login route, `login_manager`, `user_loader`) | Steps 1-2 | Single admin can log in via Flask-Login session |
-| 4 | `admin.py` (product list/edit/delete) | Steps 1-3 | Admin sees empty product list, can navigate but CRUD needs models wired |
-| 5 | `public.py` (catalog list, product detail, contact) | Steps 1-4 | Public sees product list (empty initially) |
-| 6 | Image upload field in admin form | Steps 2-5 | Admin can upload product image → saved to filesystem → displayed in catalog |
-| 7 | Templates + CSS (Vietnamese labels, responsive layout) | Steps 1-6 | Full UI polished; all screens styled |
-| 8 | Nginx config + gunicorn setup | Steps 1-7 | Production-ready self-hosted deployment |
+```python
+class OrderStatusForm(FlaskForm):
+    status = SelectField('Trạng thái', coerce=int, choices=ORDER_STATUSES, validators=[DataRequired()])
+    note = TextAreaField('Ghi chú nội bộ', validators=[Optional(), Length(max=1000)])
+    submit = SubmitField('Cập nhật')
+```
 
-**Rationale:** DB and models must exist before any CRUD. Auth must exist before admin routes can be protected. Public catalog can be built in parallel with admin CRUD since they both only depend on models existing — but admin CRUD is the "data entry" path, so it should come first to unblock seeding real data. Image upload is a refinement of the admin create/edit flow, so it comes after basic CRUD works. Deployment is last since it's config, not code.
+> Note: `OrderForm` is public (unauthenticated) but CSRFProtect is global in v1.0 — every POST needs a CSRF token. The public form renders `{{ form.hidden_tag() }}` (already the pattern in `admin/products/form.html`). CSRF on an order form is correct (prevents cross-site order spam).
 
-## Scaling Considerations
+### 3. New / Modified Routes
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| 0-100 products | Current architecture is optimal. SQLite handles low concurrency fine. Single admin means no auth contention. |
-| 100-1000 products | Add product search via `ilike` queries. Consider paginating the product list (Flask-SQLAlchemy `paginate`). Add `created_at` and `updated_at` columns for sort/filter. |
-| 1000+ products | Migrate to PostgreSQL. Add full-text search or SQLite FTS. Consider caching product list pages. Add product categories/tags. |
-| 10k+ daily visitors | Deploy with more gunicorn workers. Add Redis cache layer for product list. Offload image serving to CDN. Consider read replicas for SQLite→PostgreSQL migration. |
+#### Public — order placement on product detail
 
-### Scaling Priorities
+**No new route URL.** The form `POST`s to the existing `public.product_detail` route, which must be changed to accept `POST`:
 
-1. **First bottleneck:** Product list query grows linearly — paginate at 50-100 items. Use `paginate(page, per_page=50)`.
-2. **Second bottleneck:** Image storage grows — move uploads to a dedicated directory outside the app repo, or to S3-compatible storage if budget allows.
+```python
+# public.py — modify existing route
+@public_bp.route('/products/<int:product_id>', methods=['GET', 'POST'])
+def product_detail(product_id):
+    product = db.session.get(Product, product_id)
+    if product is None:
+        abort(404)
+    form = OrderForm()
+    if form.validate_on_submit() and product.status == 'available':
+        # create Order, snapshot product fields, commit
+        order = Order(
+            product_id=product.id,
+            product_name=product.name,
+            price_at_order=product.price,
+            cost_price_at_order=product.cost_price,
+            quantity=form.quantity.data,
+            customer_name=form.name.data.strip(),
+            customer_phone=form.phone.data.strip(),
+            customer_address=form.address.data.strip(),
+            note=form.note.data or None,
+        )
+        # quantity validation: cap at product.quantity
+        db.session.add(order)
+        db.session.commit()
+        flash('Đơn hàng của bạn đã được gửi. Chúng tôi sẽ liên hệ sớm nhất có thể.', 'success')
+        return redirect(url_for('public.product_detail', product_id=product.id))
+    images = product.images.order_by(ProductImage.sort_order.asc()).all()
+    # ... existing rendering ...
+    return render_template('public/product_detail.html', product=product, images=images, form=form, ...)
+```
 
-## Anti-Patterns
+**Template change** — `product_detail.html` gains an order form block replacing the Messenger CTA button when `product.status == 'available'`:
 
-### Anti-Pattern 1: Single-file app.py with everything inline
+```jinja
+{% if product.status == 'available' %}
+  <form method="post" class="order-form">
+    {{ form.hidden_tag() }}
+    <!-- name, phone, address, quantity, note fields -->
+    {{ form.submit }}
+  </form>
+  <p class="help-text">Hoặc liên hệ trực tiếp qua Messenger để trao đổi thêm.</p>
+  <a class="btn btn-secondary" href="{{ config['MESSENGER_URL'] }}" target="_blank" rel="noopener">Mua qua Messenger</a>
+{% else %}
+  {# existing Messenger CTA only #}
+{% endif %}
+```
 
-**What people do:** Put all routes, models, and config in one `app.py` because the tutorial shows `flask run` works.
+> Rationale: The requirement says "replace the Messenger button with an order form; keep the Messenger contact strip." The order form becomes the primary CTA on the detail page for in-stock products; the Messenger link stays as a secondary option. Out-of-stock/discontinued products skip the form and show the Messenger link (admin may still negotiate).
 
-**Why it's wrong:** Breaks gunicorn deployment (needs `wsgi:app`), config can't be environment-driven, no separation of public/admin/auth concerns, impossible to test individual components without the full app context.
+#### Admin — order tracking + stats
 
-**Do this instead:** Use the app factory pattern with `app/__init__.py` and blueprints. The extra files cost zero runtime overhead and prevent a painful refactor later.
+**New admin routes** (all `@login_required` via the existing `before_request` hook on `admin_bp`):
 
-### Anti-Pattern 2: Storing images in SQLite as BLOB
+```python
+# admin.py — new routes
+@admin_bp.route('/orders')
+def orders():
+    # list: recent orders, filter by status
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status', type=int)  # None = all
+    q = Order.query.order_by(Order.created_at.desc())
+    if status:
+        q = q.filter_by(status=status)
+    pagination = q.paginate(page=page, per_page=20, error_out=False)
+    return render_template('admin/orders/list.html', pagination=pagination, orders=pagination.items)
 
-**What people do:** `db.Column(LargeBinary)` for product images, base64-decode in templates.
+@admin_bp.route('/orders/<int:order_id>', methods=['GET', 'POST'])
+def order_detail(order_id):
+    order = db.session.get(Order, order_id)
+    if order is None:
+        abort(404)
+    form = OrderStatusForm(obj=order)
+    if form.validate_on_submit():
+        order.status = form.status.data
+        order.updated_at = utcnow()
+        db.session.commit()
+        flash('Đã cập nhật trạng thái đơn hàng.', 'success')
+        return redirect(url_for('admin.order_detail', order_id=order.id))
+    return render_template('admin/orders/detail.html', order=order, form=form)
 
-**Why it's wrong:** SQLite bloats to 3x file size for BLOBs. Backups become huge. Nginx can't serve images without Python round-trips. No browser caching.
+@admin_bp.route('/stats')
+def stats():
+    # computed at request time (no caching — low volume)
+    total_orders = Order.query.count()
+    delivered = Order.query.filter_by(status=ORDER_STATUS_DELIVERED).count()
+    total_revenue = Order.query.filter(Order.price_at_order != None).with_entities(func.sum(Order.price_at_order * Order.quantity)).scalar() or 0
+    total_cost = Order.query.filter(Order.cost_price_at_order != None).with_entities(func.sum(Order.cost_price_at_order * Order.quantity)).scalar() or 0
+    # products sold = sum of quantity where status >= shipped
+    units_sold = db.session.scalar(
+        select(func.sum(Order.quantity)).where(Order.status >= ORDER_STATUS_SHIPPED)
+    ) or 0
+    products_sold_count = db.session.query(func.count()).select_from(
+        db.Session.query(Order.product_id).filter(Order.status >= ORDER_STATUS_SHIPPED).distinct()
+    ).scalar() or 0
+    # inventory
+    total_inventory = db.session.scalar(db.select(func.sum(Product.quantity))) or 0
+    return render_template('admin/stats.html', total_orders=total_orders, delivered=delivered,
+                           total_revenue=total_revenue, total_cost=total_cost,
+                           total_profit=total_revenue - total_cost,
+                           units_sold=units_sold, products_sold_count=products_sold_count,
+                           total_inventory=total_inventory)
+```
 
-**Do this instead:** Filesystem storage with `secure_filename` + UUID. Nginx serves images directly. One column (`image_path`) stores the filename.
+> Note: Stats are computed at request-time via SQL `SUM`/`COUNT` aggregates — no caching needed for a single admin and low order volume. Uses SQLAlchemy `func` and `select` (Core-style for aggregation clarity). `Order.price_at_order` snapshot makes revenue correct even if product price changes later.
 
-### Anti-Pattern 3: Custom auth instead of Flask-Login
+**Dashboard nav update** — `admin/dashboard.html` gains links to Orders and Stats:
 
-**What people do:** Hand-roll session management with `session['user_id']` and a custom decorator.
+```jinja
+<a href="{{ url_for('admin.orders') }}">Đơn hàng</a>
+<a href="{{ url_for('admin.stats') }}">Thống kê</a>
+```
 
-**Why it's wrong:** Miss edge cases (session fixation, freshness, remember-me). Flask-Login's `user_loader`, `login_required`, and `current_user` solve this in 10 lines of setup.
+### 4. New Templates (placement matches existing structure)
 
-**Do this instead:** `flask_login.LoginManager`, `UserMixin` on the model, `@login_required` on admin routes, `@login_manager.user_loader` callback.
+```
+templates/
+├── public/
+│   └── product_detail.html       # MODIFIED — add OrderForm, conditional CTA
+└── admin/
+    ├── dashboard.html            # MODIFIED — add Orders/Stats nav links
+    ├── orders/
+    │   ├── list.html             # NEW — order list with status filter + pagination
+    │   └── detail.html           # NEW — order detail + status update form
+    └── stats.html                # NEW — revenue/profit/units/inventory cards
+```
 
-### Anti-Pattern 4: Raw SQL strings instead of SQLAlchemy ORM
+> All templates extend the existing `base.html` (VN charset, `lang="vi"`, flash zone). Admin templates are inside `templates/admin/` matching the existing split.
 
-**What people do:** `db.execute('SELECT * FROM products WHERE id = ?', (id,))` with manual row-to-dict conversion.
+### 5. New Forms Registration
 
-**Why it's wrong:** More code, no model reuse, harder to test, must handle connection lifecycle manually. ORM handles session management, lazy/eager loading, and gives you objects with methods.
+`OrderForm` and `OrderStatusForm` go in the existing `app/forms.py` (single file, matching `LoginForm` + `ProductForm`).
 
-**Do this instead:** SQLAlchemy models. `Product.query.get(id)` returns an object or None. `product.name`, `product.price` work naturally in templates.
+## Schema Migration Strategy (existing SQLite DBs)
 
-## Integration Points
+**Critical issue:** The v1.0 deploy uses `db.create_all()` in `init-db`. `create_all()` is **additive only** — it creates tables that don't exist but **never alters existing tables**. Adding `cost_price` to `Product` or `Order`/`orders` to an existing DB will be a no-op for the column, and the Order table won't exist for existing deployments.
 
-### External Services
+**Recommended approach — lightweight idempotent CLI migration:**
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Nginx | Reverse proxy + static file serving | Configure `proxy_pass http://127.0.0.1:8000`; serve `/static/uploads/` directly. |
-| Gunicorn | WSGI server running `wsgi:app` | Install `gunicorn` in requirements; run `gunicorn -w 4 -b 127.0.0.1:8000 wsgi:app`. |
-| Filesystem | `app/static/uploads/` directory | Add to `.gitignore`; create at deploy time with correct permissions. |
-| SQLite | SQLAlchemy `sqlite:///app.db` | No external service; file-based; backup via `cp data/app.db`. |
+Add a new CLI command `flask migrate-buy-system` (or extend `init-db`) that runs idempotent DDL:
 
-### Internal Boundaries
+```python
+@click.command('migrate-buy-system')
+@with_appcontext
+def migrate_buy_system():
+    """Add cost_price column + orders table for v1.1 buy system (idempotent)."""
+    from .models import Order  # ensures Order is registered
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| `app/__init__.py` ↔ `db.py` | `db.init_app(app)` | Factory calls init for each extension. |
-| `app/__init__.py` ↔ blueprints | `app.register_blueprint(bp)` | One line per blueprint; order doesn't matter for Flask. |
-| `app/__init__.py` ↔ `auth.py` | `login_manager.init_app(app)` | Flask-Login manager initialized in factory, routes defined in blueprint. |
-| `auth.py` ↔ `models.py` | `from .models import AdminUser` | User loader callback references the model. |
-| `public_bp` ↔ `admin_bp` | None (shared templates only) | No cross-imports. Admin and public are fully isolated. |
-| Templates ↔ `static/` | `url_for('static', filename=...)` | Jinja `url_for` generates correct paths; works in dev and prod. |
+    # 1. Create the orders table if it doesn't exist
+    db.create_all()  # safe: no-op for existing tables
+
+    # 2. Add cost_price column if missing (SQLite ALTER TABLE ADD COLUMN is idempotent-safe)
+    col = db.session.execute(
+        db.text("PRAGMA table_info(products)")
+    ).fetchall()
+    cols = {row[1] for row in col}  # column name is index 1
+    if 'cost_price' not in cols:
+        db.session.execute(db.text("ALTER TABLE products ADD COLUMN cost_price INTEGER"))
+        db.session.commit()
+        click.echo("Added cost_price column to products.")
+    else:
+        click.echo("cost_price column already present.")
+
+    # 3. orders table — create_all handles it, but verify
+    ord_col = db.session.execute(db.text("PRAGMA table_info(orders)")).fetchall()
+    if not ord_col:
+        click.echo("WARNING: orders table missing. Run flask db upgrade or flask init-db.")
+    else:
+        click.echo("orders table ready.")
+```
+
+> **Why not flask-migrate?** STACK.md marks flask-migrate 4.1.0 as "use once the product model is in active flux." v1.1 adds one column + one table — low churn. A 10-line idempotent ALTER + create_all is simpler, has no migration-file directory to commit, and works on the single-DB self-hosted model. If v1.2 adds more columns/tables, promote to flask-migrate at that point.
+
+**Rollback plan:** SQLite supports `ALTER TABLE DROP COLUMN` in 3.35+. If a deployer needs to revert, document the manual `DELETE FROM orders; DROP TABLE orders;` and `ALTER TABLE products DROP COLUMN cost_price;` — but this is an edge case (single admin self-hosted, no CI/CD rollback expected). No automated downgrade needed.
+
+**New deployment (greenfield):** `flask init-db` runs `db.create_all()` which includes the `orders` table and won't know about `cost_price` unless the model is already updated. So the deploy flow is:
+
+1. Update `models.py` (add `cost_price` to Product, add `Order`).
+2. `flask init-db` (creates tables including `orders`; does NOT add `cost_price` to existing tables, but greenfield DB gets it).
+3. `flask migrate-buy-system` (idempotent safety net — adds `cost_price` to existing DBs, no-op on greenfield).
+
+## Data Flow Changes
+
+### Order placement (public, unauthenticated)
+
+```
+Browser (product page)
+  → POST /products/<id> with OrderForm (CSRF token)
+  → public_bp.product_detail (POST branch)
+  → validate on_submit + product.status == 'available'
+  → snapshot product.name, price, cost_price into Order
+  → db.session.add(order) + commit
+  → flash success + redirect to same product detail
+  → Browser re-renders: form hidden, "Đơn hàng đã gửi" message shown
+```
+
+### Order tracking (admin, authenticated)
+
+```
+Browser (admin nav → Orders)
+  → GET /admin/orders?status=<int>
+  → admin_bp.orders: Order.query filtered by status, paginated
+  → list.html renders table (name, phone, product, qty, price, status badge, date, actions)
+  → click row → GET /admin/orders/<id>
+  → admin_bp.order_detail: OrderStatusForm preloaded, POST advances status
+  → commit + redirect (PRG pattern)
+  → list updates with new status badge
+```
+
+### Stats computation (admin, authenticated)
+
+```
+Browser (admin nav → Stats)
+  → GET /admin/stats
+  → admin_bp.stats: aggregate queries (SUM(price*qty), COUNT, SUM(quantity))
+  → stats.html renders cards: tổng doanh thu, lợi nhuận, số đơn, sản phẩm đã bán, tồn kho
+```
+
+## Build Order (dependency-respecting)
+
+The v1.1 milestone adds features incrementally. Suggested phase split for implementation:
+
+```
+Phase A: Data model + migration (Order, cost_price, schema CLI)
+Phase B: Public order form + product_detail integration + template
+Phase C: Admin orders list + detail + status flow + templates
+Phase D: Admin stats dashboard + templates + dashboard nav
+Phase E: Polish (validation, error handling, Vietnamese labels)
+```
+
+**Rationale:**
+- Phase A first — models must exist before any route references `Order` or `Product.cost_price`. The migration CLI must run before admin routes hit the `orders` table.
+- Phase B second — public order form depends only on `Order` model + `Product` (already exists). Can be tested independently.
+- Phase C third — admin order tracking depends on Phase A (model) + the orders table existing. List + detail + status flow are one unit.
+- Phase D fourth — stats depends on Phase A (orders populated) + Phase C (orders tracked). Can't show meaningful stats until orders exist with real statuses.
+- Phase E last — polish/validation is the same pattern as v1.0 Phase 4 (contrast, touch targets, VN labels, edge cases).
+
+**Critical integration points (explicit):**
+
+| Component | New or Modified | Touches |
+|-----------|-----------------|---------|
+| `models.py` | ADD `Order` model, ADD `cost_price` to `Product` | `db.Model`, `utcnow` (existing) |
+| `forms.py` | ADD `OrderForm`, `OrderStatusForm` | `FlaskForm`, validators (existing imports) |
+| `public.py` | MODIFY `product_detail` route: add `POST` method, `OrderForm` instantiation, snapshot+commit, conditional template rendering | existing `product_detail`, `Order`, `OrderForm` |
+| `admin.py` | ADD 3 routes: `orders`, `order_detail`, `stats` | existing `db`, `Order`, `OrderStatusForm`, `Product` |
+| `__init__.py` | ADD `migrate-buy-system` CLI command registration | existing `init_db_command` pattern |
+| `templates/public/product_detail.html` | MODIFY — embed `OrderForm`, conditional CTA | existing form rendering, Messenger strip |
+| `templates/admin/dashboard.html` | MODIFY — add Orders/Stats nav links | existing nav-list structure |
+| `templates/admin/orders/list.html` | NEW — order list table | `pagination` pattern from products/list.html |
+| `templates/admin/orders/detail.html` | NEW — order detail + status form | `OrderStatusForm`, status badges |
+| `templates/admin/stats.html` | NEW — stat cards | `format_price` filter (existing) |
+| `templates/admin/products/form.html` | MODIFY — add `cost_price` field (admin-only) | `ProductForm` gains field, rendered after `price` |
+
+## Anti-Patterns to Avoid (v1.1-specific)
+
+### Anti-Pattern: Storing live FK to product price in Order
+
+**What people do:** `Order.subtotal = product.price` computed at display time, or `Order.product_id` used to look up current price for revenue.
+
+**Why it's wrong:** Price changes after an order invalidates historical revenue. Profit calc breaks if `cost_price` changes.
+
+**Do this instead:** Snapshot `price_at_order`, `cost_price_at_order`, `product_name` into the Order row at creation. Revenue = `SUM(Order.price_at_order * Order.quantity)`. Profit = `revenue - SUM(Order.cost_price_at_order * Order.quantity)`.
+
+### Anti-Pattern: OrderItem table for single-product orders
+
+**What people do:** Create `Order` + `OrderItem` because "that's how e-commerce works."
+
+**Why it's wrong:** The v1.1 requirement is "each order = 1 product." An `OrderItem` join table adds a query + template layer for zero value.
+
+**Do this instead:** Flat `Order` model with `product_id`, `quantity`, `price_at_order`. If v1.2 adds cart functionality, refactor to Order+OrderItem at that point — not preemptively.
+
+### Anti-Pattern: Stats cached in summary table
+
+**What people do:** Maintain a `stats_daily` rollup table updated via triggers/cron.
+
+**Why it's wrong:** Single admin, low volume (<100 orders/month). Trigger overhead on every order write. Cron adds deployment complexity.
+
+**Do this instead:** Compute stats at request time via SQL aggregates. If v1.2 crosses 1000 orders or 100 daily visits, add a materialized summary — not before.
+
+### Anti-Pattern: Deleting orders to "undo"
+
+**What people do:** `DELETE FROM orders WHERE id = ?` when admin cancels.
+
+**Why it's wrong:** Stats are cumulative (revenue, units sold). Deleting an order creates a gap in the historical record. Also, "cancelled" is a valid business state.
+
+**Do this instead:** Add `ORDER_STATUS_CANCELLED` (0). Set `status = 0` instead of deleting. Exclude cancelled from revenue/units-sold aggregates (`WHERE status >= SHIPPED` for units sold, `WHERE status NOT IN (CANCELLED)` for revenue if desired).
+
+## Scalability Notes (v1.1 scope)
+
+| Scale | Behavior | V1.1 Impact |
+|-------|----------|-------------|
+| 0-100 orders | SQL aggregates on `orders` table, single AdminUser writer | Stats queries are instant (<50ms). No caching needed. |
+| 100-1000 orders | Pagination on order list (20/page). Stats still fast. | Phase C pagination handles it. Stats aggregation still sub-second. |
+| 1000+ orders | Consider `SELECT ... INTO` cached summary, or index `status`/`created_at`. | Post-v1.1 concern. Add index on `orders(status, created_at)` if slow. |
+| Concurrent admin writes | SQLite WAL allows one writer. Single admin = no contention in practice. | No change needed. busy_timeout=30s + retry in PITFALLS.md covers edge cases. |
 
 ## Sources
 
-- Flask Application Factory pattern: https://flask.palletsprojects.com/en/stable/patterns/appfactories/
-- Flask Blueprints documentation: https://flask.palletsprojects.com/en/stable/blueprints/
-- Flask-Login documentation: https://flask-login.readthedocs.io/en/latest/
-- Flask-Admin (not recommended for this use case): https://flask-admin.readthedocs.io/en/latest/
-- Flask File Uploads: https://flask.palletsprojects.com/en/stable/patterns/fileuploads/
-- Flask SQLite3 pattern: https://flask.palletsprojects.com/en/stable/patterns/sqlite3/
-- Flask-Nginx deployment: https://flask.palletsprojects.com/en/stable/deploying/nginx/
-- Flask-Gunicorn deployment: https://flask.palletsprojects.com/en/stable/deploying/gunicorn/
-- Context7 documentation: Flask (/pallets/flask), Flask-Login (/maxcountryman/flask-login), Flask-Admin (/pallets-eco/flask-admin)
+- Codebase inspection: `app/__init__.py` (create_app, config, extensions, blueprints), `app/models.py` (Product, ProductImage, AdminUser), `app/admin.py` (routes, before_request protection), `app/public.py` (product_detail, search, pagination), `app/forms.py` (Flask-WTF patterns), `app/templates/` (Jinja extends, csrf_token, wtf macro pattern).
+- PROJECT.md v1.1 requirements: order form (tên, SĐT, địa chỉ, số lượng, ghi chú); cost price optional/admin-only; status flow (đã gói → đã gửi → đã nhận); stats (revenue, profit, order counts, products sold, inventory).
+- STACK.md: Flask 3.1.3, Flask-SQLAlchemy 3.1.1, Flask-Login 0.6.3, Flask-WTF 1.3.0, SQLite WAL + busy_timeout=30s, no flask-migrate (deferred to schema churn).
+- SQLite PRAGMA `table_info()` for idempotent column-existence check (standard SQLite 3.34+, already running 3.43.1 per PITFALLS.md).
+- Werkzeug `generate_password_hash` / Flask-Login session model already proven in v1.0.
 
 ---
-*Architecture research for: Flask product catalog web app (self-hosted, single admin, SQLite, Vietnamese)*
-*Researched: 2026-07-31*
+*Architecture research for: extending StoreWeb v1.0 (Flask product catalog) with order placement, order tracking, and stats dashboard (v1.1 Buy System)*
+*Researched: 2026-08-02*
+*Confidence: HIGH — grounded in codebase inspection and v1.0 patterns; schema-migration approach is the single LOW-confidence item (no flask-migrate yet for existing-DBs)*

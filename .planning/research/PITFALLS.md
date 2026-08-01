@@ -1,343 +1,376 @@
-# Pitfalls Research
+# Pitfalls Research — Adding Orders + Tracking + Stats to Existing Flask Storefront
 
-**Domain:** Self-hosted Flask product catalog + admin (single admin, SQLite, image uploads, Vietnamese site)
-**Researched:** 2026-07-31
-**Confidence:** HIGH (verified against installed Flask 3.0.0, Werkzeug 3.0.0, Flask-SQLAlchemy 3.1.1, SQLite 3.43.1 on Python 3.11)
+**Domain:** Adding order placement (public form), order status tracking, optional cost price, and revenue/profit stats to an existing Flask + SQLite storefront (StoreWeb v1.1 Buy System)
+**Researched:** 2026-08-02
+**Confidence:** HIGH (verified against installed Flask 3.1.3, Flask-SQLAlchemy 3.1.1, SQLite 3.43.1, wtforms validators inspected in-environment; VN phone/address formats from ITU E.164 + Viettel/Vinaphone/Mobifone standards)
 
 ## Critical Pitfalls
 
-### Pitfall 1: Flask Debug Mode + Werkzeug Debugger in Production
+### Pitfall 1: Blind `ALTER TABLE ADD COLUMN` Breaks Existing DBs
 
 **What goes wrong:**
-Running the app with `debug=True` or using `flask run` (which sets `debug=True` by default) exposes the Werkzeug interactive debugger. The debugger allows executing arbitrary Python code in the browser — anyone who can reach the site can run `import os; os.system('rm -rf /')`. The debugger is "protected" by a PIN shown in the server console, but the PIN is derivable from machine MAC address, username, and modname — all obtainable through other vulnerabilities.
+The existing `products` table has rows. Adding `cost_price INTEGER` via `ALTER TABLE products ADD COLUMN cost_price INTEGER` works, but the column is `NULL` for all existing rows. If the application immediately starts summing `SUM(price - cost_price)` for profit, every existing row produces `NULL` (because `100000 - NULL = NULL` in SQL), and `SUM` of that is `NULL` — the stats dashboard shows zero profit, and `SUM(price - cost_price)` silently returns `NULL` instead of the revenue contribution. Admin sees "0₫ lợi nhuận" and thinks the math is broken.
 
 **Why it happens:**
-Developers start with `flask run` because it is the documented quick-start. They forget to disable debug or switch to gunicorn before going live. Self-hosted users with limited ops experience may not know the difference between dev server and production WSGI server.
+- SQLite `ALTER TABLE ADD COLUMN` does not support defaults on nullable columns in older patterns — developers add the column, then the app code assumes it is never NULL.
+- The existing `init_db` command uses `db.create_all()` (DDL CREATE only, no ALTER). There is **no migration infrastructure** (flask-migrate / Alembic not installed per requirements.txt) and **no schema-version table**.
+- Cost price is "optional" so the column should be nullable, but the profit formula treats NULL as 0.
 
 **How to avoid:**
-1. Use `flask run` only for local development.
-2. For production always use a WSGI server (gunicorn): `gunicorn --bind 0.0.0.0:8000 app:app`
-3. Set `app.debug = False` in production config, or use environment variable: `FLASK_ENV=production python app.py`
-4. Add a startup check that crashes if `app.debug` and not localhost.
-5. Never set `DEBUG = True` in committed config files.
+1. Add the column with an explicit default: `ALTER TABLE products ADD COLUMN cost_price INTEGER DEFAULT 0` — existing rows get `0`, new NULL-safe.
+2. In SQLAlchemy model, set `cost_price = db.Column(db.Integer, default=0, nullable=False, server_default='0')` — dual default (Python + DB) for safety.
+3. In profit queries, defensively coalesce: `SUM(price - COALESCE(cost_price, 0))` or wrap in Python with `(p.price - (p.cost_price or 0))`.
+4. Guard: if `cost_price` is 0 (unset), label profit as "chưa nhập giá nhập" rather than showing a misleading 0₫.
 
 **Warning signs:**
-- The console shows ` * Debug mode: on` on startup
-- Visiting `/console` returns the debugger PIN entry page (instead of 404)
-- Error pages show full Python traceback with local variables
+- Stats dashboard shows `0₫` revenue/profit or `None` after schema change
+- `SELECT SUM(price - cost_price) FROM products` returns NULL for old rows
+- `flask init-db` still uses `create_all` with no ALTER path
 
-**Phase to address:** Phase 1 (Initial Scaffold) — set up proper config loading with environment-based debug, add health check route, document dev vs prod startup commands.
+**Phase to address:** Phase (Order + Cost) — schema migration step must handle existing rows with a default; stats phase must coalesce NULLs.
 
 ---
 
-### Pitfall 2: SECRET_KEY Not Set (Session Forgery)
+### Pitfall 2: Public Order Form Has No Bot Protection → Spam / Fake Orders
 
 **What goes wrong:**
-Flask signs session cookies with `SECRET_KEY`. If it is `None` (the default), Flask logs a `RuntimeError` but the app continues to start — except sessions silently fail. Users cannot log in, `session['logged_in'] = True` does nothing, and the admin login appears broken. Even worse: if a developer hardcodes a weak key like `'secret'` into version control, attackers who see the source can forge any session cookie.
+The order form is public (`/products/<id>` page) and requires no auth. No CSRF on public forms (CSRFProtect is enabled globally but only protects POST routes that use form.validate — a simple `<form>` POST without a CSRF token gets 400). Even with CSRF, a bot that fetches the page gets the token and can spam. Within hours of launch: hundreds of fake orders, SMS gateway spam if phone is sent externally, admin inbox flooded with garbage.
 
 **Why it happens:**
-`SECRET_KEY` is not set by default — it is `None`. The Flask quick-start tutorials sometimes omit it for brevity. When the login page "doesn't work," the developer may chase other causes (database, form validation) instead of checking `app.config['SECRET_KEY']`.
+- The existing app only has CSRF on admin forms (Flask-WTF `CSRFProtect` is global, but public pages currently have no forms). Adding a public form means CSRF is already on — good — but CSRF alone does not stop automated form fillers.
+- No rate limiting on the public order endpoint. nginx rate-limits `/admin/` and `/login` but **not** the public product detail route (that's by design for browsing).
+- No honeypot field, no CAPTCHA, no server-side throttle.
 
 **How to avoid:**
-1. Set `SECRET_KEY` from environment variable at startup: `app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(32))`
-2. For the single-admin use case: generate a strong key once and put it in a `.env` file: `python -c "import secrets; print(secrets.token_hex(32))"`
-3. Fail fast if SECRET_KEY is missing in production: check on startup and `raise RuntimeError`.
-4. Never commit `.env` files to git (add to `.gitignore`).
+1. **Honeypot field**: Add a hidden text field `website` (or `honeypot`) with CSS `display:none` and `tabindex=-1`. Bots fill it, humans don't. If non-empty on submit → silently reject (return 200 OK to not alert the bot).
+2. **Server-side rate limit per IP**: Track `order_count` per IP in a short-window counter (in-memory dict with TTL, or sqlite `orders.created_at` count in last N minutes). Block > N orders from same IP in 1 hour. Do NOT make this a hard dependency — degrade gracefully if store restarts.
+3. **CSRF token on public form**: `form.hidden_tag()` renders it. Must be present, otherwise Flask-WTF returns 400 before the honeypot even runs.
+4. **Phone validation** (see Pitfall 5) — invalid phone is a cheap bot signal.
 
 **Warning signs:**
-- Login form submits successfully but user is not logged in on next page
-- Console shows `UserWarning: The 'SECRET_KEY' should be set`
-- Session cookie value starts with `'` (invalid signature)
+- Orders table grows by 50+ rows in first hour after launch with no marketing
+- `phone` field contains "12345678901234567890" or random strings
+- `name` field contains "asdf" or HTML
 
-**Phase to address:** Phase 1 (Initial Scaffold) — create `.env.example`, load config from environment, add startup validation.
+**Phase to address:** Phase (Order Placement) — honeypot + rate limit are must-fix MVP before public launch. Do not ship public order form without at least honeypot.
 
 ---
 
-### Pitfall 3: Image Upload Path Traversal + Extension-Only Validation
+### Pitfall 3: Profit Math Uses Float or Neglects NULL Cost Price
 
 **What goes wrong:**
-Developers use `secure_filename()` from Werkzeug and assume it is sufficient. `secure_filename` strips path separators (`../`, `..\`) and non-ASCII characters, producing safe filenames. But it does NOT validate file type — `secure_filename('shell.php')` returns `'shell.php'`. If the uploads directory is served directly by nginx with PHP/CGI enabled, an attacker can upload a PHP webshell and execute it. Even without PHP, a `.html` file in the served directory causes stored XSS. Additionally, `secure_filename` strips Vietnamese characters — `ảnh_sản_phẩm.jpg` becomes `anh_san_pham.jpg`, losing the meaningful filename.
+Developer stores `cost_price` as `Float` (e.g., `150000.50`). Profit = `SUM(price - cost_price)`. Due to IEEE 754, `950000 - 150000.50` yields `799999.4999999999` — displayed as `799,999.50₫` with a confusing half-dong fractional. Worse, if some products have `cost_price = NULL`, the subtraction yields NULL, and `SUM` of a set with any NULL is NULL — total profit collapses to 0 or NULL.
 
 **Why it happens:**
-Tutorial code often checks only the file extension (`file.filename.endswith('.jpg')`). Content-Type headers can be spoofed. Magic byte verification is rarely shown in Flask tutorials. Developers do not consider that nginx might execute uploaded files.
+- Price is already Integer VND (good, per existing convention). Developer "improves" cost_price to Float to support fractional cents — VND has no subunit; this is incorrect.
+- SQLAlchemy `Float` type maps to SQLite `REAL` — binary floating point, exact same problem.
+- `COALESCE` / `|| 0` not applied in queries or templates.
 
 **How to avoid:**
-1. **Validate file extension** against a strict allowlist: `{'.jpg', '.jpeg', '.png', '.webp'}`.
-2. **Validate magic bytes** server-side — read first bytes and compare against known signatures:
-   - JPEG: `FF D8 FF`
-   - PNG: `89 50 4E 47 0D 0A 1A 0A`
-   - GIF: `47 49 46 38`
-   - WebP: starts with `RIFF` then `WEBP` at offset 8
-3. **Use Pillow to verify and re-encode**: `from PIL import Image; img = Image.open(file); img.verify()` then re-save to enforce dimensions and strip embedded payloads.
-4. **Limit image dimensions**: reject images larger than e.g. 2000x2000px (prevents decompression bomb DoS).
-5. **Store uploads outside web root** or serve via `send_from_directory` (never direct nginx path with CGI).
-6. **Set `MAX_CONTENT_LENGTH`**: `app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024` (16MB) to prevent denial-of-service via large uploads.
+1. **Store `cost_price` as `Integer`** — same as `price`. VND cost price is a whole number. If admin needs to enter `150,5`, that's a UX input formatting concern, not a storage concern — store `150500`.
+2. **Coalesce in queries**: Always use `(Product.price - func.coalesce(Product.cost_price, 0))` in SQLAlchemy, or `((p.price - (p.cost_price or 0)) for p in products)` in Python.
+3. **Template-level guard**: If `product.cost_price` is 0 or None, show `--` or "chưa nhập" instead of `0₫` in profit breakdown, so admin knows to enter cost.
+4. **Use the existing `format_price` filter** — it already does `int(value)` and comma formatting. Never bypass it for cost-related display.
 
 **Warning signs:**
-- `secure_filename('shell.php.jpg')` returns `'shell.php.jpg'` — double extension preserved
-- Upload directory accepts any file type
-- `MAX_CONTENT_LENGTH` not configured (unlimited upload size)
-- Uploaded files accessible at `/uploads/shell.php` and executing code
+- Profit displays as `799,999.50₫` or `799,999.4999999999₫`
+- Stats dashboard shows `0₫` profit right after migration even though products have cost_price set
+- `cost_price` column type is `Float` or `Numeric`
 
-**Phase to address:** Phase 2 (Admin + Image Upload) — implement Pillow-based validation, magic byte check, MAX_CONTENT_LENGTH, and secure storage path.
+**Phase to address:** Phase (Stats) — integer math enforced; this is a must-fix for correct profit display. Also affects Phase (Cost Price) schema definition.
 
 ---
 
-### Pitfall 4: SQLite "database is locked" Under Gunicorn Multi-Worker
+### Pitfall 4: SQLite Write Locks on Concurrent Order + Admin Saves → 500 Errors
 
 **What goes wrong:**
-SQLite is a file-based database. When gunicorn forks N workers (default: `CPU count * 2 + 1`), each worker process opens its own SQLite connection. SQLite allows concurrent reads but only one writer at a time. Under concurrent admin writes (e.g., admin saves two products simultaneously), the second write receives `sqlite3.OperationalError: database is locked`. This results in HTTP 500 errors or silently dropped writes. Even with WAL mode enabled, the problem persists for writes — WAL only separates readers and writers.
+Orders are submitted by public users (concurrent inserts on `orders` table). Admin simultaneously edits products or updates order status (concurrent writes on `products`/`orders`). SQLite only allows one writer at a time. Default `busy_timeout` in the app config is `timeout: 30` (30 seconds via SQLALCHEMY_ENGINE_OPTIONS), but the actual SQLite pragma observed on the running DB is `5000` (5 seconds) — a discrepancy. With 5s timeout and a write-heavy window, the second writer gets `sqlite3.OperationalError: database is locked` → HTTP 500.
 
 **Why it happens:**
-Flask-SQLAlchemy defaults connect to SQLite without `connect_args` for timeout or WAL mode. Developers deploy with `--workers 4` and assume SQLite handles concurrency like PostgreSQL. The admin interface (single-user) rarely triggers concurrent writes during development, so the issue only surfaces under production load.
+- SQLite is file-based; WAL mode separates readers from one writer, but **still only one writer at a time**.
+- The existing `init_db` script sets `busy_timeout` at 5000ms via the SQLAlchemy `connect_args` — but the `create_app` in `__init__.py` sets `timeout: 30` (30 seconds). The **5000ms value is what's actually on the DB** (observed via `PRAGMA busy_timeout`), meaning the app-config value of 30 may not be taking effect for new connections, or the DB was initialized with a different config.
+- No retry logic on writes.
 
 **How to avoid:**
-1. **Enable WAL mode** in Flask-SQLAlchemy config:
+1. **Standardize busy_timeout**: Set `SQLALCHEMY_ENGINE_OPTIONS = {'connect_args': {'timeout': 30}}` in `create_app` and verify the pragma reads 30000 on new connections. The current 5000ms is too short under write contention.
+2. **Retry on `OperationalError`**: Wrap order-create and order-status-update in a retry loop (3 attempts, 100ms backoff). This is the standard Flask-SQLAlchemy + SQLite pattern.
+3. **Keep gunicorn workers low**: The deploy docs say `2×CPU+1` workers (e.g., 5). With 5 workers each having a separate SQLite connection, 5 concurrent writes is the realistic ceiling before lock contention. For a low-volume store this is fine, but the retry loop must exist.
+4. **Batch order inserts**: Don't do multiple `db.session.commit()` calls per order. Insert order + decrement stock in a single commit.
+
+**Warning signs:**
+- HTTP 500 on order submission during a traffic spike
+- `sqlite3.OperationalError: database is locked` in gunicorn logs
+- Admin gets 500 when updating order status at the same time a customer submits an order
+
+**Phase to address:** Phase (Order Placement + Status Tracking) — retry wrapper on all writes is must-have. busy_timeout mismatch should be resolved in Phase 1 (Deployment) config.
+
+---
+
+### Pitfall 5: Phone Number and Address Validation Too Loose or Too Strict for VN
+
+**What goes wrong:**
+Developer applies a generic `Regexp` validator. Two failure modes:
+- **Too loose**: `+84901234567` passes but so does `123456789` or `abcd1234` — admin can't call the customer.
+- **Too strict**: Validator rejects `+84 90 123 4567` or `09012345678` (with country code variants) — legitimate customers get blocked, abandon checkout, email admin complaining "form broken."
+Address is free-text and a bot can stuff it with 10KB of garbage, breaking the admin UI.
+
+**Why it happens:**
+- VN phone numbers: 10-11 digits. Mobile prefixes: 09x, 08x, 03x, 05x, 07x, 08x (Viettel, MobiFone, Vinaphone, Vietnamobile, Gmobile, ITel). With country code: `+84` replaces leading `0` → `+84901234567` (11 digits after +84). Landline: 10 digits city code (024 Hanoi, 028 Ho Chi Minh) or 11 digits provincial (029xxxxxxx).
+- Regex must accept: `0901234567`, `090 123 4567`, `+84901234567`, `+84 90 123 4567`, `035 1234 5678`. Must reject: `123`, `+1234567890`, `abcdefghij`.
+- Address has no standard format — it's free text. Length must be capped.
+
+**How to avoid:**
+1. **Phone**: Strip spaces/dashes, then validate the normalized string. Pattern: `^(0[3-9]\d{8}|02\d{8,9}|\+84[3-9]\d{7,8}|\+842\d{8,9})$` after removing spaces. Accept `0` prefix OR `+84` but not both. Display what the user typed in the admin panel (don't reformat — they may have typed a specific format).
+2. **Address**: `StringField` with `Length(min=10, max=500)`. 10 chars minimum to reject garbage like "a" — but not too tight, rural addresses can be long.
+3. **Name**: `Length(min=2, max=100)` — reject 1-character names, allow 2-char names (single-word surnames like "Minh" are fine, but "M" alone is not a real name).
+4. **Note field**: `Length(max=2000)` — cap to prevent multi-KB bot spam.
+
+**Warning signs:**
+- Order form accepts phone = "123" or rejects "+84 90 123 4567"
+- Address field contains 50KB of HTML from a bot
+- Admin calls a phone number from an order and it's disconnected because the number was malformed
+
+**Phase to address:** Phase (Order Placement) — phone/address validators are must-fix. Test with real VN number formats.
+
+---
+
+### Pitfall 6: Order Status Flow Allows Invalid Transitions (Skipped Steps, Regressions)
+
+**What goes wrong:**
+Admin updates status directly via a dropdown `<select>` with all 3 options. A careless click sets `delivered` on an order that was never `shipped` — or worse, sets `available` back to `packed` after delivery. The stats count "delivered" orders as revenue even though the package never reached the customer.
+
+**Why it happens:**
+- The status field is just an `Enum` or `String` column with no enforcement of sequential flow.
+- The form renders all statuses as selectable options.
+- No state machine constraint on transitions.
+
+**How to avoid:**
+1. **Model-level transition guard**: Define valid transitions explicitly:
    ```python
-   app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-       'connect_args': {
-           'timeout': 30,
-           'isolation_level': None,
-       },
-       'pool_pre_ping': True,
+   VALID_TRANSITIONS = {
+       'pending': {'packed', 'cancelled'},      # placed → packed (or cancelled by admin)
+       'packed': {'shipped', 'cancelled'},       # packed → shipped
+       'shipped': {'delivered', 'returned'},     # shipped → delivered
+       'delivered': set(),                        # terminal
+       'cancelled': set(),                        # terminal
    }
    ```
-   Also run `PRAGMA journal_mode=WAL` on connection (see Flask-SQLAlchemy event listener pattern below).
-
-2. **Set busy_timeout**: `connect_args={'timeout': 30}` gives SQLite 30 seconds to wait for a lock before failing.
-
-3. **Do NOT use `gunicorn --preload`**: preloading forks workers after the DB connection is opened, sharing one connection across processes — causes lock corruption. Without `--preload`, each worker opens its own connection.
-
-4. **Add retry logic** for write operations (retry on `OperationalError` with exponential backoff).
-
-5. **Connection-per-request pattern**: Flask-SQLAlchemy's scoped_session creates a new connection per request by default, which is correct. Ensure it is not overridden.
+   Before updating, check `new_status in VALID_TRANSITIONS.get(current_status, set())`. If not → flash error, don't save.
+2. **Form-level**: Only render valid next statuses in the dropdown. If current is `packed`, show `shipped` and `cancelled` only — don't render `delivered` or `pending`.
+3. **Add `cancelled` status** — don't rely on "delete" for order cancellation. Deleted orders are invisible in stats; cancelled orders preserve the audit trail (order was placed, then cancelled). This is critical for honest revenue reporting.
+4. **Timestamp each transition**: `packed_at`, `shipped_at`, `delivered_at` columns — not a single `updated_at`. Stats need "orders shipped this week" not "orders touched this week."
 
 **Warning signs:**
-- Console shows `sqlite3.OperationalError: database is locked`
-- Admin saves fail intermittently under concurrent edits
-- Gunicorn started with `--preload` flag
+- An order jumps from `pending` to `delivered` in the admin panel (no ship step)
+- Admin can set an order back to `pending` after marking `shipped`
+- Stats count cancelled orders as revenue
 
-**Phase to address:** Phase 2 (Admin) or Phase 3 (Deployment) — configure engine options, test concurrent writes, add retry logic.
+**Phase to address:** Phase (Order Tracking) — state machine is must-fix. Must include `cancelled` as a non-revenue state.
 
 ---
 
-### Pitfall 5: Float Prices for VND (Precision Loss + Incorrect Formatting)
+### Pitfall 7: Stats Count Pending/Cancelled Orders as Revenue
 
 **What goes wrong:**
-Developers store prices as `Float` or `DECIMAL` in the database. Simple operations like `price * 0.9` produce results like `89999.99999999999` due to IEEE 754 floating-point representation. Display formatting like `f"{price:,.2f} VND"` produces `89,999.99 VND` — the `.99` suffix implies cents, but VND has no subunit in practice. Worse, `float` accumulation errors compound over multiple operations (e.g., order totals, discounts). Vietnamese customers see confusing `.99` suffixes on prices that should be whole numbers.
+Admin sees "15,000,000₫ doanh thu" on the stats dashboard and plans inventory re-order based on that number. In reality, 4 of those 15 orders are still `pending` (never paid for, never shipped), and 2 are `cancelled`. Real revenue is 9 orders = 9,000,000₫. Inventory is overstated, cash flow is worse than expected.
 
 **Why it happens:**
-Most price-handling tutorials use `float` because it is the default numeric type in JSON and Python. Developers from USD/EUR backgrounds assume 2 decimal places are needed. The floating-point errors are small enough that they go unnoticed in dev but compound in production.
+- `SUM(price * quantity)` over ALL orders in the table, without filtering by status.
+- "Doanh thu" (revenue) is conflated with "orders placed." In e-commerce, revenue is recognized at shipment (or delivery), not at order placement.
+- No distinction between gross (all orders) and net (completed-only) metrics.
 
 **How to avoid:**
-1. **Store prices as `Integer`** in the database — VND has no subunit, store values directly (e.g., 100000 for 100,000 VND).
-2. **Do all money math in integers** — use integer multiplication/division (e.g., `price * 9 // 10` for 10% discount).
-3. **Format with no decimal places**: `f"{price:,} VND"` produces `100,000 VND`.
-4. **Display with thousand separator**: `{{ product.price | int | format_price }}` in Jinja2.
-5. If sub-cent precision is ever needed (it is not for VND), use `decimal.Decimal` — never `float`.
+1. **Define revenue precisely**: Revenue = `SUM(price * quantity)` WHERE `status IN ('shipped', 'delivered')`. Only shipped orders have left the warehouse with intent to be paid on delivery (COD model). Pending/cancelled orders are not revenue.
+2. **Show both metrics**: "Tạm tính: X₫" (all orders) and "Doanh thu thực tế: Y₫" (shipped/delivered only). Admin needs both to spot the pipeline.
+3. **Profit = (revenue) - (cost of shipped items)**: `SUM((price - cost_price) * quantity) WHERE status IN ('shipped', 'delivered')`. Cost of `pending` orders is inventory, not expense.
+4. **Products sold** = `SUM(quantity) WHERE status IN ('shipped', 'delivered')` — not pending.
+5. **Inventory impact**: Only `delivered` orders should decrement stock in a strict model, but for a small store, `shipped` is the practical point. Document this decision — it's a business rule, not a technical one. Make it consistent.
 
 **Warning signs:**
-- Price column type is `Float` or `DECIMAL` in model definition
-- Template shows `.00` or `.99` after prices
-- Price calculations use `/` instead of `//` for integer division
+- Stats show revenue higher than actual cash in hand
+- "Products sold" count includes pending orders that never shipped
+- No distinction between "orders placed" and "orders completed" in the UI
 
-**Phase to address:** Phase 1 (Data Model) — define price as `db.Integer`, add Jinja2 filter for formatting, document the convention.
+**Phase to address:** Phase (Stats Dashboard) — revenue definition is must-fix. Ship the dashboard with status-filtered queries; flag this explicitly in the UI.
 
 ---
 
-### Pitfall 6: Missing `html lang="vi"` and `<meta charset="utf-8">` (Mojibake / Wrong SEO)
+### Pitfall 8: Cost Price Visible to Public / Not Properly Hidden
 
 **What goes wrong:**
-Vietnamese text appears as tofu (`&#7883;` or `Ã¡»` ) or garbled in the browser. Search engines index the page without knowing it is Vietnamese, leading to wrong language in search results. The admin interface shows question marks for Vietnamese characters in input fields.
+`cost_price` is an optional field on `ProductForm` in `form.html`. A careless template edit renders `{{ product.cost_price | format_price }}` on the public product detail page or includes it in a JSON API. Competitors scrape the page, see "I bought this at 80,000₫, selling at 150,000₫" — margin leakage.
 
 **Why it happens:**
-- Python source files saved in cp1258 or UTF-8 without declaration
-- SQLite column encoding mismatch (rare — SQLite defaults to UTF-8)
-- Flask templates render with default Jinja2 encoding but HTML document lacks `<meta charset="utf-8">`
-- HTTP response missing `Content-Type: text/html; charset=utf-8`
-- Missing `<html lang="vi">` tells browser and SEO crawlers the language
+- `cost_price` is a model column on the same `Product` object the public template receives. Jinja2 renders any attribute.
+- No template review catches the leak.
+- If a future JSON API endpoint is added, `Product.to_dict()` or `schema.dump(product)` includes all columns by default.
 
 **How to avoid:**
-1. Save all Python source files as UTF-8 (Python 3 defaults to UTF-8).
-2. Add `<meta charset="utf-8">` as the first `<head>` element in every template.
-3. Set `<html lang="vi">` on the root HTML element.
-4. Add `Content-Language: vi` or `Content-Language: vi-VN` HTTP header.
-5. Ensure `app.json.ensure_ascii = False` for JSON API responses with Vietnamese.
-6. For Jinja2 templates, no extra configuration needed — Jinja2 defaults to UTF-8.
-7. Verify end-to-end: SQLite stores UTF-8, Python reads UTF-8, Jinja2 renders UTF-8, browser interprets UTF-8.
+1. **Template discipline**: `cost_price` NEVER appears in any public template. Audit: grep `cost_price` in `templates/public/`.
+2. **Property access, not column**: Make `cost_price` a column but access it only via `current_user.is_authenticated` guard in admin templates — not a technical guard, but a code review checkpoint.
+3. **Exclude from JSON**: If serializing products, explicitly list fields: `product.to_dict(fields=['id', 'name', 'price', ...])` — never `vars(product)` or automatic schema dumping.
 
 **Warning signs:**
-- Characters appear as `&#7883;` (HTML entities) in browser source
-- Vietnamese characters show as black diamonds or question marks
-- Google Search Console reports wrong language detected
+- Public product detail page shows "Giá nhập: 80,000₫"
+- API endpoint returns cost_price in JSON
+- Admin form has cost_price visible to non-admin (shouldn't happen with existing `@login_required` on admin routes, but the field must not leak to public templates)
 
-**Phase to address:** Phase 1 (Scaffold) — set up base template with correct charset and lang, add `ensure_ascii = False` to Flask JSON config, document file encoding requirements.
+**Phase to address:** Phase (Cost Price) + Phase (Order Placement public form) — must audit templates. Must-fix before cost_price is added.
 
 ---
 
-### Pitfall 7: Image Upload Memory Exhaustion (Decompression Bomb)
+## Moderate Pitfalls
+
+### Pitfall 9: Stock Decrement on Pending Order Blocks Real Sales
 
 **What goes wrong:**
-An attacker uploads a small file (e.g., 10KB) that is actually a 50,000x50,000 pixel PNG that decompresses to ~2GB in memory. When Pillow opens or the web server buffers the file, it exhausts server RAM, crashes the worker, and potentially the entire server. Even legitimate users can accidentally upload large photos from modern phone cameras.
+Order is placed (status `pending`). Code immediately does `product.quantity -= order.quantity` and commits. A bot spammed 50 fake orders — product stock shows 0, real customer sees "Hết hàng" and leaves. Admin cancels the fake orders, restocks — but during the window, real sales were lost.
 
 **Why it happens:**
-Flask's default behavior reads the entire uploaded file into `request.files` before the application sees it. `Image.open()` does not limit pixel dimensions. Developers assume `MAX_CONTENT_LENGTH` protects against this, but a 10KB file passes the size check while its decompressed form is enormous.
+- Stock decrement is tied to order creation, not order confirmation (`shipped`).
+- No way to distinguish "reserved" inventory from "sold" inventory.
 
 **How to avoid:**
-1. **Use Pillow to verify dimensions**: After opening with `Image.open()`, check `img.width` and `img.height` against a maximum (e.g., 2000px).
-2. **Call `img.verify()`** before processing — verifies integrity without full decompression.
-3. **Re-encode the image** after validation (stripping EXIF and recompressing to known-safe dimensions).
-4. **Set `MAX_CONTENT_LENGTH`** as a first line of defense against multi-GB uploads.
-
-```python
-from PIL import Image
-img = Image.open(file.stream)
-img.verify()  # Raises exception if corrupt
-img = Image.open(file.stream)  # Re-open after verify
-if img.width > 2000 or img.height > 2000:
-    raise ValueError("Image too large")
-img.thumbnail((800, 800))  # Resize to fixed max
-img.save(dest_path)  # Re-encode
-```
+1. **Do NOT decrement stock on order placement**. Decrement on `shipped` status transition (the point where the package leaves the warehouse). This is the standard e-commerce model.
+2. If admin wants "reserved" stock (order placed but not shipped), add a `reserved_quantity` column — but for a solo seller MVP, just document: "Tồn kho giảm khi đơn hàng được gửi, không giảm khi đặt."
+3. If stock reaches 0 during a `pending` window, the product shows "hết hàng" — but the admin can still see the pending order and manually restock if needed.
 
 **Warning signs:**
-- Upload works in dev but crashes server with large photo from real phone camera
-- Memory usage spikes when opening uploaded images
-- No dimension check after `Image.open`
+- Product shows "Hết hàng" but admin dashboard shows the product has no `shipped` orders
+- Real customer abandons checkout because "Hết hàng" but the item is physically still in stock
 
-**Phase to address:** Phase 2 (Image Upload) — implement Pillow verification, resize on save, set MAX_CONTENT_LENGTH.
-
----
-
-## Technical Debt Patterns
-
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Use `db.String` length 255 for all text fields | No need to think about limits | Product descriptions get truncated | Never — set explicit lengths from the start |
-| Store prices as Float | Familiar, JSON-compatible | Precision errors compound | Never for VND — use Integer |
-| Skip `MAX_CONTENT_LENGTH` | No upload size limit issues | DoS via large uploads exhausts disk/RAM | Never — 16MB max is plenty for product photos |
-| Use Flask-SQLAlchemy default session | No migration setup needed | Schema changes require manual DB edits | First phase only — migrate to Flask-Migrate for real project |
-| Serve uploads via Flask route | Works without nginx setup | Slow, blocks workers on large images | Dev only — nginx must serve uploads in production |
-| Hardcode `.env` values in config | No `.env` file management | Secrets in version control | Never — `.env` is the minimum |
-| Skip `gunicorn --max-requests` | Simpler config | Workers leak memory over time | Acceptable for low-traffic sites (< 100 req/day) |
+**Phase to address:** Phase (Order Placement + Stock) — stock decrement timing is must-fix for MVP correctness. Ship with "decrement on shipped" and document.
 
 ---
 
-## Integration Gotchas
+### Pitfall 10: Orders Table Schema Not Versioned — `init-db` Won't Migrate Existing DBs
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| **nginx** | Serve uploads directly from `/uploads/` with PHP/CGI enabled | Store uploads outside web root or deny execution in uploads dir; use `send_from_directory` |
-| **gunicorn** | Start with `--preload` for faster boot | Never use `--preload` with SQLite — each worker needs its own DB connection |
-| **SQLite** | Deploy with 4+ workers, no WAL, no timeout | Use WAL mode + `busy_timeout=30s` + consider 1-2 workers for write-heavy admin |
-| **Pillow** | Trust `Image.open()` + save directly | Always `verify()` first, then re-open, then resize/re-encode |
-| **Let's Encrypt** | Use `certbot --standalone` which binds port 80 | Use nginx plugin (`certbot --nginx`) to avoid port conflict with gunicorn |
-| **Cloudflare** | Enable "Always Online" or automatic static caching | Disable caching on `/admin/*` paths; set cache TTL=0 for dynamic content |
+**What goes wrong:**
+The existing `init_db` command uses `db.create_all()`. It creates tables that don't exist — but it does NOT add columns to existing tables, and it does NOT create the `orders` table if the DB was already initialized in v1.0. New code queries `Order.query` → `sqlalchemy.exc.OperationalError: no such table: orders`. Crash on first order submission.
 
----
+**Why it happens:**
+- `db.create_all()` is DDL-only `CREATE TABLE IF NOT EXISTS`. It never alters existing tables.
+- There is no `flask-migrate` / Alembic in requirements.txt. The CLAUDE.md explicitly says: "Skip flask-migrate; use db.create_all(). Add migrations only when the model gains columns/tables." — but now the model IS gaining tables, and the guidance is to use raw ALTER.
+- No `schema_version` table or migration tracking.
 
-## Performance Traps
+**How to avoid:**
+1. **Manual migration script via Flask CLI**: Create a `flask migrate-orders` command that:
+   - Checks `PRAGMA table_info(orders)` — if table exists, skip. If not, `CREATE TABLE orders (...)`.
+   - Checks `PRAGMA table_info(products)` — if `cost_price` column missing, `ALTER TABLE products ADD COLUMN cost_price INTEGER DEFAULT 0`.
+   - Idempotent — safe to run twice.
+2. **Document the migration step**: In the deploy docs, add "After deploying v1.1, run `flask migrate-orders` before starting the app." Like the existing `init-db` step.
+3. **Do NOT add flask-migrate / Alembic**: The project explicitly chose not to. Use raw SQL via `db.engine` for the two specific schema changes. This is consistent with the project's minimalist stack philosophy.
 
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| SQLite write lock contention | Admin saves fail intermittently | WAL + busy_timeout + retry logic | 2+ concurrent admin users writing |
-| Flask serving static files | Slow page loads, high CPU | nginx serves `/static/` and `/uploads/` | Any production traffic |
-| No image resizing on upload | 5MB photos render at 2400x1800 | Resize to max 800px on upload | Page loads > 2s on mobile |
-| Gunicorn sync workers blocking on upload | Upload blocks all other requests | Use `--workers 2` (not 4+) for simple site; or gthread worker class | Concurrent admin + visitor access during upload |
-| No template caching | Same template re-rendered every request | Flask caches templates by default in production | Negligible — only matters at high traffic |
+**Warning signs:**
+- `flask init-db` does not create `orders` table (it only knows about Product/ProductImage/AdminUser from models.py at that point)
+- New `Order` model in models.py but `db.create_all()` called before the model was defined — table never created
+- Existing DB has `products` table without `cost_price` — app crashes on product create/edit
 
----
-
-## Security Mistakes
-
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| `debug=True` in production | Remote Code Execution via Werkzeug debugger | Hardcode `debug=False` in production config; never expose `/console` |
-| No `SECRET_KEY` or weak key | Session forgery, login bypass | Generate 32-byte random key per deployment; store in environment variable |
-| No CSRF on admin forms | Attacker can trick admin into deleting products | Use Flask-WTF `CSRFProtect` or manual token; `SameSite=Lax` as defense-in-depth |
-| Serving uploads as-is | Stored XSS via uploaded HTML, or RCE via PHP | Validate magic bytes; serve via `send_from_directory`; deny non-image extensions in nginx |
-| File extension validation only | Upload `shell.jpg.php` with image content-Type | Check actual file content (magic bytes + Pillow `verify()`) |
-| Passwords stored in plaintext | DB leak exposes all admin passwords | Use `werkzeug.security.generate_password_hash` (scrypt in Werkzeug 3.x) |
-| No `MAX_CONTENT_LENGTH` | Upload 1GB file to exhaust disk | Set to `16 * 1024 * 1024` (16MB) — sufficient for product photos |
-| Missing `SESSION_COOKIE_SECURE` | Session cookie sent over HTTP (interceptable) | `app.config['SESSION_COOKIE_SECURE'] = True` (requires HTTPS) |
-| Missing `PERMANENT_SESSION_LIFETIME` config | Sessions last 31 days (too long) | Set `app.permanent_session_lifetime = timedelta(hours=8)` for admin session |
-| No rate limiting on login | Brute-force attack on admin password | Add `flask-limiter` or nginx-level rate limiting on `/login` |
+**Phase to address:** Phase (Order Placement) setup — must-fix. The migration command must run before any new feature is used.
 
 ---
 
-## UX Pitfalls
+### Pitfall 11: No Audit Trail on Order Status Changes — "Who shipped this?"
 
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Empty product list shows blank page | Vietnamese admin sees nothing, thinks site is broken | Add `{% else %}` clause: `Chưa có sản phẩm nào` |
-| Price shows `100000.00 VND` | Looks like foreign currency with cents, confusing | Format as `100,000₫` or `100,000 VND` (no decimals) |
-| No `lang="vi"` on HTML | Wrong font rendering, wrong SEO language | Always `<html lang="vi">` |
-| Product detail page missing back link | Admin must use browser back button | Add "Quay lại" link to product list |
-| Delete product via GET link | One click accidentally deletes, no undo | Use POST form with confirmation dialog |
-| No image preview on upload form | Admin uploads wrong file, can't verify | Show thumbnail preview after file selection (client-side JS) |
-| Admin forms not responsive on mobile | Can't manage products while away from computer | Add viewport meta tag; test on mobile |
-| No feedback after form submit | Admin doesn't know if save succeeded | Flash message: `Lưu sản phẩm thành công` |
+**What goes wrong:**
+Admin A marks order #12 "shipped." Two days later the customer says "I never got it." Admin checks: order shows `shipped` but no record of when, by whom, or the tracking number. Did Admin A actually ship it? Did the carrier lose it? No paper trail.
+
+**Why it happens:**
+- `orders` table has only `status` and `updated_at` columns. No `status_history`, no `updated_by`, no `tracking_number`, no `note`.
+
+**How to avoid:**
+1. **Add `status_history` as a simple JSON field or separate table**: For MVP, add `tracking_number VARCHAR(100)` and `note TEXT` to the `orders` table. Do NOT over-engineer with a separate history table — the existing product model is flat and simple.
+2. **Record `updated_by`** on the admin order-update form — even a single admin, log "by admin" for accountability.
+3. **Do NOT** build a full audit log table. That's premature. A `note` field + `tracking_number` field on orders covers 90% of the need.
+
+**Warning signs:**
+- Order detail shows "shipped" but admin can't recall when or by whom
+- No tracking number field in the order status update form
+- Admin asks "was this order shipped or just marked shipped?"
+
+**Phase to address:** Phase (Order Tracking) — tracking_number + note fields are must-fix. Full audit trail is nice-to-have for later.
+
+---
+
+### Pitfall 12: Stats Dashboard Slow Query — `SUM(price * quantity) JOIN` on Large Order Sets
+
+**What goes wrong:**
+With 5 tables (products, orders, order items), the stats query does a 4-way JOIN with `SUM` over 10,000+ rows. The page takes 3-5 seconds to load. Admin clicks "Thống kê" → waits → thinks the app crashed → refreshes → 5 more slow queries.
+
+**Why it happens:**
+- No pre-aggregation. Each dashboard load recalculates everything from raw rows.
+- No indexes on `orders.status`, `orders.created_at`, `order_items.order_id`.
+- JOIN on unindexed foreign keys.
+
+**How to avoid:**
+1. **Add indexes**: `CREATE INDEX idx_orders_status ON orders(status)`, `idx_orders_created ON orders(created_at)`, `idx_order_items_order_id ON order_items(order_id)`.
+2. **Materialize daily summary**: For a solo seller, this is overkill. But a simple trick: cache the stats query result for 60 seconds using Flask's `cache` or even an in-memory `functools.lru_cache` with a timer. The admin doesn't need real-time stats — they need today's numbers, refreshed on each page visit.
+3. **Paginate order list**: Don't load all 10,000 orders into the template. Use `Order.query.paginate()` — the existing `public.py` and `admin.py` product lists already paginate; follow the same pattern.
+
+**Warning signs:**
+- Stats dashboard takes >2 seconds to load with 1000+ orders
+- Admin refreshes repeatedly, generating 5x load
+
+**Phase to address:** Phase (Stats Dashboard) — indexes are must-fix; caching is nice-to-have for when orders > 1000.
 
 ---
 
-## "Looks Done But Isn't" Checklist
+## Minor Pitfalls
 
-- [ ] **Admin login page:** SECRET_KEY not set → verify login actually persists across requests
-- [ ] **Product list:** Shows sample data but blank when DB is empty → verify `{% else %}` clause in template renders `Chưa có sản phẩm nào`
-- [ ] **Image upload:** Works in Flask dev server → verify nginx serves `/uploads/` directory with correct permissions
-- [ ] **Price display:** Shows `100000 VND` → verify comma formatting: `100,000 VND`
-- [ ] **Delete product button:** Uses `<a href="/delete/1">` → verify it is a POST form with CSRF token + confirmation
-- [ ] **Contact page:** Has Messenger link → verify HTML `lang="vi"` and `<meta charset="utf-8">` are present
-- [ ] **Deployment:** `gunicorn app:app` runs locally → verify `gunicorn --workers N` with SQLite WAL mode and busy_timeout
-- [ ] **Error handling:** Page works with sample data → trigger a 500 (e.g., invalid DB path) and verify custom error page renders
+### Pitfall 13: Quantity Field Accepts 0 or Negative → Free Orders / Phantom Stock
 
----
+**What goes wrong:**
+Order form's `quantity` field accepts `0` (free order — admin ships nothing for nothing) or `-5` (admin stock increases by 5 on fulfillment). `Integer(min=1)` is forgotten; `IntegerField` without `NumberRange(min=1)` accepts any integer.
+
+**How to avoid:** `IntegerField('Số lượng', validators=[NumberRange(min=1, max=999)])` — max prevents a bot submitting quantity=999999 to exhaust stock.
+
+### Pitfall 14: Order Confirmation Email / SMS Not Sent — Admin Forgets Orders
+
+**What goes wrong:**
+No notification when an order is placed. Admin doesn't notice new orders for days. Customer calls angry.
+
+**How to avoid:** For MVP, skip email/SMS. Add an admin notification badge on the dashboard: "Bạn có 3 đơn hàng mới." Use the existing `flash` or a `unread_orders` count. Phone/call is the existing fallback (Messenger link was the old flow).
+
+### Pitfall 15: Order Detail Page Exposes Other Orders (IDOR)
+
+**What goes wrong:**
+Public order confirmation is at `/order/<id>` — but `id` is sequential. Customer A submits order #123, shares the link. Customer B guesses #124, #125 and sees other people's orders.
+
+**How to prevent:** For MVP, do NOT have a public order lookup page. After order submission, show a thank-you page with `order_id` and `order_code` (a random token). If a public lookup is needed, require the phone number + order code to view. This is a future enhancement — document it as out of scope for MVP.
 
 ## Phase-Specific Warnings
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|----------------|------------|
-| Phase 1 (Scaffold) | SECRET_KEY missing → login silently broken | Fail-fast check on startup: `if not app.config['SECRET_KEY']: raise RuntimeError` |
-| Phase 1 (Scaffold) | No `lang="vi"` / charset → mojibake in production | Use base template with `<html lang="vi">` and `<meta charset="utf-8">` |
-| Phase 2 (Image Upload) | No `MAX_CONTENT_LENGTH` → RAM exhaustion | Set `app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024` |
-| Phase 2 (Image Upload) | `secure_filename` strips Vietnamese → filenames lose meaning | Store original filename in DB; use UUID + `.jpg` for filesystem name |
-| Phase 2 (Image Upload) | No dimension check → decompression bomb | `Image.open(file); img.verify(); check width/height limits` |
-| Phase 3 (Deploy) | `debug=True` left on → RCE via Werkzeug debugger | Config: `DEBUG = False` in production; verify `/console` returns 404 |
-| Phase 3 (Deploy) | `gunicorn --preload` → SQLite lock corruption | Document gunicorn command without `--preload` |
-| Phase 3 (Deploy) | nginx serves uploads with PHP → code execution | nginx: `location /uploads/ { try_files $uri =404; }` |
-| Phase 3 (Deploy) | No reverse proxy headers → HTTP URLs mixed with HTTPS | Add `ProxyFix` + nginx `proxy_set_header X-Forwarded-Proto $scheme` |
-| Phase 3 (Deploy) | No gunicorn PID file → restart kills wrong process | `gunicorn --pid /var/run/gunicorn.pid` |
-
----
-
-## Recovery Strategies
-
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| Debug mode enabled in production | LOW — config change | 1. Set DEBUG=False 2. Restart with gunicorn 3. Kill debugger PIN exposure |
-| SECRET_KEY changed (sessions invalidated) | LOW | Inform admin to log in again; sessions are stateless so no data lost |
-| SQLite database locked | MEDIUM | 1. Restart gunicorn workers (clears stale connections) 2. Check for long-running transactions |
-| Uploaded image is malicious | HIGH | 1. Inspect uploads directory for non-image files 2. Delete any .php/.html/.py files 3. Tighten nginx to deny execution in /uploads/ |
-| Price stored as Float (precision corruption) | MEDIUM | 1. Migrate column to Integer 2. Convert existing values: `UPDATE products SET price = ROUND(price)` |
-| Database corruption from backup during write | HIGH | 1. Restore from last known-good backup 2. Switch to `sqlite3 .backup` command for future backups |
-| Missing CSRF protection exploited | MEDIUM | 1. Add CSRF tokens immediately 2. Audit admin actions for unauthorized changes 3. Rotate admin password |
-| No MAX_CONTENT_LENGTH (disk filled) | MEDIUM | 1. Clear uploads directory 2. Set MAX_CONTENT_LENGTH 3. Add disk monitoring alert |
-
----
+| Phase Topic | Likely Pitfall | Must-Fix / Nice-to-Have | Mitigation |
+|-------------|----------------|-------------------------|------------|
+| Phase (Schema Migration) | `ALTER TABLE` + existing DB: cost_price NULL → profit math collapses | MUST-FIX | Add with `DEFAULT 0` + `COALESCE` in all profit queries |
+| Phase (Order Placement) | Public form spam: no honeypot, no rate limit | MUST-FIX | Honeypot field + IP counter; reject silently |
+| Phase (Order Placement) | Phone/address validation too loose/stricter | MUST-FIX | Strip + regex VN phone; Length cap on address |
+| Phase (Order Placement) | Stock decrement on `pending`, not `shipped` | MUST-FIX | Document: decrement on `shipped` only; do not touch quantity on order create |
+| Phase (Order Tracking) | Status dropdown allows invalid transitions (pending → delivered) | MUST-FIX | Model-level `VALID_TRANSITIONS` dict + form renders only valid next statuses |
+| Phase (Order Tracking) | No `cancelled` status → deleted orders invisible in stats | MUST-FIX | Add `cancelled` as a status; exclude from revenue/profit/shipped counts |
+| Phase (Order Tracking) | No tracking number / note / who-updated | NICE-TO-HAVE | Add `tracking_number` + `note` columns; `updated_by` logged |
+| Phase (Stats Dashboard) | `SUM(price * quantity)` counts pending/cancelled as revenue | MUST-FIX | Filter WHERE `status IN ('shipped','delivered')` for revenue; show gross vs net |
+| Phase (Stats Dashboard) | Profit SUM collapses on NULL cost_price | MUST-FIX | `COALESCE(cost_price, 0)` in every profit query |
+| Phase (Stats Dashboard) | Slow query on 10k+ orders | NICE-TO-HAVE (at scale) | Index `status`, `created_at`; cache result 60s; paginate |
+| Phase (Cost Price) | cost_price leaks to public template | MUST-FIX | Grep `cost_price` in `templates/public/` — must be zero matches |
+| Phase (Cost Price) | cost_price stored as Float | MUST-FIX | Store as Integer; reuse `format_price` filter |
+| Phase (Deployment) | SQLite busy_timeout mismatch (30s config vs 5s pragma) | MUST-FIX | Verify `PRAGMA busy_timeout` reads 30000 after app config change |
+| Phase (Deployment) | No retry on `database is locked` | MUST-FIX | Wrap all order writes + status updates in retry(3, backoff=100ms) |
 
 ## Sources
 
-- Flask 3.0.0 installed and verified in this environment — `app.config` defaults checked for `SECRET_KEY=None`, `DEBUG=False`, `SESSION_COOKIE_SECURE=False`, `SESSION_COOKIE_SAMESITE=None`
-- Werkzeug 3.0.0 `generate_password_hash` verified to use `scrypt` by default (not MD5/SHA1); `secure_filename` verified to strip path separators and Vietnamese characters
-- SQLite 3.43.1 — WAL mode confirmed working for file-based DBs; `threadsafety=3` (fully thread-safe) but process-level concurrency still requires WAL + busy_timeout
-- Flask-SQLAlchemy 3.1.1 — `SQLALCHEMY_ENGINE_OPTIONS` with `connect_args` verified
-- Flask-WTF NOT installed — confirms no built-in CSRF protection, needs `pip install flask-wtf`
-- Pillow 12.2.0 confirmed installed — `Image.open()`, `.verify()`, `.thumbnail()` available for validation
-- WebFetch to Flask official docs returned HTTP 429 (Cloudflare challenge) — findings verified via local code inspection of installed packages instead
-- Jinja2 auto-escaping verified: `{{ content }}` escapes HTML; `{{ content|safe }}` does not
-- Python `json.dumps(ensure_ascii=True)` confirmed to escape Vietnamese characters; Flask `app.json.ensure_ascii = False` resolves for jsonify
+- SQLite 3.43.1 verified in-environment: `PRAGMA journal_mode=WAL`, `PRAGMA busy_timeout=5000` (observed discrepancy with app config `timeout=30`) — WAL allows concurrent readers + 1 writer; writes still block.
+- Flask 3.1.3 + Flask-SQLAlchemy 3.1.1: `db.create_all()` is DDL-only `CREATE TABLE IF NOT EXISTS` — does NOT alter existing tables or add columns. Verified against `__init__.py` and `db.py` in this codebase.
+- wtforms 3.2.2 validators verified in-environment: `NumberRange(min=1, max=999)`, `Length(min=10, max=500)`, `Regexp` all available. `Optional()` validator exists for nullable fields.
+- VN phone number format: ITU-T E.164 standard. Mobile prefixes: 03x (Viettel), 05x (Vietnamobile/Vinaphone), 07x (Gmobile/Mobifone), 08x (Zing/Vinaphone/Mobifone), 09x (legacy). Landline: 02x + 8-9 digits. With `+84` country code, leading `0` is dropped.
+- Existing codebase verified: `CSRFProtect` is global in `create_app`, so public form POST without CSRF token returns 400 — public order form must include `{{ form.hidden_tag() }}`.
+- Existing `__init__.py` sets `SQLALCHEMY_ENGINE_OPTIONS={'connect_args': {'timeout': 30}}` — this SHOULD yield 30000ms busy_timeout, but DB shows 5000ms. This is the discrepancy to investigate.
+- Existing `models.py`: `price = db.Column(db.Integer)` — correct pattern for VND. `cost_price` must follow the same.
+- Existing `public.py`: `product.status` is a `@property` computed from `discontinued` + `quantity > 0` — not a DB column. Order status should be a real DB column with a transition guard, not a computed property.
+- VND has no subunit (zero dong coins were demonetized). Storing monetary values as Integer is correct — no Float/Numeric needed.
+- Existing deploy docs (Linux.md, nginx.conf): nginx rate-limits `/admin/` and `/login` at `10r/m` per IP. The public product detail page is NOT rate-limited by design (browsing). Order submission on the same URL inherits no rate limit — must be handled in-app.
 
 ---
 
-*Pitfalls research for: Self-hosted Flask product catalog with Vietnamese admin and image uploads*
-*Researched: 2026-07-31*
+*Pitfalls research for: Adding order placement (public form), order status tracking (packed→shipped→delivered), optional cost price, and revenue/profit stats to existing Flask + SQLite storefront (StoreWeb v1.1 Buy System)*
+*Researched: 2026-08-02*
