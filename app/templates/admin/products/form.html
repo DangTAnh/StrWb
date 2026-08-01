@@ -18,7 +18,7 @@
     <div class="form-row-2">
       <div class="form-field">
         {{ form.price.label }}<span class="required" aria-hidden="true"> *</span>
-        {{ form.price(class="input", required=True, aria_required="true") }}
+        {{ form.price(class="input", required=True, aria_required="true", min="0", step="1") }}
         {% for error in form.price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
       </div>
       <div class="form-field">
@@ -56,7 +56,7 @@
     <div class="form-row-2">
       <div class="form-field">
         {{ form.quantity.label }}<span class="required" aria-hidden="true"> *</span>
-        {{ form.quantity(class="input", required=True, aria_required="true") }}
+        {{ form.quantity(class="input", required=True, aria_required="true", min="0", step="1") }}
         {% for error in form.quantity.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
         <p class="help-text">Trạng thái tự động: Còn hàng khi tồn kho &gt; 0, Hết hàng khi tồn kho = 0. Bật “Ngừng bán” để ghi đè.</p>
       </div>
