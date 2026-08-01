@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-card delete-card">
+    <h1>Xóa sản phẩm</h1>
+    <p>Bạn có chắc muốn xóa sản phẩm “{{ product.name }}”?</p>
+    {% if product.images.count() > 0 %}
+    <p>Sản phẩm có {{ product.images.count() }} ảnh và sẽ bị xóa cùng.</p>
+    {% endif %}
+    <p class="delete-warning">Hành động này không thể hoàn tác.</p>
+    <div class="action-row">
+      <a class="btn btn-secondary" href="{{ url_for('admin.products') }}">Hủy</a>
+      <form method="post" action="{{ url_for('admin.delete_product', product_id=product.id) }}" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger">Xóa sản phẩm</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

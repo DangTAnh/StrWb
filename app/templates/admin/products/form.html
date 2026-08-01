@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-page">
+  <a class="back-link" href="{{ url_for('admin.products') }}">Quay lại</a>
+  <h1>{% if is_new %}Thêm sản phẩm{% else %}Sửa sản phẩm{% endif %}</h1>
+  <form method="post" action="" enctype="multipart/form-data" class="admin-card product-form">
+    {{ form.hidden_tag() }}
+    {% if form.errors %}
+    <div class="flash error">Vui lòng kiểm tra lại các trường nhập.</div>
+    {% endif %}
+
+    <div class="form-field">
+      {{ form.name.label }}<span class="required" aria-hidden="true"> *</span>
+      {{ form.name(class="input", required=True, aria_required="true") }}
+      {% for error in form.name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        {{ form.price.label }}<span class="required" aria-hidden="true"> *</span>
+        {{ form.price(class="input", required=True, aria_required="true") }}
+        {% for error in form.price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+      <div class="form-field">
+        {{ form.brand.label }}
+        {{ form.brand(class="input") }}
+        {% for error in form.brand.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        {{ form.sku.label }}
+        {{ form.sku(class="input") }}
+        {% for error in form.sku.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+      <div class="form-field">
+        {{ form.sort_order.label }}
+        {{ form.sort_order(class="input") }}
+        {% for error in form.sort_order.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+    </div>
+
+    <div class="form-field">
+      {{ form.measurements.label }}
+      {{ form.measurements(class="input", placeholder="Ví dụ: 60×40×2cm hoặc M/L/XL") }}
+      {% for error in form.measurements.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    </div>
+
+    <div class="form-field">
+      {{ form.description.label }}
+      {{ form.description(class="input") }}
+      {% for error in form.description.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        {{ form.quantity.label }}<span class="required" aria-hidden="true"> *</span>
+        {{ form.quantity(class="input", required=True, aria_required="true") }}
+        {% for error in form.quantity.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+        <p class="help-text">Trạng thái tự động: Còn hàng khi tồn kho &gt; 0, Hết hàng khi tồn kho = 0. Bật “Ngừng bán” để ghi đè.</p>
+      </div>
+      <div class="form-field checkbox-field">
+        <label class="checkbox-label">
+          {{ form.discontinued(class="checkbox") }}
+          {{ form.discontinued.label.text }}
+        </label>
+      </div>
+    </div>
+
+    <div class="form-field">
+      {{ form.admin_note.label }}
+      {{ form.admin_note(class="input") }}
+      <p class="help-text">Chỉ quản trị viên xem được</p>
+      {% for error in form.admin_note.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    </div>
+
+    <div class="action-row">
+      {{ form.submit(class="btn btn-primary") }}
+      <a class="btn btn-secondary" href="{{ url_for('admin.products') }}">Hủy</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
