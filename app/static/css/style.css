@@ -382,6 +382,7 @@ label { font-size: 14px; }
 .contact-strip { margin-top: 64px; background: #FFFFFF; padding: 32px; border-radius: 8px; text-align: center; }
 .contact-strip h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
 .contact-strip p { color: #6B7280; margin-bottom: 24px; }
+/* Declared spec addition (04-UI-SPEC D-07 #1): keeps the Messenger CTA a >=44px touch target on mobile. Harmless, documented, no token change. */
 .contact-strip .btn { min-width: 200px; }
 
 /* ============ Phase 3: Product detail ============ */
