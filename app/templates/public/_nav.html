@@ -3,7 +3,7 @@
     <a class="brand" href="{{ url_for('public.home') }}">Cửa hàng</a>
     <form class="search-form" role="search" method="get" action="{{ url_for('public.search') }}">
       <label class="visually-hidden" for="search-input">Tìm kiếm</label>
-      <input type="search" id="search-input" name="q" placeholder="Tìm sản phẩm…" value="{{ request.args.get('q', '') }}">
+      <input type="search" id="search-input" name="q" placeholder="Tìm sản phẩm…" value="{{ q if q is defined else request.args.get('q', '') }}">
       <button class="btn btn-primary" type="submit" aria-label="Tìm kiếm">Tìm</button>
     </form>
   </div>
