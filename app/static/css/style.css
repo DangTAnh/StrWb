@@ -291,6 +291,41 @@ label { font-size: 14px; }
 .delete-card p { margin-bottom: 8px; }
 .delete-warning { color: var(--destructive); }
 
+/* Gallery */
+.gallery-section { margin-top: 24px; border-top: 1px solid #E5E7EB; padding-top: 24px; }
+.gallery-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.gallery-grid { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 16px; }
+.gallery-item { width: 96px; position: relative; }
+.gallery-item > a img { width: 96px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; display: block; }
+.badge-primary {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.gallery-actions { display: flex; justify-content: center; gap: 4px; margin-top: 4px; }
+.reorder-btn {
+  min-width: 44px;
+  min-height: 44px;
+  background: none;
+  border: none;
+  color: #6B7280;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.reorder-btn:hover:not(:disabled) { color: var(--accent); background: #F9FAFB; }
+.reorder-btn:disabled { color: #9CA3AF; cursor: default; }
+.img-delete { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 14px; }
+.img-delete input[type="checkbox"] { width: 18px; height: 18px; }
+.gallery-upload { margin-top: 16px; }
+
 /* Responsive */
 @media (max-width: 768px) {
   .admin-card { max-width: 100%; margin-top: 16px; }

@@ -24,7 +24,13 @@
         <tbody>
           {% for p in products %}
           <tr>
-            <td><span class="thumb-placeholder" aria-label="Chưa có ảnh">—</span></td>
+            <td>
+              {% if p.primary_image %}
+              <img src="{{ url_for('static', filename='uploads/' + p.primary_image.thumb_filename) }}" alt="{{ p.name }}" width="48" height="48" class="thumb">
+              {% else %}
+              <span class="thumb-placeholder" aria-label="Chưa có ảnh">—</span>
+              {% endif %}
+            </td>
             <td class="product-name">{{ p.name }}</td>
             <td>{{ p.sku or '—' }}</td>
             <td class="price-cell">{{ p.price | format_price }}</td>

@@ -87,11 +87,11 @@ def new_product():
         if err:
             db.session.rollback()
             flash(f'Không thể lưu ảnh: {err}. Chưa có ảnh nào được lưu.', 'error')
-            return render_template('admin/products/form.html', form=form, product=None, is_new=True)
+            return render_template('admin/products/form.html', form=form, product=None, is_new=True, existing_images=[])
         db.session.commit()
         flash('Lưu sản phẩm thành công', 'success')
         return redirect(url_for('admin.products'))
-    return render_template('admin/products/form.html', form=form, product=None, is_new=True)
+    return render_template('admin/products/form.html', form=form, product=None, is_new=True, existing_images=[])
 
 
 @admin_bp.route('/products/<int:product_id>/edit', methods=['GET', 'POST'])
@@ -110,11 +110,13 @@ def edit_product(product_id):
         if err:
             db.session.rollback()
             flash(f'Không thể lưu ảnh: {err}. Chưa có ảnh nào được lưu.', 'error')
-            return render_template('admin/products/form.html', form=form, product=product, is_new=False)
+            existing_images = product.images.order_by(ProductImage.sort_order.asc()).all()
+            return render_template('admin/products/form.html', form=form, product=product, is_new=False, existing_images=existing_images)
         db.session.commit()
         flash(f'Đã cập nhật sản phẩm “{product.name}”', 'success')
         return redirect(url_for('admin.products'))
-    return render_template('admin/products/form.html', form=form, product=product, is_new=False)
+    existing_images = product.images.order_by(ProductImage.sort_order.asc()).all()
+    return render_template('admin/products/form.html', form=form, product=product, is_new=False, existing_images=existing_images)
 
 
 @admin_bp.route('/products/<int:product_id>/delete', methods=['GET', 'POST'])
