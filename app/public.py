@@ -75,4 +75,10 @@ def search():
     pagination = _manual_pagination(page, per_page, len(matched))
     start = (pagination.page - 1) * per_page
     pagination.items = matched[start:start + per_page]
+    # D-07 #2: mirror home() — out-of-range page -> 302 to last valid page (no silent clamp).
+    # _manual_pagination clamps page, so compare the raw request page, not the clamped value.
+    if pagination.total and page > pagination.pages:
+        return redirect(url_for('public.search', q=q, page=pagination.pages))
+    if page < 1:
+        return redirect(url_for('public.search', q=q, page=1))
     return render_template('public/search.html', q=q, products=pagination.items, pagination=pagination)
