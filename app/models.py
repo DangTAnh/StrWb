@@ -39,12 +39,26 @@ class Product(db.Model):
             return 'discontinued'
         return 'available' if self.quantity > 0 else 'out_of_stock'
 
+    @property
+    def primary_image(self):
+        """First image in gallery order = primary (D-12)."""
+        return self.images.order_by(ProductImage.sort_order.asc()).first()
+
 
 class ProductImage(db.Model):
     __tablename__ = 'product_images'
 
     id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(255), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)  # UUID filesystem name, set by image_utils
+    original_filename = db.Column(db.String(255), nullable=True)  # user's Vietnamese name, display only (D-16)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     is_primary = db.Column(db.Boolean, default=False, nullable=False)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)  # gallery position; 0 = first = primary (D-12/D-13)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def thumb_filename(self):
+        """Derived thumb asset name: <uuid>_thumb.jpg alongside <uuid>.jpg (IMG-04)."""
+        if not self.filename or not self.filename.endswith('.jpg'):
+            return None
+        return self.filename[:-4] + '_thumb.jpg'
