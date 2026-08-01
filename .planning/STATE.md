@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: "Phase 4 context gathered (7 decisions) — next: Phase 4 plan"
-last_updated: "2026-08-01T17:31:25.755Z"
-last_activity: 2026-08-01 -- Phase 4 planning complete
+status: verifying
+stopped_at: Completed Phase 4 (polish+deploy) — 3 plans, all success criteria verified
+last_updated: "2026-08-01T18:06:06.578Z"
+last_activity: 2026-08-01
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 12
-  completed_plans: 9
-  percent: 75
+  completed_plans: 12
+  percent: 100
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-31)
 
 **Core value:** Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admin dễ dàng quản lý sản phẩm.
-**Current focus:** Phase 3 — Public Catalog + Search + Contact
+**Current focus:** Phase 4 complete — Milestone v1.0 done (polish + deploy + verification)
 
 ## Current Position
 
-Phase: 3 (Public Catalog + Search + Contact) — CLOSED
+Phase: 4 (Polish + Deploy) — COMPLETE
 Plan: 3 of 3
-Status: Ready to execute
-Last activity: 2026-08-01 -- Phase 4 planning complete
+Status: Milestone v1.0 complete — all 12 plans done, all success criteria verified
+Last activity: 2026-08-01
 
 Progress: [██████████] 100%
 
@@ -36,23 +36,23 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 0
-- Average duration: N/A min
-- Total execution time: 0.0 hours
+- Total plans completed: 12
+- Average duration: 15 min
+- Total execution time: 3.0 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 | 0 | 0 | - |
-| 2 | 0 | 0 | - |
-| 3 | 0 | 0 | - |
-| 4 | 0 | 0 | - |
+| 1 | 3 | 50min | 17min |
+| 2 | 3 | 59min | 20min |
+| 3 | 3 | 21min | 7min |
+| 4 | 3 | 50min | 17min |
 
 **Recent Trend:**
 
-- Last 5 plans: N/A
-- Trend: N/A
+- Last 5 plans: 4-5min → 12min → 20min → 16min → 14min
+- Trend: stable (~15min/plan) across phases 1-4
 
 *Updated after each plan completion*
 | Phase 01-scaffold-auth-data-model P01 | 20min | 3 tasks | 17 files |
@@ -64,6 +64,9 @@ Progress: [██████████] 100%
 | Phase 3 P1 | 5min | 3 tasks | 8 files |
 | Phase 3 P2 | 4min | 2 tasks | 3 files |
 | Phase 3 P3 | 12min | 2 tasks | 3 files |
+| Phase 04-polish-deploy P04-01 | 20min | 5 tasks | 3 files |
+| Phase 04-polish-deploy P04-02 | 16min | 4 tasks | 7 files |
+| Phase 04-polish-deploy P04-03 | 14min | 4 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -83,6 +86,13 @@ Recent decisions affecting current work:
 - [Phase 3]: Search result count uses pagination.total (phase-wide total), not products|length (current page) — required by multi-page verify
 - [Phase 3]: Verify-harness fix: Flask-SQLAlchemy 3.1.1 creates engines eagerly in init_app; setting SQLALCHEMY_DATABASE_URI after create_app is ineffective — harness must dispose+rebuild the engine to isolate a temp DB
 - [Phase 3]: Phase 3 closed — verified passed 5/5 (49 checks), code review 0 HIGH/1 MED/5 LOW all fixed, UI review 20/24 -> 5 findings fixed, 6 polish deferred to Phase 4 (spec-sync min-width, contrast token, 2x-DPR thumbs, ₫ glyph, search-clamp-vs-redirect cosmetic)
+- [Phase 04]: Phase 4 complete: polish UI (D-07 5/5 deferrals fixed, D-05 CAT-04 HOLD verified, D-06 responsive audit all invariants hold) + deploy (waitress Windows smoke 200, gunicorn/systemd Linux, nginx HTTPS + admin rate-limit) + hardening verified (SC-1..SC-5)
+- [Phase 04]: D-07 #2 search out-of-range redirect compares the raw request page (page > pagination.pages) because _manual_pagination clamps — mirrors home() 302 to last valid page; page<1 -> 302 page=1
+- [Phase 04]: D-07 #4 gallery main image + swap data-src serve full-size img.filename (JPEG q85 max 2000px) at width/height 440 for 2x DPR; 72px thumbnails keep thumb_filename
+- [Phase 04]: D-07 #3 .out-of-stock-note darkened to #B91C1C (measures 6.19:1 on #F9FAFB, passes AA); --destructive token and copy unchanged
+- [Phase 04]: Deploy: waitress==3.0.2 pinned in requirements.txt (Windows smoke test GET / -> 200); gunicorn documented-only for Linux (2*CPU+1 workers, systemd, certbot --nginx); nginx.conf carries limit_req zone=admin + security headers + static alias + X-Forwarded-Proto $scheme; admin protected by app login + rate limit only, no basic auth/allowlist (D-04)
+- [Phase 04]: YOUR_DOMAIN placeholder kept in nginx.conf/Linux.md/README because no real domain was available at execution time — flagged prominently, must be replaced before go-live (D-03)
+- [Phase 04]: Phase 4 verification: SC-1..SC-5 all VERIFIED programmatically (40+ checks, isolated temp DBs), 4 non-blocking human UAT items (2x-DPR gallery sharpness, responsive visual audit, U+20AB glyph browser check, real-domain HTTPS go-live)
 
 ### Pending Todos
 
@@ -100,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-01T15:50:00Z
-Stopped at: Phase 4 context gathered (7 decisions) — next: Phase 4 plan
-Resume file: .planning/phases/04-polish-deploy/04-CONTEXT.md
+Last session: 2026-08-01T18:06:06.565Z
+Stopped at: Completed Phase 4 (polish+deploy) — 3 plans, all success criteria verified
+Resume file: None

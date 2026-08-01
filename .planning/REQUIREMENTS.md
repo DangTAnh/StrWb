@@ -33,21 +33,21 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Catalog công khai
 
-- [ ] **CAT-01**: Khách xem danh sách sản phẩm công khai, không cần đăng nhập
-- [ ] **CAT-02**: Khách xem trang chi tiết sản phẩm: ảnh, giá, thương hiệu, số đo, mô tả, trạng thái
-- [ ] **CAT-03**: Giá + trạng thái còn/hết hiển thị rõ trên trang
-- [ ] **CAT-04**: Sản phẩm hết hàng hoặc ngừng bán được hiển thị khác đi (không lấn át hàng còn)
-- [ ] **CAT-05**: Trang chi tiết hiển thị gallery nhiều ảnh của sản phẩm
-- [ ] **CAT-06**: Giao diện responsive trên mobile (đa số khách VN dùng điện thoại)
+- [x] **CAT-01**: Khách xem danh sách sản phẩm công khai, không cần đăng nhập
+- [x] **CAT-02**: Khách xem trang chi tiết sản phẩm: ảnh, giá, thương hiệu, số đo, mô tả, trạng thái
+- [x] **CAT-03**: Giá + trạng thái còn/hết hiển thị rõ trên trang
+- [x] **CAT-04**: Sản phẩm hết hàng hoặc ngừng bán được hiển thị khác đi (không lấn át hàng còn)
+- [x] **CAT-05**: Trang chi tiết hiển thị gallery nhiều ảnh của sản phẩm
+- [x] **CAT-06**: Giao diện responsive trên mobile (đa số khách VN dùng điện thoại)
 
 ### Tìm kiếm
 
-- [ ] **SRCH-01**: Khách tìm kiếm sản phẩm theo tên/mô tả
+- [x] **SRCH-01**: Khách tìm kiếm sản phẩm theo tên/mô tả
 
 ### Liên hệ
 
-- [ ] **CONT-01**: Trang/dải liên hệ hiển thị link Messenger của người bán
-- [ ] **CONT-02**: Link Messenger dễ thấy trên trang chủ và trang chi tiết
+- [x] **CONT-01**: Trang/dải liên hệ hiển thị link Messenger của người bán
+- [x] **CONT-02**: Link Messenger dễ thấy trên trang chủ và trang chi tiết
 
 ### Nền tảng & Ngôn ngữ
 
@@ -111,15 +111,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | IMG-02 | 2 | Complete |
 | IMG-03 | 2 | Complete |
 | IMG-04 | 2 | Complete |
-| CAT-01 | 3 | Pending |
-| CAT-02 | 3 | Pending |
-| CAT-03 | 3 | Pending |
-| CAT-04 | 4 | Pending |
-| CAT-05 | 3 | Pending |
-| CAT-06 | 4 | Pending |
-| SRCH-01 | 3 | Pending |
-| CONT-01 | 3 | Pending |
-| CONT-02 | 3 | Pending |
+| CAT-01 | 3 | Complete |
+| CAT-02 | 3 | Complete |
+| CAT-03 | 3 | Complete |
+| CAT-04 | 4 | Complete |
+| CAT-05 | 3 | Complete |
+| CAT-06 | 4 | Complete |
+| SRCH-01 | 3 | Complete |
+| CONT-01 | 3 | Complete |
+| CONT-02 | 3 | Complete |
 | PLAT-01 | 1 | Complete |
 | PLAT-02 | 1 | Complete |
 | PLAT-03 | 1 | Complete |

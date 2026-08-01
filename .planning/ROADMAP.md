@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Scaffold + Auth + Data Model** - Foundation: app skeleton, secure config, admin login/logout, Vietnamese interface, SQLite WAL mode, DB init CLI (completed 2026-07-31)
 - [x] **Phase 2: Admin CRUD + Images** - Admin creates/edits/deletes products with image upload, validation, UUID naming, thumbnails, and stock management (completed 2026-08-01)
 - [x] **Phase 3: Public Catalog + Search + Contact** - Customers browse product listing and detail pages with gallery, search by name/description, and Messenger contact links (completed 2026-08-01)
-- [ ] **Phase 4: Polish + Deploy** - Responsive mobile layout, out-of-stock de-emphasis, production WSGI deployment with reverse proxy and hardened config
+- [x] **Phase 4: Polish + Deploy** - Responsive mobile layout, out-of-stock de-emphasis, production WSGI deployment with reverse proxy and hardened config (completed 2026-08-01)
 
 ## Phase Details
 
@@ -117,12 +117,12 @@ Plans:
 
 **Wave 1**
 
-- [ ] 04-01-PLAN.md — Polish: responsive mobile layout, out-of-stock de-emphasis, empty/error state review
-- [ ] 04-02-PLAN.md — Deployment: WSGI server (waitress/gunicorn), reverse proxy, hardened config
+- [x] 04-01-PLAN.md — Polish: responsive mobile layout, out-of-stock de-emphasis, empty/error state review
+- [x] 04-02-PLAN.md — Deployment: WSGI server (waitress/gunicorn), reverse proxy, hardened config
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 04-03-PLAN.md — Production hardening + verification: HTTPS, SECRET_KEY env, error-page audit
+- [x] 04-03-PLAN.md — Production hardening + verification: HTTPS, SECRET_KEY env, error-page audit
 
 ## Progress
 
@@ -134,4 +134,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Scaffold + Auth + Data Model | 3/3 | Complete   | 2026-07-31 |
 | 2. Admin CRUD + Images | 3/3 | Complete   | 2026-08-01 |
 | 3. Public Catalog + Search + Contact | 3/3 | Complete   | 2026-08-01 |
-| 4. Polish + Deploy | 0/2 | Not started | - |
+| 4. Polish + Deploy | 3/3 | Complete   | 2026-08-01 |
