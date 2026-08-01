@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
   <h1 class="page-heading">Kết quả tìm kiếm</h1>
-  {% if not q %}
+  {% if products is none %}
   <div class="empty-state">
     <h2>Tìm kiếm sản phẩm</h2>
     <p>Vui lòng nhập từ khóa để tìm kiếm.</p>
