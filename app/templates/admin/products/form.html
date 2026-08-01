@@ -117,11 +117,16 @@
   var newItems = [];
 
   function syncOrder() {
-    var ids = [];
-    grid.querySelectorAll('.gallery-item[data-id]').forEach(function (item) {
-      ids.push(item.getAttribute('data-id'));
+    var order = [];
+    grid.querySelectorAll('.gallery-item').forEach(function (item) {
+      var id = item.getAttribute('data-id');
+      if (id) {
+        order.push(id);
+      } else {
+        order.push('new:' + newItems.indexOf(item));
+      }
     });
-    orderField.value = ids.join(',');
+    orderField.value = order.join(',');
   }
   function syncDelete() {
     var ids = [];
@@ -177,6 +182,7 @@
       grid.appendChild(item);
     });
     updateDisabled();
+    syncOrder();
   }
   function moveNew(from, dir) {
     var to = from + dir;

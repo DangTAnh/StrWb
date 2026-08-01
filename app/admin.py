@@ -16,31 +16,69 @@ def _protect_admin():
     pass
 
 
-def _process_image_batch(new_files, image_order, delete_ids, product):
-    """Save new files, delete marked, set sort_order/is_primary. Returns error message or None."""
+def _process_image_batch(new_files, order_stream, delete_ids, product):
+    """Save new files, delete marked, set sort_order/is_primary from the displayed
+    gallery order. Returns error message or None.
+
+    ``order_stream`` is the raw ``image_order`` field value: a comma-separated
+    sequence where each token is either an existing image id (int) or a new
+    upload reference ``new:<i>`` (index into ``new_files``). form.html's
+    ``syncOrder`` serializes the full on-screen gallery this way, so the
+    persisted order always matches the order the editor displayed (D-12/D-13) —
+    including newly uploaded images interleaved with existing ones.
+    """
     # 1. Validate the ENTIRE batch first (D-17): any failure -> return reason, save nothing
     for f in new_files:
         ok, reason = validate_image_upload(f)
         if not ok:
             return f'file “{f.filename}” không hợp lệ ({reason})'
     # 2. Delete marked existing images (D-15) — files + rows
+    delete_set = set(delete_ids)
     for img_id in delete_ids:
         img = db.session.get(ProductImage, img_id)
         if img and img.product_id == product.id:
             delete_image_files(img.filename)  # orphan-safe; failure tolerated (D-09)
             db.session.delete(img)
-    # 3. Save new files (IMG-01/02/04), append to the ordered list
+    # 3. Assemble the final gallery from the displayed order stream:
+    #    existing images re-sorted by their submitted id, new uploads inserted
+    #    at their displayed position (D-12/D-13)
     ordered = []
-    for img_id in image_order:  # existing kept, in displayed order
-        img = db.session.get(ProductImage, img_id)
-        if img and img.product_id == product.id:
+    placed_new = set()
+    placed_existing = set()
+    for token in order_stream.split(','):
+        token = token.strip()
+        if not token:
+            continue
+        if token.startswith('new:'):
+            try:
+                idx = int(token[4:])
+            except ValueError:
+                continue
+            if 0 <= idx < len(new_files) and idx not in placed_new:
+                placed_new.add(idx)
+                fname, original = save_image_file(new_files[idx])
+                img = ProductImage(filename=fname, original_filename=original, product_id=product.id)
+                db.session.add(img)
+                ordered.append(img)
+        else:
+            try:
+                img_id = int(token)
+            except ValueError:
+                continue
+            if img_id in delete_set or img_id in placed_existing:
+                continue
+            img = db.session.get(ProductImage, img_id)
+            if img and img.product_id == product.id:
+                placed_existing.add(img_id)
+                ordered.append(img)
+    # 4. Uploads not referenced in the order stream (e.g. no-JS form fallback) go last
+    for idx, f in enumerate(new_files):
+        if idx not in placed_new:
+            fname, original = save_image_file(f)
+            img = ProductImage(filename=fname, original_filename=original, product_id=product.id)
+            db.session.add(img)
             ordered.append(img)
-    for f in new_files:
-        fname, original = save_image_file(f)
-        img = ProductImage(filename=fname, original_filename=original, product_id=product.id)
-        db.session.add(img)
-        ordered.append(img)
-    # 4. Assign order + primary (D-12, D-13)
+    # 5. Assign order + primary (D-12, D-13)
     for idx, img in enumerate(ordered):
         img.sort_order = idx
         img.is_primary = (idx == 0)
@@ -80,10 +118,9 @@ def new_product():
         )
         db.session.add(product)
         db.session.flush()  # need product.id before attaching images
-        image_order = [int(x) for x in request.form.get('image_order', '').split(',') if x.strip().lstrip('-').isdigit()]
         delete_ids = [int(x) for x in request.form.get('delete_images', '').split(',') if x.strip().lstrip('-').isdigit()]
         new_files = [f for f in request.files.getlist('images') if f and (f.filename or '').strip()]
-        err = _process_image_batch(new_files, image_order, delete_ids, product)
+        err = _process_image_batch(new_files, request.form.get('image_order', ''), delete_ids, product)
         if err:
             db.session.rollback()
             flash(f'Không thể lưu ảnh: {err}. Chưa có ảnh nào được lưu.', 'error')
@@ -103,10 +140,9 @@ def edit_product(product_id):
     form = ProductForm(obj=product)
     if form.validate_on_submit():
         form.populate_obj(product)
-        image_order = [int(x) for x in request.form.get('image_order', '').split(',') if x.strip().lstrip('-').isdigit()]
         delete_ids = [int(x) for x in request.form.get('delete_images', '').split(',') if x.strip().lstrip('-').isdigit()]
         new_files = [f for f in request.files.getlist('images') if f and (f.filename or '').strip()]
-        err = _process_image_batch(new_files, image_order, delete_ids, product)
+        err = _process_image_batch(new_files, request.form.get('image_order', ''), delete_ids, product)
         if err:
             db.session.rollback()
             flash(f'Không thể lưu ảnh: {err}. Chưa có ảnh nào được lưu.', 'error')
