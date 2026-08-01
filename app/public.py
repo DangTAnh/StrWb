@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, abort
 
 from .db import db
-from .models import Product
+from .models import Product, ProductImage
 
 public_bp = Blueprint('public', __name__)
 
@@ -20,7 +20,8 @@ def product_detail(product_id):
     product = db.session.get(Product, product_id)
     if product is None:
         abort(404)
-    return render_template('public/product_detail.html', product=product)
+    images = product.images.order_by(ProductImage.sort_order.asc()).all()
+    return render_template('public/product_detail.html', product=product, images=images)
 
 
 @public_bp.route('/search', methods=['GET'])
