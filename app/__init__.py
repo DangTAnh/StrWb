@@ -35,6 +35,7 @@ def create_app():
         SQLALCHEMY_ENGINE_OPTIONS={'connect_args': {'timeout': 30}},
         MAX_CONTENT_LENGTH=16 * 1024 * 1024,
         PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+        REMEMBER_COOKIE_DURATION=timedelta(days=30),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax',
         SESSION_COOKIE_SECURE=(os.environ.get('FLASK_ENV') == 'production'),
