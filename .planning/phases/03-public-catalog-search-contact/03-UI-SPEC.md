@@ -1,7 +1,8 @@
 ---
 phase: 3
 slug: public-catalog-search-contact
-status: draft
+status: approved
+reviewed_at: 2026-08-01
 shadcn_initialized: false
 preset: none
 created: 2026-08-01
@@ -482,11 +483,11 @@ Ambiguities resolved with a reasonable choice rather than a user question:
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS — specific VN CTA labels ("Mua qua Messenger", "Xem tất cả sản phẩm"); every empty/error state carries actionable copy; orthography correct (result count, no-results, out-of-stock line); "Tìm" is idiomatic for a search form control with `aria-label="Tìm kiếm"`.
+- [x] Dimension 2 Visuals: PASS — focal point via accent reservations (price anchor + sole filled-accent CTA); no icon-only actions; type-role hierarchy declared.
+- [x] Dimension 3 Color: PASS — accent reserved for a specific element list (not "all interactive"); 60/30/10 declared; no new hex vs Phase 1+2; destructive-token reuse for the out-of-stock alert documented as deliberate.
+- [x] Dimension 4 Typography: FLAG — 4 sizes + 2 weights respected; body line-height 1.5 declared; card-name clamp uses line-height 1.4 (not in role set) — document as exception or use 1.5 (non-blocking).
+- [x] Dimension 5 Spacing: PASS — all values multiples of 4 from the 4/8/16/24/32/48/64 set; 12px input padding + 0px thumb padding declared as justified exceptions; 3xl consumed as reserved for the catalog section break.
+- [x] Dimension 6 Registry Safety: PASS — no third-party registries, no shadcn, no component libraries; all components hand-rolled per CLAUDE.md; gate satisfied.
 
-**Approval:** pending
+**Approval:** flagged
