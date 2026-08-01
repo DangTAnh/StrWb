@@ -1,7 +1,7 @@
 import unicodedata
 from types import SimpleNamespace
 
-from flask import Blueprint, render_template, request, abort
+from flask import Blueprint, render_template, request, abort, redirect, url_for
 
 from .db import db
 from .models import Product, ProductImage
@@ -35,6 +35,8 @@ def home():
     pagination = Product.query.order_by(Product.sort_order.asc(), Product.id.asc()).paginate(
         page=page, per_page=12, error_out=False
     )
+    if pagination.total and pagination.page > pagination.pages:
+        return redirect(url_for('public.home', page=pagination.pages))
     return render_template('public/index.html', pagination=pagination, products=pagination.items)
 
 
