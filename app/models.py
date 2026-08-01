@@ -1,8 +1,13 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask_login import UserMixin
 
 from .db import db
+
+
+def utcnow():
+    """Timezone-aware UTC now (datetime.utcnow is deprecated in 3.12+)."""
+    return datetime.now(timezone.utc)
 
 
 class AdminUser(UserMixin, db.Model):
@@ -11,7 +16,7 @@ class AdminUser(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
 
 class Product(db.Model):
@@ -28,8 +33,8 @@ class Product(db.Model):
     sku = db.Column(db.String(100), nullable=True)          # D-06 optional
     sort_order = db.Column(db.Integer, default=0, nullable=False)  # D-06 optional
     admin_note = db.Column(db.Text, nullable=True)          # D-06 optional, admin-only
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
     images = db.relationship('ProductImage', backref='product', lazy='dynamic', cascade='all, delete-orphan')
 
     @property
@@ -54,7 +59,7 @@ class ProductImage(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     is_primary = db.Column(db.Boolean, default=False, nullable=False)
     sort_order = db.Column(db.Integer, default=0, nullable=False)  # gallery position; 0 = first = primary (D-12/D-13)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     @property
     def thumb_filename(self):
