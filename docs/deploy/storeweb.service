@@ -1,0 +1,15 @@
+[Unit]
+Description=StoreWeb (gunicorn)
+After=network.target
+
+[Service]
+User=storeweb
+Group=storeweb
+WorkingDirectory=/srv/storewweb
+EnvironmentFile=/srv/storewweb/.env
+ExecStart=/srv/storewweb/venv/bin/gunicorn --workers 5 --bind 127.0.0.1:8000 wsgi:app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
