@@ -40,7 +40,8 @@ Chạy các kiểm tra sau sau khi deploy lên production:
    báo HSTS/SSL, khóa ổ khóa xuất hiện (HTTPS hoạt động).
 2. **Admin login:** vào `https://YOUR_DOMAIN/admin` → bị redirect sang `/login`; đăng nhập
    bằng `ADMIN_PASSWORD` trong `.env` → vào được dashboard. Thử đăng nhập sai vài lần —
-   nginx `limit_req` chặn brute-force (429 nếu vượt 10 req/phút/IP).
+   nginx `limit_req` chặn brute-force: `/login` và `/admin/` giới hạn 10 req/phút/IP, trả
+   **429** khi vượt (nhờ `limit_req_status 429;` trong nginx.conf).
 3. **Error page 404:** gõ `https://YOUR_DOMAIN/khong-ton-tai` → trang 404 tiếng Việt
    ("Trang không tìm thấy") **không kèm stack trace**.
 4. **Error page 500:** tạm kích hoạt lỗi server (nếu cần) → trang 500 "Đã có lỗi xảy ra",
