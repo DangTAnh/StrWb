@@ -15,16 +15,16 @@ def init_db_command():
     from .models import AdminUser
 
     admin_password = os.environ.get('ADMIN_PASSWORD', '')
-    if admin_password == 'change-me':
+    if not admin_password.strip():
+        raise click.ClickException('ADMIN_PASSWORD must be set in environment variables.')
+    if admin_password.strip() == 'change-me':
         raise click.ClickException(
             'ADMIN_PASSWORD is still "change-me". Update .env with a real password before running init-db.'
         )
-    if not admin_password:
-        raise click.ClickException('ADMIN_PASSWORD must be set in environment variables.')
-    if len(admin_password) < 8:
-        raise click.ClickException('ADMIN_PASSWORD must be at least 8 characters long.')
+    if len(admin_password.strip()) < 8:
+        raise click.ClickException('ADMIN_PASSWORD must be at least 8 non-whitespace characters.')
 
-    admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
+    admin_username = os.environ.get('ADMIN_USERNAME', 'admin').strip()
 
     db.create_all()
 
