@@ -7,7 +7,7 @@
     <div class="product-gallery">
       <div class="main-image-box">
         {% if product.primary_image %}
-        <img id="main-image" src="{{ url_for('static', filename='uploads/' + product.primary_image.thumb_filename) }}" alt="{{ product.name }}" width="400" height="400">
+        <img id="main-image" src="{{ url_for('static', filename='uploads/' + product.primary_image.filename) }}" alt="{{ product.name }}" width="440" height="440">
         {% else %}
         <span class="main-placeholder">—</span>
         {% endif %}
@@ -16,7 +16,7 @@
       <div class="gallery-thumbs">
         {% for img in images %}
         <button type="button" class="gallery-thumb{% if loop.first %} is-active{% endif %}"{% if loop.first %} aria-current="true"{% endif %} aria-label="Xem ảnh {{ loop.index }}"
-                data-src="{{ url_for('static', filename='uploads/' + img.thumb_filename) }}" data-alt="{{ product.name }}">
+                data-src="{{ url_for('static', filename='uploads/' + img.filename) }}" data-alt="{{ product.name }}">
           <img src="{{ url_for('static', filename='uploads/' + img.thumb_filename) }}" alt="{{ product.name }}" width="72" height="72" loading="lazy">
         </button>
         {% endfor %}
