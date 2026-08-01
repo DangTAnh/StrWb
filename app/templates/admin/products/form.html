@@ -149,6 +149,19 @@
       if (down) down.disabled = (i === items.length - 1);
     });
   }
+  function updatePrimaryBadge() {
+    var items = grid.querySelectorAll('.gallery-item');
+    items.forEach(function (item) {
+      var badge = item.querySelector('.badge-primary');
+      if (badge) badge.remove();
+    });
+    if (items.length > 0) {
+      var badge = document.createElement('span');
+      badge.className = 'badge-primary';
+      badge.textContent = 'Ảnh chính';
+      items[0].insertBefore(badge, items[0].firstChild);
+    }
+  }
   function makeNewItem(file) {
     var item = document.createElement('div');
     item.className = 'gallery-item';
@@ -182,6 +195,7 @@
       grid.appendChild(item);
     });
     updateDisabled();
+    updatePrimaryBadge();
     syncOrder();
   }
   function moveNew(from, dir) {
@@ -199,6 +213,7 @@
     grid.insertBefore(item, to > idx ? items[to].nextSibling : items[to]);
     syncOrder();
     updateDisabled();
+    updatePrimaryBadge();
   }
   grid.addEventListener('click', function (e) {
     var btn = e.target.closest('.reorder-btn');
