@@ -430,3 +430,6 @@ label { font-size: 14px; }
   .product-gallery { width: 360px; flex-shrink: 0; }
 }
 @media (min-width: 1200px) { .product-gallery { width: 440px; } }
+
+/* ============ Phase 3: Search results ============ */
+.result-count { font-size: 14px; color: #6B7280; margin-bottom: 48px; }
