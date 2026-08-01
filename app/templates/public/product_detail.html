@@ -2,8 +2,70 @@
 {% block title %}{{ product.name }} — Cửa hàng{% endblock %}
 {% block content %}
 <div class="container">
-  <a class="back-link" href="{{ url_for('public.home') }}">Quay lại</a>
-  <h1>{{ product.name }}</h1>
-  <p class="product-price">{{ product.price | format_price }}</p>
+  <a class="back-link" href="{% if request.referrer and request.referrer.startswith(request.host_url) %}{{ request.referrer }}{% else %}{{ url_for('public.home') }}{% endif %}">Quay lại</a>
+  <div class="product-detail">
+    <div class="product-gallery">
+      <div class="main-image-box">
+        {% if product.primary_image %}
+        <img id="main-image" src="{{ url_for('static', filename='uploads/' + product.primary_image.thumb_filename) }}" alt="{{ product.name }}" width="400" height="400">
+        {% else %}
+        <span class="main-placeholder">—</span>
+        {% endif %}
+      </div>
+      {% if images|length > 1 %}
+      <div class="gallery-thumbs">
+        {% for img in images %}
+        <button type="button" class="gallery-thumb{% if loop.first %} is-active{% endif %}"{% if loop.first %} aria-current="true"{% endif %} aria-label="Xem ảnh {{ loop.index }}"
+                data-src="{{ url_for('static', filename='uploads/' + img.thumb_filename) }}" data-alt="{{ product.name }}">
+          <img src="{{ url_for('static', filename='uploads/' + img.thumb_filename) }}" alt="{{ product.name }}" width="72" height="72" loading="lazy">
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="product-info">
+      <h1>{{ product.name }}</h1>
+      <p class="product-price">{{ product.price | format_price }}</p>
+      <div class="product-status">
+        {% if product.status == 'available' %}<span class="badge badge-available">Còn hàng</span>
+        {% elif product.status == 'out_of_stock' %}<span class="badge badge-out_of_stock">Hết hàng</span>
+        {% else %}<span class="badge badge-discontinued">Ngừng bán</span>{% endif %}
+      </div>
+      <a class="btn btn-primary messenger-cta" href="{{ config['MESSENGER_URL'] }}" target="_blank" rel="noopener">Mua qua Messenger</a>
+      {% if product.status == 'out_of_stock' %}
+      <p class="out-of-stock-note">Sản phẩm hiện đang hết hàng.</p>
+      {% endif %}
+      {% if product.brand or product.measurements %}
+      <dl class="product-meta">
+        {% if product.brand %}<div class="product-meta-row"><dt>Thương hiệu:</dt><dd>{{ product.brand }}</dd></div>{% endif %}
+        {% if product.measurements %}<div class="product-meta-row"><dt>Số đo:</dt><dd>{{ product.measurements }}</dd></div>{% endif %}
+      </dl>
+      {% endif %}
+      {% if product.description %}
+      <section class="product-description">
+        <h2>Mô tả</h2>
+        <p>{{ product.description }}</p>
+      </section>
+      {% endif %}
+    </div>
+  </div>
 </div>
+<script>
+(function(){
+  var main = document.getElementById('main-image');
+  if (!main) return;
+  var thumbs = document.querySelectorAll('.gallery-thumb');
+  for (var i = 0; i < thumbs.length; i++) {
+    thumbs[i].addEventListener('click', function(e) {
+      e.preventDefault();
+      main.src = this.getAttribute('data-src');
+      main.alt = this.getAttribute('data-alt');
+      var all = document.querySelectorAll('.gallery-thumb');
+      for (var j = 0; j < all.length; j++) { all[j].classList.remove('is-active'); all[j].removeAttribute('aria-current'); }
+      this.classList.add('is-active');
+      this.setAttribute('aria-current', 'true');
+    });
+  }
+})();
+</script>
 {% endblock %}
