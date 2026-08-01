@@ -115,8 +115,13 @@ Plans:
 
 Plans:
 
+**Wave 1**
+
 - [ ] 04-01-PLAN.md — Polish: responsive mobile layout, out-of-stock de-emphasis, empty/error state review
 - [ ] 04-02-PLAN.md — Deployment: WSGI server (waitress/gunicorn), reverse proxy, hardened config
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 04-03-PLAN.md — Production hardening + verification: HTTPS, SECRET_KEY env, error-page audit
 
 ## Progress
