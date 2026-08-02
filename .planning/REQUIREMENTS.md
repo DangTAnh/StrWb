@@ -14,6 +14,9 @@ Requirements for milestone v1.1 Buy System. Each maps to roadmap phases.
 - [ ] **ORD-03**: Khách thấy thông báo thành công sau khi đặt; form không hiện khi sản phẩm hết hàng/ngừng bán
 - [x] **ORD-04**: Mỗi đơn = 1 sản phẩm, lưu snapshot tên sản phẩm + giá bán + giá nhập tại thời điểm đặt
 - [ ] **ORD-05**: Form công khai có CSRF + chống spam cơ bản
+- [ ] **ORD-10**: Giỏ hàng nhiều sản phẩm — khách thêm/sửa số lượng/xóa sản phẩm trong giỏ (lưu session), xem tổng tiền
+- [ ] **ORD-10a**: Checkout tạo một đơn nhiều sản phẩm (refactor `Order` → `Order` + `OrderItem`, snapshot từng sản phẩm) — thay thế form đặt hàng 1 sản phẩm
+- [ ] **ORD-10b**: Trang chi tiết có nút "Thêm vào giỏ hàng" (chọn số lượng, ≤ tồn kho); form đặt hàng đơn bị bỏ; dải liên hệ Messenger giữ nguyên
 
 ### Theo dõi đơn — Admin
 
@@ -44,7 +47,6 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ### Đặt hàng nâng cao
 
-- **ORD-10**: Giỏ hàng nhiều sản phẩm trong một đơn (refactor Order → Order + OrderItem)
 - **ORD-11**: Thông báo đơn mới cho admin (in-app / email)
 - **ORD-12**: Tự động trừ tồn kho khi đơn được xác nhận
 
@@ -74,6 +76,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | ORD-03 | 6 | Pending |
 | ORD-04 | 5 | Complete |
 | ORD-05 | 6 | Pending |
+| ORD-10 | 6 | Pending |
+| ORD-10a | 6 | Pending |
+| ORD-10b | 6 | Pending |
 | ORD-06 | 7 | Pending |
 | ORD-07 | 7 | Pending |
 | ORD-08 | 7 | Pending |
@@ -87,8 +92,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | PLAT-05 | 5 | Complete |
 
 **Coverage:**
-- v1.1 requirements: 16 total
-- Mapped to phases: 16
+- v1.1 requirements: 19 total
+- Mapped to phases: 19
 - Unmapped: 0 ✓
 
 ---

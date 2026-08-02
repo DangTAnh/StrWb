@@ -62,27 +62,27 @@ Plans:
 - [x] 05-02-PLAN.md — Idempotent SQLite migration
 - [x] 05-03-PLAN.md — Cost price on admin product form
 
-### Phase 6: Public Order Form
+### Phase 6: Cart + Checkout (Public Order Form)
 
-**Goal**: Order placement form on product detail replacing the "Mua qua Messenger" CTA, with validation + CSRF + success feedback
-**Depends on**: Phase 5
-**Requirements**: ORD-01, ORD-02, ORD-03, ORD-05
+**Goal**: Giỏ hàng nhiều sản phẩm (lưu session) + checkout tạo đơn nhiều sản phẩm (Order + OrderItem) thay form đặt hàng 1 sản phẩm; bỏ nút "Mua qua Messenger" trên trang chi tiết, giữ dải liên hệ Messenger
+**Depends on**: Phase 5 (Order model refactor → Order + OrderItem)
+**Requirements**: ORD-01, ORD-02, ORD-03, ORD-05, ORD-10, ORD-10a, ORD-10b
 **Success Criteria** (what must be TRUE):
 
-  1. Product detail page shows an order form with fields: name, phone, address, quantity, note
-  2. Form requires name, phone, address; quantity ≥ 1 and ≤ current stock
-  3. Customer sees a success message after placing an order
-  4. Form is hidden when product is out of stock or discontinued
-  5. Public form has CSRF protection and basic spam protection
+  1. Order model refactored: `orders` giữ thông tin khách + status; `order_items` lưu snapshot từng sản phẩm (name/price/cost_price/quantity) + FK `order_id`; migration idempotent không mất dữ liệu
+  2. Trang chi tiết có "Thêm vào giỏ hàng" (chọn số lượng, 1 ≤ qty ≤ tồn kho); không còn nút "Mua qua Messenger" trên trang chi tiết; dải Messenger ở nơi khác giữ nguyên
+  3. Trang giỏ hàng liệt kê sản phẩm, cho sửa số lượng/xóa, hiện tổng tiền; hidden khi hết hàng/ngừng bán
+  4. Checkout bắt buộc tên/SĐT/địa chỉ; tạo 1 Order + nhiều OrderItem snapshot; CSRF + honeypot chống spam
+  5. Khách thấy thông báo thành công sau khi đặt hàng; tồn kho không giảm (ORD-12 deferred v2)
 
 **Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
 
-- [ ] 06-01-PLAN.md — Order form UI on product detail
-- [ ] 06-02-PLAN.md — Order submit route + validation + CSRF
-- [ ] 06-03-PLAN.md — Success feedback + out-of-stock handling
+- [ ] 06-01-PLAN.md — Order → Order + OrderItem refactor + migration
+- [ ] 06-02-PLAN.md — Cart (session) + add/update/remove + total
+- [ ] 06-03-PLAN.md — Checkout form + submit route + CSRF/honeypot + success
 
 ### Phase 7: Admin Order Tracking
 
