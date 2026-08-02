@@ -124,6 +124,11 @@ def cart():
             flash(f"Sản phẩm '{product.name}' đã ngừng bán hoặc hết hàng và được xóa khỏi giỏ.", 'info')
             cart.pop(pid_str, None)
         else:
+            # MD-02: clamp qty xuống tồn kho hiện tại (stock giảm sau khi add).
+            # Persist qty đã clamp để session khớp với đơn đặt được — tránh tổng tiền
+            # hiển thị mà checkout sẽ reject.
+            qty = min(int(qty), product.quantity)
+            cart[pid_str] = qty
             items.append(SimpleNamespace(product=product, quantity=qty))
             total += product.price * qty
     session['cart'] = cart
