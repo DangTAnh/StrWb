@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-header"><h1>Đơn hàng</h1></div>
+  <form class="order-filter" method="get" action="{{ url_for('admin.orders') }}">
+    <label class="visually-hidden" for="status-filter">Lọc theo trạng thái</label>
+    <select id="status-filter" name="status">
+      <option value="">Tất cả ({{ total_orders }})</option>
+      {% for s in order_statuses %}
+      <option value="{{ s }}" {% if current_status == s %}selected{% endif %}>{{ s }} ({{ status_counts.get(s, 0) }})</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-primary" type="submit">Lọc</button>
+  </form>
+  <div class="admin-card admin-card--wide">
+    {% if orders %}
+    <div class="table-scroll">
+      <table class="data-table">
+        <caption class="visually-hidden">Danh sách đơn hàng</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th><th scope="col">Khách hàng</th>
+            <th scope="col">Tổng tiền</th><th scope="col">Trạng thái</th><th scope="col">Ngày tạo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td><a class="order-id" href="{{ url_for('admin.order_detail', order_id=order.id) }}">#{{ order.id }}</a></td>
+            <td>{{ order.customer_name }}</td>
+            <td class="price-cell">{{ _order_total(order) | format_price }}</td>
+            <td><span class="badge {{ order_badge_class(order.status) }}">{{ order.status }}</span></td>
+            <td class="qty-muted">{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+      {% if pagination.has_prev %}
+      <a href="{{ url_for('admin.orders', page=pagination.prev_num, status=(current_status or None)) }}">Trước</a>
+      {% else %}<span class="disabled" aria-disabled="true">Trước</span>{% endif %}
+      <span class="page-indicator">Trang {{ pagination.page }} / {{ pagination.pages }}</span>
+      {% if pagination.has_next %}
+      <a href="{{ url_for('admin.orders', page=pagination.next_num, status=(current_status or None)) }}">Sau</a>
+      {% else %}<span class="disabled" aria-disabled="true">Sau</span>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+      {% if current_status %}
+      <h2>Không có đơn nào ở trạng thái “{{ current_status }}”</h2>
+      <p>Thử chọn trạng thái khác hoặc chọn “Tất cả”.</p>
+      {% else %}
+      <h2>Chưa có đơn nào</h2>
+      <p>Khách đặt hàng qua web sẽ hiện ở đây.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

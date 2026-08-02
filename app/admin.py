@@ -4,9 +4,28 @@ from flask_login import login_required
 from .db import db
 from .forms import ProductForm
 from .image_utils import delete_image_files, save_image_file, validate_image_upload
-from .models import Product, ProductImage
+from .models import Product, ProductImage, Order
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+ORDER_STATUSES = ('Chờ xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận', 'Đã hủy')
+
+
+@admin_bp.app_template_global()
+def _order_total(order):
+    """Grand total = sum of item snapshot prices × quantities (single source of truth)."""
+    return sum(item.product_price * item.quantity for item in order.items)
+
+
+@admin_bp.app_template_global()
+def order_badge_class(status):
+    return {
+        'Chờ xác nhận': 'badge-order-pending',
+        'Đã gói': 'badge-order-packed',
+        'Đã gửi': 'badge-order-shipped',
+        'Đã nhận': 'badge-order-delivered',
+        'Đã hủy': 'badge-order-cancelled',
+    }.get(status, '')
 
 
 @admin_bp.before_request
@@ -88,7 +107,41 @@ def _process_image_batch(new_files, order_stream, delete_ids, product):
 @admin_bp.route('/', methods=['GET'])
 def dashboard():
     products_count = Product.query.count()
-    return render_template('admin/dashboard.html', products_count=products_count)
+    orders_count = Order.query.count()
+    return render_template('admin/dashboard.html', products_count=products_count, orders_count=orders_count)
+
+
+@admin_bp.route('/orders', methods=['GET'])
+def orders():
+    page = request.args.get('page', 1, type=int)
+    status = (request.args.get('status') or '').strip()
+    query = Order.query.order_by(Order.created_at.desc(), Order.id.desc())
+    if status in ORDER_STATUSES:
+        query = query.filter_by(status=status)
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+    status_counts = dict(
+        db.session.query(Order.status, db.func.count(Order.id)).group_by(Order.status).all()
+    )
+    return render_template(
+        'admin/orders/list.html',
+        pagination=pagination,
+        orders=pagination.items,
+        current_status=status,
+        status_counts=status_counts,
+        total_orders=sum(status_counts.values()),
+        order_statuses=ORDER_STATUSES,
+    )
+
+
+# Minimal detail route — full detail UI is 07-02; this stub exists so the
+# order list template's drill-in link renders and resolves.
+@admin_bp.route('/orders/<int:order_id>', methods=['GET'])
+def order_detail(order_id):
+    order = db.session.get(Order, order_id)
+    if order is None:
+        flash('Không tìm thấy đơn.', 'error')
+        return redirect(url_for('admin.orders'))
+    return render_template('admin/orders/detail.html', order=order)
 
 
 @admin_bp.route('/products', methods=['GET'])
