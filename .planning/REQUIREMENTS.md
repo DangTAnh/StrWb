@@ -20,7 +20,7 @@ Requirements for milestone v1.1 Buy System. Each maps to roadmap phases.
 
 ### Theo dõi đơn — Admin
 
-- [ ] **ORD-06**: Admin xem danh sách đơn (phân trang, lọc theo trạng thái)
+- [x] **ORD-06**: Admin xem danh sách đơn (phân trang, lọc theo trạng thái)
 - [x] **ORD-07**: Admin xem chi tiết đơn (thông tin khách, sản phẩm, số lượng, giá, ghi chú, thời gian)
 - [x] **ORD-08**: Admin cập nhật trạng thái đơn: Chờ xác nhận → Đã gói → Đã gửi → Đã nhận (+ Đã hủy, chỉ admin)
 - [x] **ORD-09**: Trạng thái đơn chỉ tiến về trước, không cho lùi
@@ -79,7 +79,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | ORD-10 | 6 | Complete |
 | ORD-10a | 6 | Complete |
 | ORD-10b | 6 | Complete |
-| ORD-06 | 7 | Pending |
+| ORD-06 | 7 | Complete |
 | ORD-07 | 7 | Complete |
 | ORD-08 | 7 | Complete |
 | ORD-09 | 7 | Complete |
