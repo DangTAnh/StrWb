@@ -2,13 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Buy System
-status: planning
-last_updated: "2026-08-01T20:44:12.470Z"
-last_activity: 2026-08-01
+status: executing
+stopped_at: Milestone v1.0 archived (complete-milestone) — shipped, awaiting next milestone
+last_updated: "2026-08-02T03:32:44.507Z"
+last_activity: 2026-08-02 -- Phase 5 planning complete
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -26,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 
 Phase: 5 Data Model + Migration
 Plan: —
-Status: Roadmap approved — ready for discuss/plan phase 5
-Last activity: 2026-08-02 — Milestone v1.1 roadmap created
+Status: Ready to execute
+Last activity: 2026-08-02 -- Phase 5 planning complete
 
 ## Performance Metrics
 

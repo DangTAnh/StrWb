@@ -53,7 +53,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 
+**Wave 1**
+
 - [x] 05-01-PLAN.md — Order + Product cost data model
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [x] 05-02-PLAN.md — Idempotent SQLite migration
 - [x] 05-03-PLAN.md — Cost price on admin product form
 
