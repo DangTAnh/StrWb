@@ -505,3 +505,10 @@ button.link-danger:hover { text-decoration: underline; }
 .stat-hint { font-size: 14px; color: #6B7280; margin-top: 8px; }
 .stat-note { font-size: 14px; color: #B45309; margin-top: 8px; }  /* NEW hex, AA 4.7:1 on #F9FAFB */
 @media (max-width: 480px) { .stats-group { padding: 16px; } }
+
+/* Order status breakdown — links to /admin/orders?status=<label> */
+.status-breakdown { list-style: none; margin: 16px 0 0; padding: 0; }
+.status-breakdown li + li { border-top: 1px solid #E5E7EB; }
+.status-breakdown a { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 12px 8px; color: #1F2937; }
+.status-breakdown a:hover { background: #F9FAFB; text-decoration: none; }
+.badge-neutral { color: #6B7280; background: #F3F4F6; border-color: #E5E7EB; }
