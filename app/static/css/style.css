@@ -456,3 +456,16 @@ label { font-size: 14px; }
 .checkout-section h2 { font-size: 24px; font-weight: 600; line-height: 1.2; margin-bottom: 16px; }
 button.link-danger { background: none; border: none; padding: 0; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
 button.link-danger:hover { text-decoration: underline; }
+
+/* ============ Phase 7: Admin order tracking ============ */
+.badge-order-pending { color: #1D4ED8; background: #DBEAFE; border-color: #BFDBFE; }
+.badge-order-packed { color: #D97706; background: #FFFBEB; border-color: #FDE68A; }
+.badge-order-shipped { color: #1D4ED8; background: #DBEAFE; border-color: #BFDBFE; }
+.badge-order-delivered { color: #059669; background: #ECFDF5; border-color: #A7F3D0; }
+.badge-order-cancelled { color: #6B7280; background: #F3F4F6; border-color: #E5E7EB; }
+.order-filter { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.order-id { color: var(--accent); font-size: 14px; font-weight: 600; display: inline-block; padding: 12px 8px; }
+@media (max-width: 480px) {
+  .order-filter { flex-direction: column; align-items: stretch; gap: 8px; }
+  .order-filter button { width: 100%; }
+}
