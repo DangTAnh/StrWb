@@ -1,0 +1,24 @@
+<form class="checkout-form" method="post" action="{{ url_for('public.checkout') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="text" name="website" class="honeypot" autocomplete="off" tabindex="-1" aria-hidden="true">
+  <div class="form-field">
+    <label for="customer_name">Họ và tên</label> <span class="required" aria-hidden="true">*</span>
+    <input type="text" id="customer_name" name="customer_name" maxlength="100" required>
+  </div>
+  <div class="form-field">
+    <label for="customer_phone">Số điện thoại</label> <span class="required" aria-hidden="true">*</span>
+    <input type="tel" id="customer_phone" name="customer_phone" required>
+    <p class="help-text">8–11 chữ số, có thể có dấu cách, gạch ngang hoặc dấu cộng</p>
+  </div>
+  <div class="form-field">
+    <label for="customer_address">Địa chỉ</label> <span class="required" aria-hidden="true">*</span>
+    <textarea id="customer_address" name="customer_address" maxlength="500" required></textarea>
+  </div>
+  <div class="form-field">
+    <label for="customer_note">Ghi chú (tùy chọn)</label>
+    <textarea id="customer_note" name="customer_note" maxlength="1000" placeholder="Ví dụ: giao sau 18h, gọi trước khi đến..."></textarea>
+  </div>
+  <div class="form-field">
+    <button type="submit" class="btn btn-primary" style="width: 100%; max-width: 320px;">Đặt hàng</button>
+  </div>
+</form>
