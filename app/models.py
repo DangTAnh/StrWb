@@ -74,11 +74,6 @@ class Order(db.Model):
     __tablename__ = 'orders'
 
     id = db.Column(db.Integer, primary_key=True)  # order number = incrementing id (no formatted code)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='SET NULL'), nullable=True)
-    product_name = db.Column(db.String(200), nullable=False)  # snapshot at order time (ORD-04)
-    product_price = db.Column(db.Integer, nullable=False)  # sale price VND, Integer only (D-05)
-    product_cost_price = db.Column(db.Integer, nullable=True)  # cost price VND; NULL if product has none
-    quantity = db.Column(db.Integer, nullable=False)  # >= 1 enforced at Phase 6 form
     customer_name = db.Column(db.String(100), nullable=False)
     customer_phone = db.Column(db.String(20), nullable=False)
     customer_address = db.Column(db.Text, nullable=False)
@@ -87,4 +82,20 @@ class Order(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
-    product = db.relationship('Product', backref=db.backref('orders', passive_deletes=True))
+    items = db.relationship('OrderItem', backref='order', lazy='dynamic', cascade='all, delete-orphan')
+
+
+class OrderItem(db.Model):
+    __tablename__ = 'order_items'
+    __table_args__ = (db.CheckConstraint('quantity >= 1', name='ck_order_items_quantity_positive'),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id', ondelete='CASCADE'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='SET NULL'), nullable=True)
+    product_name = db.Column(db.String(200), nullable=False)  # snapshot at order time (ORD-10a)
+    product_price = db.Column(db.Integer, nullable=False)  # sale price VND, Integer only (D-05)
+    product_cost_price = db.Column(db.Integer, nullable=True)  # cost price VND; NULL if product has none
+    quantity = db.Column(db.Integer, nullable=False)  # >= 1 (CheckConstraint ck_order_items_quantity_positive)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    product = db.relationship('Product', backref=db.backref('order_items', passive_deletes=True))
