@@ -125,7 +125,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 08-01-PLAN.md — Revenue + profit stats
+- [x] 08-01-PLAN.md — Revenue + profit stats
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -169,7 +169,7 @@ Plans:
 | 5. Data Model + Migration | v1.1 | 3/3 | Complete    | 2026-08-02 |
 | 6. Cart + Checkout (Public Order Form) | v1.1 | 3/3 | Complete | 2026-08-02 |
 | 7. Admin Order Tracking | v1.1 | 3/3 | Complete    | 2026-08-02 |
-| 8. Admin Stats | v1.1 | 0/3 | Planned | — |
+| 8. Admin Stats | v1.1 | 1/3 | In Progress|  |
 | 9. Polish + Deploy | v1.1 | 0/3 | Planned | — |
 
 ---

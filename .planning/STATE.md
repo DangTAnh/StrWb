@@ -4,8 +4,8 @@ milestone: v1.1
 milestone_name: Buy System
 status: executing
 stopped_at: Phase 8 UI-SPEC approved
-last_updated: "2026-08-02T17:35:59.580Z"
-last_activity: 2026-08-02 -- Phase 8 planning complete
+last_updated: "2026-08-02T17:39:06.671Z"
+last_activity: 2026-08-02 -- Phase 8 execution started
 progress:
   total_phases: 5
   completed_phases: 3
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-02)
 
 **Core value:** Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admin dễ dàng quản lý sản phẩm.
-**Current focus:** Phase 8 — admin stats
+**Current focus:** Phase 8 — Admin Stats
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-08-02 -- Phase 8 planning complete
+Phase: 8 (Admin Stats) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 8
+Last activity: 2026-08-02 -- Phase 8 execution started
 
 ## Performance Metrics
 
