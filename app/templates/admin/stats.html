@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-header"><h1>Thống kê</h1></div>
+  <div class="admin-card admin-card--wide">
+    <section class="stats-group">
+      <h2 class="stats-group-title">Doanh thu &amp; Lợi nhuận</h2>
+      <div class="stats-grid">
+        <article class="stat-card">
+          <p class="stat-label">Tổng doanh thu</p>
+          <p class="stat-value stat-value--display stat-value--accent">{{ revenue | format_price }}</p>
+          <p class="stat-hint">Chỉ tính đơn Đã gửi và Đã nhận.</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Lợi nhuận</p>
+          <p class="stat-value stat-value--display">{{ profit | format_price }}</p>
+          {% if profit_note %}<p class="stat-note">{{ profit_note }}</p>{% endif %}
+          <p class="stat-hint">Doanh thu trừ giá nhập.</p>
+        </article>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -4,11 +4,14 @@ from flask_login import login_required
 from .db import db
 from .forms import ProductForm
 from .image_utils import delete_image_files, save_image_file, validate_image_upload
-from .models import Product, ProductImage, Order
+from .models import Product, ProductImage, Order, OrderItem
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 ORDER_STATUSES = ('Chờ xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận', 'Đã hủy')
+# STAT-01 locked: only shipped + received orders count toward revenue. Tuple (not set)
+# keeps iteration order deterministic for the IN-clause filter.
+REVENUE_STATUSES = ('Đã gửi', 'Đã nhận')
 
 # Forward-only status transition map (ORD-08, ORD-09).
 # Server-side single source of truth — never trust client-supplied next_status.
@@ -141,6 +144,52 @@ def orders():
         status_counts=status_counts,
         total_orders=sum(status_counts.values()),
         order_statuses=ORDER_STATUSES,
+    )
+
+
+@admin_bp.route('/stats', methods=['GET'])
+def stats():
+    """Admin stats dashboard — revenue + profit (NULL-safe). GET-only, no new deps."""
+    # Q1 — revenue + units_sold in one aggregate tuple. coalesce guarantees 0 (not NULL)
+    # when the qualifying set is empty, so format_price(int(None)) can never crash (#Pitfall 1).
+    revenue, units_sold = (
+        db.session.query(
+            db.func.coalesce(db.func.sum(OrderItem.product_price * OrderItem.quantity), 0),
+            db.func.coalesce(db.func.sum(OrderItem.quantity), 0),
+        )
+        .join(Order, OrderItem.order_id == Order.id)
+        .filter(Order.status.in_(REVENUE_STATUSES))
+        .one()
+    )
+
+    # Q2 — profit, NULL-safe: only cost-bearing items contribute. NULL cost items are
+    # excluded (never treated as 0 -> avoids overstating profit), per STAT-02 / #Pitfall 3.
+    profit, profit_items = (
+        db.session.query(
+            db.func.coalesce(db.func.sum((OrderItem.product_price - OrderItem.product_cost_price) * OrderItem.quantity), 0),
+            db.func.count(OrderItem.id),
+        )
+        .join(Order, OrderItem.order_id == Order.id)
+        .filter(Order.status.in_(REVENUE_STATUSES), OrderItem.product_cost_price.isnot(None))
+        .one()
+    )
+
+    # Q3 — total qualifying items -> derive the conditional profit note.
+    total_qual_items = (
+        db.session.query(db.func.count(OrderItem.id))
+        .join(Order, OrderItem.order_id == Order.id)
+        .filter(Order.status.in_(REVENUE_STATUSES))
+        .scalar()
+    )
+    profit_note = None
+    if total_qual_items - profit_items > 0:
+        profit_note = f'Lợi nhuận tính trên {profit_items} sản phẩm có giá nhập.'
+
+    # Note: units_sold is computed (Q1) but only rendered in plan 08-02 per the ROADMAP split.
+    # Pitfall 4 self-consistency: only pass vars this plan's template consumes.
+    return render_template(
+        'admin/stats.html',
+        revenue=revenue, profit=profit, profit_note=profit_note, units_sold=units_sold
     )
 
 

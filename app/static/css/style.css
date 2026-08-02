@@ -489,3 +489,19 @@ button.link-danger:hover { text-decoration: underline; }
 .order-progress li.is-current .dot { background: #2563EB; box-shadow: 0 0 0 3px #DBEAFE; }
 .order-progress li.is-current { color: #1F2937; font-weight: 600; }
 .order-terminal { color: #6B7280; }
+
+/* ============ Phase 8: Admin stats ============ */
+.stats-group { padding: 24px; }
+.stats-group + .stats-group { border-top: 1px solid #E5E7EB; }  /* first section: no border */
+.stats-group-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.stats-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+.stat-card { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px; }
+.stat-label { font-size: 14px; color: #6B7280; }
+.stat-value { font-size: 24px; font-weight: 600; line-height: 1.2; color: #1F2937; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.stat-value--display { font-size: 32px; line-height: 1.1; }
+.stat-value--accent { color: #2563EB; }  /* revenue only; profit stays #1F2937 to avoid misreading negatives */
+.stat-hint { font-size: 14px; color: #6B7280; margin-top: 8px; }
+.stat-note { font-size: 14px; color: #B45309; margin-top: 8px; }  /* NEW hex, AA 4.7:1 on #F9FAFB */
+@media (max-width: 480px) { .stats-group { padding: 16px; } }
