@@ -1,10 +1,11 @@
 ---
 phase: 5
 slug: data-model-migration
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-08-02
+reviewed_at: 2026-08-02
 ---
 
 # Phase 5 — UI Design Contract
