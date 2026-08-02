@@ -15,7 +15,7 @@ Requirements for milestone v1.1 Buy System. Each maps to roadmap phases.
 - [x] **ORD-04**: Mỗi đơn = 1 sản phẩm, lưu snapshot tên sản phẩm + giá bán + giá nhập tại thời điểm đặt
 - [ ] **ORD-05**: Form công khai có CSRF + chống spam cơ bản
 - [ ] **ORD-10**: Giỏ hàng nhiều sản phẩm — khách thêm/sửa số lượng/xóa sản phẩm trong giỏ (lưu session), xem tổng tiền
-- [ ] **ORD-10a**: Checkout tạo một đơn nhiều sản phẩm (refactor `Order` → `Order` + `OrderItem`, snapshot từng sản phẩm) — thay thế form đặt hàng 1 sản phẩm
+- [x] **ORD-10a**: Checkout tạo một đơn nhiều sản phẩm (refactor `Order` → `Order` + `OrderItem`, snapshot từng sản phẩm) — thay thế form đặt hàng 1 sản phẩm
 - [ ] **ORD-10b**: Trang chi tiết có nút "Thêm vào giỏ hàng" (chọn số lượng, ≤ tồn kho); form đặt hàng đơn bị bỏ; dải liên hệ Messenger giữ nguyên
 
 ### Theo dõi đơn — Admin
@@ -77,7 +77,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | ORD-04 | 5 | Complete |
 | ORD-05 | 6 | Pending |
 | ORD-10 | 6 | Pending |
-| ORD-10a | 6 | Pending |
+| ORD-10a | 6 | Complete |
 | ORD-10b | 6 | Pending |
 | ORD-06 | 7 | Pending |
 | ORD-07 | 7 | Pending |

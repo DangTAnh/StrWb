@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Buy System
-status: planning
-stopped_at: Phase 6 plans verified (3/3) — blocker fixed (06-03 → wave 3)
-last_updated: "2026-08-02T14:55:00.000Z"
-last_activity: 2026-08-02
+status: executing
+stopped_at: Phase 6 plan 1 complete (1/3) — Order + OrderItem refactor + migration
+last_updated: "2026-08-02T08:10:49.063Z"
+last_activity: 2026-08-02 -- Phase 6 execution started
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 3
-  completed_plans: 0
+  completed_plans: 1
   percent: 20
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 ## Current Position
 
 Phase: 6
-Plan: Ready to execute
-Status: Plans verified (3/3)
+Plan: 06-01 complete (1/3) — Order + OrderItem refactor + migration
+Status: Executing (next: 06-02 cart session)
 Last activity: 2026-08-02
 
 ## Performance Metrics
@@ -66,6 +66,7 @@ Last activity: 2026-08-02
 | Phase 04-polish-deploy P04-01 | 20min | 5 tasks | 3 files |
 | Phase 04-polish-deploy P04-02 | 16min | 4 tasks | 7 files |
 | Phase 04-polish-deploy P04-03 | 14min | 4 tasks | 1 files |
+| Phase 06-public-order-form P06-01 | 6min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,7 @@ Recent decisions affecting current work:
 - [Phase 04]: Deploy: waitress==3.0.2 pinned in requirements.txt (Windows smoke test GET / -> 200); gunicorn documented-only for Linux (2*CPU+1 workers, systemd, certbot --nginx); nginx.conf carries limit_req zone=admin + security headers + static alias + X-Forwarded-Proto $scheme; admin protected by app login + rate limit only, no basic auth/allowlist (D-04)
 - [Phase 04]: YOUR_DOMAIN placeholder kept in nginx.conf/Linux.md/README because no real domain was available at execution time — flagged prominently, must be replaced before go-live (D-03)
 - [Phase 04]: Phase 4 verification: SC-1..SC-5 all VERIFIED programmatically (40+ checks, isolated temp DBs), 4 non-blocking human UAT items (2x-DPR gallery sharpness, responsive visual audit, U+20AB glyph browser check, real-domain HTTPS go-live)
+- [Phase 6 06-01]: Order refactored -> Order + OrderItem: orders giữ customer+status (8 cột), order_items snapshot từng sản phẩm (FK order_id CASCADE, product_id nullable SET NULL, CheckConstraint quantity >= 1 / IN-03). init-db idempotent rebuild orders legacy (guard PRAGMA table_info, DROP chỉ khi 0 rows). Verified trên temp copies (5 cases A-E pass); data/app.db thật không bị đụng (vẫn v1.0)
 
 ### Pending Todos
 
@@ -117,9 +119,9 @@ Items acknowledged and deferred at milestone close on 2026-08-02:
 
 ## Session Continuity
 
-Last session: 2026-08-02T07:12:17.491Z
-Stopped at: Phase 6 UI-SPEC approved (6/6)
-Resume file: .planning/phases/06-public-order-form/06-UI-SPEC.md
+Last session: 2026-08-02T08:10:49.051Z
+Stopped at: Phase 6 plan 1 complete (1/3) — Order + OrderItem refactor + migration
+Resume file: None
 
 ## Operator Next Steps
 
