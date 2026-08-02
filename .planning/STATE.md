@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Buy System
 status: executing
-stopped_at: Phase 6 plan 3 complete (3/3) — checkout + CSRF/honeypot + success
-last_updated: "2026-08-02T12:27:05.294Z"
+stopped_at: Phase 7 plan 3 complete (3/3) — forward-only status transitions (ORD-08/ORD-09)
+last_updated: "2026-08-02T12:58:27.777Z"
 last_activity: 2026-08-02
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 8
-  percent: 40
+  completed_plans: 9
+  percent: 60
 ---
 
 # Project State
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 ## Current Position
 
 Phase: 7 (admin-order-tracking) — EXECUTING
-Plan: 2 of 3
-Status: Ready to execute
+Plan: 3 of 3 — COMPLETE
+Status: Plan complete, advancing to Phase 7 end
 Last activity: 2026-08-02
 
 ## Performance Metrics
@@ -99,6 +99,9 @@ Recent decisions affecting current work:
 - [Phase 6 06-02]: Cart session ORD-10: session `{product_id(str): qty}` + CartForm + 4 public routes (cart_add/cart/cart_update/cart_remove). add thay thế qty (không cộng dồn); server re-validate 1 <= qty <= tồn kho + status available; mọi ghi session gán lại cả dict (mark modified). cart() filter stale: key không số -> skip, product deleted -> silent remove (không flash, tránh lộ id), out_of_stock/discontinued -> pop + flash info. ORD-10b: product_detail thay Messenger CTA bằng block add-to-cart status-gated (csrf, qty min=1 max=stock); ORD-03: block ẩn khi hết hàng/ngừng bán. Nav cart-link + cart-badge len(session['cart']) ẩn khi trống. CSRF chặn POST thiếu token (400). Không dependency mới; không đụng data/app.db thật; giữ nguyên form.html uncommitted
 - [Phase 6 06-03]: Checkout ORD-01/02/03/05 + ORD-10a: CheckoutForm (tên/SĐT/địa chỉ bắt buộc, note optional, SĐT 8-11 chữ số Regexp + digit-count, honeypot 'website') + route POST /cart/checkout: honeypot silent reject -> empty-cart guard -> form.validate -> server re-validate từng món (available + 1<=qty<=tồn kho) -> tạo 1 Order + nhiều OrderItem snapshot trong 1 commit -> xóa giỏ + flash success + redirect về trang chi tiết. _checkout_form.html partial (CSRF + honeypot + 4 field) include vào cart.html. Fix Rule 1: `(customer_note.data or '').strip() or None` (Optional field vắng mặt khỏi POST -> data None -> crash). Không giảm tồn kho (ORD-12 v2); grep gate cost_price/Giá nhập = 0 hits; không dependency mới; form.html uncommitted giữ nguyên
 - [Phase 6]: Phase 6 CLOSED: 3/3 plans complete (f9d4083..f8f799d), code review 0 HIGH (MD-01 cart_update no-upsert, MD-02 clamp qty->session, LW-02 guard items_to_save, LW-05 bỏ ignore missing — đều fixed), verify 5/5 SC VERIFIED (72/72 checks, 7 reqs ORD-01/02/03/05/10/10a/10b), UI review APPROVED (H1 cart price hierarchy, M1 checkout h2, M2 flash.success #047857 AA 5.25:1 — fixed f8f799d). human_needed: 5 visual UAT items (non-blocking) + re-audit populated cart sau operator init-db. Deploy note: data/app.db thật vẫn v1.0, cần `flask --app app init-db` (operator, ADMIN_PASSWORD hợp lệ) — verify chỉ trên temp copies
+- [Phase 7 07-01]: ORDER_STATUSES + _order_total/order_badge_class Jinja globals + admin.orders list route + list.html + dashboard nav "Đơn hàng" + 5 badge-order-* CSS classes
+- [Phase 7 07-02]: order_detail route + detail.html background + strftime filter + .order-detail/.order-section/.order-meta CSS
+- [Phase 7 07-03]: TRANSITION_MAP forward-only status map + POST /admin/orders/<id>/status route (server-side whitelist, invalid/backward/terminal reject no DB change no 500, missing -> flash) + detail.html stepper (4-step .order-progress, is-done/is-current/aria-current, terminal notes for Đã nhận/Đã hủy, per-status transition buttons with hidden csrf_token + next_status) + CSS .order-progress/.dot connectors/.order-terminal (8 min, 3 tasks, 3 files, no new deps)
 
 ### Pending Todos
 
@@ -124,7 +127,7 @@ Items acknowledged and deferred at milestone close on 2026-08-02:
 
 ## Session Continuity
 
-Last session: 2026-08-02T12:27:05.272Z
+Last session: 2026-08-02T12:58:27.754Z
 Stopped at: Phase 6 plan 3 complete (3/3) — checkout + CSRF/honeypot + success
 Resume file: None
 
