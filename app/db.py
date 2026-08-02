@@ -3,6 +3,7 @@ import os
 import click
 from flask.cli import with_appcontext
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from werkzeug.security import generate_password_hash
 
 db = SQLAlchemy()
@@ -27,6 +28,14 @@ def init_db_command():
     admin_username = os.environ.get('ADMIN_USERNAME', 'admin').strip()
 
     db.create_all()
+
+    # Migration guard (PLAT-05): create_all never ALTERs an existing table, so add
+    # cost_price to v1.0 DBs manually. PRAGMA check makes this idempotent.
+    with db.engine.begin() as conn:
+        rows = conn.execute(text('PRAGMA table_info(products)')).fetchall()
+        if not any(row[1] == 'cost_price' for row in rows):
+            conn.execute(text('ALTER TABLE products ADD COLUMN cost_price INTEGER'))
+            click.echo('Migrated: added products.cost_price (v1.0 -> v1.1).')
 
     user = AdminUser.query.filter_by(username=admin_username).first()
     if user:
