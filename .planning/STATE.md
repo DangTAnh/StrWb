@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-08-01T20:44:12.470Z"
 last_activity: 2026-08-01
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-02)
 
 **Core value:** Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admin dễ dàng quản lý sản phẩm.
-**Current focus:** Milestone v1.0 shipped — awaiting next milestone
+**Current focus:** Milestone v1.1 Buy System — 5 phases (5-9) planned, starting Phase 5
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 5 Data Model + Migration
 Plan: —
-Status: Defining requirements
-Last activity: 2026-08-01 — Milestone v1.1 started
+Status: Roadmap approved — ready for discuss/plan phase 5
+Last activity: 2026-08-02 — Milestone v1.1 roadmap created
 
 ## Performance Metrics
 

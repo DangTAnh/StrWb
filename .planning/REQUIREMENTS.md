@@ -69,27 +69,27 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ORD-01 | — | Pending |
-| ORD-02 | — | Pending |
-| ORD-03 | — | Pending |
-| ORD-04 | — | Pending |
-| ORD-05 | — | Pending |
-| ORD-06 | — | Pending |
-| ORD-07 | — | Pending |
-| ORD-08 | — | Pending |
-| ORD-09 | — | Pending |
-| COST-01 | — | Pending |
-| COST-02 | — | Pending |
-| STAT-01 | — | Pending |
-| STAT-02 | — | Pending |
-| STAT-03 | — | Pending |
-| STAT-04 | — | Pending |
-| PLAT-05 | — | Pending |
+| ORD-01 | 6 | Pending |
+| ORD-02 | 6 | Pending |
+| ORD-03 | 6 | Pending |
+| ORD-04 | 5 | Pending |
+| ORD-05 | 6 | Pending |
+| ORD-06 | 7 | Pending |
+| ORD-07 | 7 | Pending |
+| ORD-08 | 7 | Pending |
+| ORD-09 | 7 | Pending |
+| COST-01 | 5 | Pending |
+| COST-02 | 5 | Pending |
+| STAT-01 | 8 | Pending |
+| STAT-02 | 8 | Pending |
+| STAT-03 | 8 | Pending |
+| STAT-04 | 8 | Pending |
+| PLAT-05 | 5 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 16 total
-- Mapped to phases: 0
-- Unmapped: 16 ⚠️
+- Mapped to phases: 16
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-08-02*
