@@ -123,8 +123,16 @@ Plans:
 
 Plans:
 
+**Wave 1**
+
 - [ ] 08-01-PLAN.md — Revenue + profit stats
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 08-02-PLAN.md — Orders-by-status + units sold
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 08-03-PLAN.md — Inventory counts dashboard
 
 ### Phase 9: Polish + Deploy
