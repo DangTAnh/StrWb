@@ -13,6 +13,7 @@ class LoginForm(FlaskForm):
 class ProductForm(FlaskForm):
     name = StringField('Tên sản phẩm', validators=[DataRequired(message='Vui lòng nhập tên sản phẩm'), Length(max=200)])
     price = IntegerField('Giá (VND)', validators=[InputRequired(message='Vui lòng nhập giá'), NumberRange(min=0, message='Giá không được âm')])
+    cost_price = IntegerField('Giá nhập (VND)', validators=[Optional(), NumberRange(min=0, message='Giá nhập không được âm')])
     brand = StringField('Thương hiệu', validators=[Optional(), Length(max=100)])
     measurements = TextAreaField('Số đo', validators=[Optional()])
     description = TextAreaField('Mô tả', validators=[Optional()])

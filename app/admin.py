@@ -107,6 +107,7 @@ def new_product():
         product = Product(
             name=form.name.data.strip(),
             price=form.price.data,
+            cost_price=form.cost_price.data or None,
             brand=form.brand.data or None,
             measurements=form.measurements.data or None,
             description=form.description.data or None,
@@ -140,6 +141,8 @@ def edit_product(product_id):
     form = ProductForm(obj=product)
     if form.validate_on_submit():
         form.populate_obj(product)
+        if product.sort_order is None:
+            product.sort_order = 0  # populate_obj writes None for empty Optional() -> NOT NULL violation; mirror new_product's `or 0`
         delete_ids = [int(x) for x in request.form.get('delete_images', '').split(',') if x.strip().lstrip('-').isdigit()]
         new_files = [f for f in request.files.getlist('images') if f and (f.filename or '').strip()]
         err = _process_image_batch(new_files, request.form.get('image_order', ''), delete_ids, product)
