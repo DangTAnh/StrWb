@@ -41,6 +41,29 @@
         </ul>
       </div>
     </section>
+
+    <section class="stats-group">
+      <h2 class="stats-group-title">Kho</h2>
+      <div class="stats-grid">
+        <article class="stat-card">
+          <p class="stat-label">Tổng sản phẩm</p>
+          <p class="stat-value">{{ total_products }}</p>
+          <p class="stat-hint">Gồm cả sản phẩm ngừng bán.</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Còn hàng</p>
+          <p class="stat-value">{{ in_stock }}</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Hết hàng</p>
+          <p class="stat-value">{{ out_of_stock }}</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Ngừng bán</p>
+          <p class="stat-value">{{ discontinued }}</p>
+        </article>
+      </div>
+    </section>
   </div>
 </div>
 {% endblock %}
