@@ -107,7 +107,7 @@ def new_product():
         product = Product(
             name=form.name.data.strip(),
             price=form.price.data,
-            cost_price=form.cost_price.data or None,
+            cost_price=form.cost_price.data,  # Optional() yields None on empty; 0 VND preserved
             brand=form.brand.data or None,
             measurements=form.measurements.data or None,
             description=form.description.data or None,
