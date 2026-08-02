@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
-from wtforms import IntegerField, TextAreaField, BooleanField
-from wtforms.validators import DataRequired, InputRequired, Optional, Length, NumberRange
+from wtforms import IntegerField, TextAreaField, BooleanField, ValidationError
+from wtforms.validators import DataRequired, InputRequired, Optional, Length, NumberRange, Regexp
 
 
 class LoginForm(FlaskForm):
@@ -27,3 +27,18 @@ class ProductForm(FlaskForm):
     sort_order = IntegerField('Thứ tự hiển thị', validators=[Optional()], default=0)
     admin_note = TextAreaField('Ghi chú nội bộ', validators=[Optional()])
     submit = SubmitField('Lưu sản phẩm')
+
+
+class CheckoutForm(FlaskForm):
+    customer_name = StringField('Họ và tên', validators=[DataRequired(message='Vui lòng nhập họ và tên.'), Length(max=100, message='Tên không được quá 100 ký tự.')])
+    customer_phone = StringField('Số điện thoại', validators=[DataRequired(message='Vui lòng nhập số điện thoại.'), Regexp(r'^\+?[\d\s-]{8,15}$', message='Số điện thoại phải có 8–11 chữ số.')])
+    customer_address = TextAreaField('Địa chỉ', validators=[DataRequired(message='Vui lòng nhập địa chỉ.'), Length(max=500, message='Địa chỉ không được quá 500 ký tự.')])
+    customer_note = TextAreaField('Ghi chú', validators=[Optional(), Length(max=1000, message='Ghi chú không được quá 1000 ký tự.')])
+    website = StringField()  # honeypot: bot điền -> silent reject ở route, không validator
+    submit = SubmitField('Đặt hàng')
+
+    def validate_customer_phone(self, field):
+        # Regexp chỉ kiểm tra charset + độ dài thô; đếm chữ số là check chính (8–11 chữ số).
+        digits = ''.join(ch for ch in field.data if ch.isdigit())
+        if not (8 <= len(digits) <= 11):
+            raise ValidationError('Số điện thoại phải có 8–11 chữ số.')

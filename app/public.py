@@ -5,8 +5,8 @@ from urllib.parse import urlsplit
 from flask import Blueprint, render_template, request, abort, redirect, url_for, flash, session
 
 from .db import db
-from .forms import CartForm
-from .models import Product, ProductImage
+from .forms import CartForm, CheckoutForm
+from .models import Product, ProductImage, Order, OrderItem
 
 public_bp = Blueprint('public', __name__)
 
@@ -157,3 +157,63 @@ def cart_remove(product_id):
     session['cart'] = cart
     flash('Đã xóa sản phẩm khỏi giỏ.', 'success')
     return redirect(url_for('public.cart'))
+
+
+@public_bp.route('/cart/checkout', methods=['POST'])
+def checkout():
+    # BƯỚC 1 — Honeypot silent reject (T-06-01): field 'website' điền -> bot trap.
+    # Không flash, không ghi DB, không đụng session cart.
+    if request.form.get('website'):
+        return redirect(url_for('public.cart'))
+
+    # BƯỚC 2 — Empty cart guard
+    cart = session.get('cart', {})
+    if not cart:
+        flash('Giỏ hàng của bạn đang trống.', 'error')
+        return redirect(url_for('public.cart'))
+
+    # BƯỚC 3 — Form validation (tên/SĐT/địa chỉ bắt buộc, SĐT 8-11 chữ số)
+    form = CheckoutForm()
+    if not form.validate():
+        flash('Vui lòng nhập đầy đủ Họ và tên, Số điện thoại, và Địa chỉ.', 'error')
+        return redirect(url_for('public.cart'))
+
+    # BƯỚC 4 — Server re-validate từng món (T-06-03): không tin session cart.
+    # Mỗi món: product còn tồn tại + available + 1 <= qty <= tồn kho. Sai -> không tạo đơn.
+    items_to_save = []
+    for pid_str, qty in cart.items():
+        if not str(pid_str).isdigit():
+            continue  # T-06-02: bỏ key không phải số
+        product = db.session.get(Product, int(pid_str))
+        if product is None or product.status != 'available' or not (1 <= qty <= product.quantity):
+            flash('Một số sản phẩm trong giỏ không còn khả dụng. Vui lòng kiểm tra lại giỏ hàng.', 'error')
+            return redirect(url_for('public.cart'))
+        items_to_save.append((product, qty))
+
+    # BƯỚC 5 — Tạo 1 Order + nhiều OrderItem snapshot trong 1 commit (ORD-10a).
+    # Snapshot product_name/price/cost_price tại thời điểm đặt từ product hiện tại.
+    order = Order(
+        customer_name=form.customer_name.data.strip(),
+        customer_phone=form.customer_phone.data.strip(),
+        customer_address=form.customer_address.data.strip(),
+        customer_note=form.customer_note.data.strip() or None,
+        status='Chờ xác nhận',
+    )
+    db.session.add(order)
+    db.session.flush()  # lấy order.id
+    for product, qty in items_to_save:
+        db.session.add(OrderItem(
+            order_id=order.id,
+            product_id=product.id,
+            product_name=product.name,
+            product_price=product.price,
+            product_cost_price=product.cost_price,
+            quantity=qty,
+        ))
+    db.session.commit()
+
+    # BƯỚC 6 — Xóa giỏ + success + redirect về trang chi tiết sản phẩm đầu tiên.
+    # KHÔNG giảm product.quantity (ORD-12 deferred v2).
+    session['cart'] = {}
+    flash('Đặt hàng thành công! Chúng tôi sẽ liên hệ xác nhận qua SĐT.', 'success')
+    return redirect(url_for('public.product_detail', product_id=items_to_save[0][0].id))
