@@ -85,8 +85,6 @@ def _verify_full(app):
     # Total orders: 4 (all statuses incl Đã hủy)
     _assert_stat(html, 'Tổng số đơn', 4)
     # Status breakdown: 5 statuses + Đã gói shows 0
-    for status in ['Chờ xác nhận', 'Đã hủy', 'Đã nhận', 'Đã gửi', 'Đóng gói']:
-        pass  # placeholders; check specific below
     assert 'Đã gói' in html
     # Đã hủy = 1, Chờ xác nhận = 1, Đã gửi = 1, Đã nhận = 1, Đã gói = 0
     assert _badge_count(html, 'Đã hủy') == 1
@@ -143,7 +141,6 @@ def main():
     print("Verify 2: Empty DB renders zeros")
     # New app on a fresh temp DIR to guarantee empty DB.
     tmpdir2 = tempfile.mkdtemp(prefix='gsd_verify_08_empty_')
-    app_module.BASE_DIR = tmpdir2
     app2 = _setup_app(tmpdir2)
     with app2.app_context():
         db.create_all()
