@@ -4,6 +4,48 @@
   <a class="back-link" href="{{ url_for('admin.orders') }}">Quay lại</a>
   <div class="admin-header">
     <h1>Đơn #{{ order.id }}</h1>
+    <span class="badge {{ order_badge_class(order.status) }}">{{ order.status }}</span>
+  </div>
+  <div class="admin-card order-detail">
+    <section class="order-section">
+      <h2>Thông tin khách</h2>
+      <dl class="order-meta">
+        <dt>Họ và tên</dt><dd>{{ order.customer_name }}</dd>
+        <dt>Số điện thoại</dt><dd>{{ order.customer_phone }}</dd>
+        <dt>Địa chỉ</dt><dd>{{ order.customer_address }}</dd>
+        {% if order.customer_note %}<dt>Ghi chú</dt><dd>{{ order.customer_note }}</dd>{% endif %}
+      </dl>
+    </section>
+    <section class="order-section">
+      <h2>Sản phẩm</h2>
+      <table class="data-table">
+        <caption class="visually-hidden">Sản phẩm trong đơn</caption>
+        <thead><tr>
+          <th scope="col">Sản phẩm</th><th scope="col">Số lượng</th><th scope="col">Đơn giá</th><th scope="col">Thành tiền</th>
+        </tr></thead>
+        <tbody>
+          {% for item in order.items %}
+          <tr>
+            <td>{{ item.product_name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td class="unit-price">{{ item.product_price | format_price }}</td>
+            <td class="line-total">{{ (item.product_price * item.quantity) | format_price }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="cart-total">
+        <span class="cart-total-label">Tổng cộng</span>
+        <span class="cart-total-value">{{ _order_total(order) | format_price }}</span>
+      </div>
+    </section>
+    <section class="order-section">
+      <h2>Thời gian</h2>
+      <dl class="order-meta">
+        <dt>Ngày tạo</dt><dd>{{ order.created_at | strftime('%d/%m/%Y %H:%M') }}</dd>
+        <dt>Cập nhật</dt><dd>{{ order.updated_at | strftime('%d/%m/%Y %H:%M') }}</dd>
+      </dl>
+    </section>
   </div>
 </div>
 {% endblock %}
