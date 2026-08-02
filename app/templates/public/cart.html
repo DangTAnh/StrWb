@@ -1,0 +1,70 @@
+{% extends "public/base.html" %}
+{% block title %}Giỏ hàng — Cửa hàng{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 class="page-heading">Giỏ hàng</h1>
+  {% if items %}
+    <div class="table-scroll">
+      <table class="data-table">
+        <caption class="visually-hidden">Giỏ hàng của bạn</caption>
+        <thead>
+          <tr>
+            <th scope="col">Sản phẩm</th>
+            <th scope="col">Đơn giá</th>
+            <th scope="col">Số lượng</th>
+            <th scope="col">Thành tiền</th>
+            <th scope="col">Xóa</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>
+              {% if item.product.primary_image %}
+              <img src="{{ url_for('static', filename='uploads/' + item.product.primary_image.thumb_filename) }}" alt="{{ item.product.name }}" width="80" height="80" style="object-fit: cover; border-radius: 4px; vertical-align: middle;">
+              {% else %}
+              <span class="thumb-placeholder">—</span>
+              {% endif %}
+              <span class="product-name">{{ item.product.name }}</span>
+            </td>
+            <td>{{ item.product.price | format_price }}</td>
+            <td>
+              <form class="cart-qty-form" method="post" action="{{ url_for('public.cart_update', product_id=item.product.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="number" name="quantity" min="1" max="{{ item.product.quantity }}" value="{{ item.quantity }}" class="cart-qty-input" aria-label="Số lượng {{ item.product.name }}">
+                <button type="submit" class="btn btn-secondary">Cập nhật</button>
+              </form>
+            </td>
+            <td>{{ (item.product.price * item.quantity) | format_price }}</td>
+            <td>
+              <form method="post" action="{{ url_for('public.cart_remove', product_id=item.product.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="link-danger">Xóa</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="cart-total">
+      <span class="cart-total-label">Tổng cộng:</span>
+      <span class="cart-total-value">{{ total | format_price }}</span>
+    </div>
+    <div class="cart-actions">
+      <a class="btn btn-secondary" href="{{ url_for('public.home') }}">Tiếp tục mua sắm</a>
+      <a class="btn btn-primary" href="#checkout">Đặt hàng</a>
+    </div>
+    <section class="checkout-section" id="checkout">
+      <h2>Thông tin đặt hàng</h2>
+      {% include "public/_checkout_form.html" ignore missing %}
+    </section>
+  {% else %}
+    <div class="empty-state">
+      <h2>Giỏ hàng trống</h2>
+      <p>Bạn chưa thêm sản phẩm nào vào giỏ.</p>
+      <a class="btn btn-primary" href="{{ url_for('public.home') }}">Tiếp tục mua sắm</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

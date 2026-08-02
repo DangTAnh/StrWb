@@ -406,7 +406,8 @@ label { font-size: 14px; }
 .product-info h1 { margin-bottom: 8px; }
 .product-price { font-size: 32px; font-weight: 600; color: #2563EB; line-height: 1.1; font-variant-numeric: tabular-nums; margin-bottom: 8px; }
 .product-status { margin-bottom: 16px; }
-.messenger-cta { width: 100%; max-width: 320px; margin-bottom: 8px; }
+.add-to-cart-form { max-width: 320px; margin-bottom: 8px; }
+.cart-cta { width: 100%; }
 .out-of-stock-note { color: #B91C1C; font-size: 14px; margin-bottom: 8px; }
 .product-meta { margin-bottom: 24px; }
 .product-meta-row { display: flex; gap: 8px; margin-bottom: 4px; }
@@ -423,3 +424,30 @@ label { font-size: 14px; }
 
 /* ============ Phase 3: Search results ============ */
 .result-count { font-size: 14px; color: #6B7280; margin-bottom: 48px; }
+
+/* ============ Phase 6: Cart + Checkout ============ */
+.cart-link { font-size: 14px; font-weight: 600; color: var(--text); }
+.cart-link:hover { color: var(--accent); text-decoration: none; }
+.cart-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 8px;
+  height: 20px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 999px;
+  line-height: 1.5;
+}
+.cart-qty-form { display: flex; gap: 8px; align-items: center; }
+.cart-qty-input { width: 72px; height: 44px; padding: 0 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; font-family: inherit; }
+.honeypot { display: none; }
+.cart-total { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 0; border-top: 1px solid #E5E7EB; margin-top: 24px; }
+.cart-total-label { font-size: 14px; font-weight: 600; color: #6B7280; }
+.cart-total-value { font-size: 32px; font-weight: 600; color: var(--accent); line-height: 1.1; }
+.cart-actions { display: flex; gap: 16px; margin-top: 16px; }
+.checkout-section { margin-top: 32px; padding-top: 32px; border-top: 1px solid #E5E7EB; }
+.checkout-section h2 { margin-bottom: 16px; }
+button.link-danger { background: none; border: none; padding: 0; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
+button.link-danger:hover { text-decoration: underline; }
