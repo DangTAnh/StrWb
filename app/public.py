@@ -196,7 +196,7 @@ def checkout():
         customer_name=form.customer_name.data.strip(),
         customer_phone=form.customer_phone.data.strip(),
         customer_address=form.customer_address.data.strip(),
-        customer_note=form.customer_note.data.strip() or None,
+        customer_note=(form.customer_note.data or '').strip() or None,  # Optional: data None khi field vắng mặt
         status='Chờ xác nhận',
     )
     db.session.add(order)
