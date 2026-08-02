@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Buy System
-status: executing
-stopped_at: Phase 6 plan 3 complete (3/3) — checkout + CSRF/honeypot + success
-last_updated: "2026-08-02T09:05:00Z"
-last_activity: 2026-08-02 -- Phase 6 execution continued (06-03 checkout)
+status: ready_to_plan
+stopped_at: Phase 6 COMPLETE — cart + checkout, 5/5 SC verified, 0 HIGH, UI APPROVED
+last_updated: "2026-08-02T09:30:00Z"
+last_activity: 2026-08-02 -- Phase 6 closed (gates all pass)
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
   completed_plans: 3
-  percent: 20
+  percent: 40
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-02)
 
 **Core value:** Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admin dễ dàng quản lý sản phẩm.
-**Current focus:** Phase 6 — public order form
+**Current focus:** Phase 7 — admin order tracking
 
 ## Current Position
 
-Phase: 6
-Plan: 06-03 complete (3/3) — Checkout + CSRF/honeypot + success
-Status: Executing (next: 06-review code review + regression + verify_phase_goal)
+Phase: 7
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-08-02
 
 ## Performance Metrics
@@ -98,6 +98,7 @@ Recent decisions affecting current work:
 - [Phase 6 06-01]: Order refactored -> Order + OrderItem: orders giữ customer+status (8 cột), order_items snapshot từng sản phẩm (FK order_id CASCADE, product_id nullable SET NULL, CheckConstraint quantity >= 1 / IN-03). init-db idempotent rebuild orders legacy (guard PRAGMA table_info, DROP chỉ khi 0 rows). Verified trên temp copies (5 cases A-E pass); data/app.db thật không bị đụng (vẫn v1.0)
 - [Phase 6 06-02]: Cart session ORD-10: session `{product_id(str): qty}` + CartForm + 4 public routes (cart_add/cart/cart_update/cart_remove). add thay thế qty (không cộng dồn); server re-validate 1 <= qty <= tồn kho + status available; mọi ghi session gán lại cả dict (mark modified). cart() filter stale: key không số -> skip, product deleted -> silent remove (không flash, tránh lộ id), out_of_stock/discontinued -> pop + flash info. ORD-10b: product_detail thay Messenger CTA bằng block add-to-cart status-gated (csrf, qty min=1 max=stock); ORD-03: block ẩn khi hết hàng/ngừng bán. Nav cart-link + cart-badge len(session['cart']) ẩn khi trống. CSRF chặn POST thiếu token (400). Không dependency mới; không đụng data/app.db thật; giữ nguyên form.html uncommitted
 - [Phase 6 06-03]: Checkout ORD-01/02/03/05 + ORD-10a: CheckoutForm (tên/SĐT/địa chỉ bắt buộc, note optional, SĐT 8-11 chữ số Regexp + digit-count, honeypot 'website') + route POST /cart/checkout: honeypot silent reject -> empty-cart guard -> form.validate -> server re-validate từng món (available + 1<=qty<=tồn kho) -> tạo 1 Order + nhiều OrderItem snapshot trong 1 commit -> xóa giỏ + flash success + redirect về trang chi tiết. _checkout_form.html partial (CSRF + honeypot + 4 field) include vào cart.html. Fix Rule 1: `(customer_note.data or '').strip() or None` (Optional field vắng mặt khỏi POST -> data None -> crash). Không giảm tồn kho (ORD-12 v2); grep gate cost_price/Giá nhập = 0 hits; không dependency mới; form.html uncommitted giữ nguyên
+- [Phase 6]: Phase 6 CLOSED: 3/3 plans complete (f9d4083..f8f799d), code review 0 HIGH (MD-01 cart_update no-upsert, MD-02 clamp qty->session, LW-02 guard items_to_save, LW-05 bỏ ignore missing — đều fixed), verify 5/5 SC VERIFIED (72/72 checks, 7 reqs ORD-01/02/03/05/10/10a/10b), UI review APPROVED (H1 cart price hierarchy, M1 checkout h2, M2 flash.success #047857 AA 5.25:1 — fixed f8f799d). human_needed: 5 visual UAT items (non-blocking) + re-audit populated cart sau operator init-db. Deploy note: data/app.db thật vẫn v1.0, cần `flask --app app init-db` (operator, ADMIN_PASSWORD hợp lệ) — verify chỉ trên temp copies
 
 ### Pending Todos
 
