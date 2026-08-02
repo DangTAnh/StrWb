@@ -65,6 +65,12 @@ def create_app():
     def format_price(value):
         return f'{int(value):,}'.replace(',', '.') + '₫'
 
+    @app.template_filter('strftime')
+    def strftime(value, fmt):
+        if value is None:
+            return ''
+        return value.strftime(fmt)
+
     from .public import public_bp
     from .auth import auth_bp
     from .admin import admin_bp
