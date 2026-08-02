@@ -53,9 +53,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 
-- [ ] 05-01-PLAN.md — Order + Product cost data model
-- [ ] 05-02-PLAN.md — Idempotent SQLite migration
-- [ ] 05-03-PLAN.md — Cost price on admin product form
+- [x] 05-01-PLAN.md — Order + Product cost data model
+- [x] 05-02-PLAN.md — Idempotent SQLite migration
+- [x] 05-03-PLAN.md — Cost price on admin product form
 
 ### Phase 6: Public Order Form
 
