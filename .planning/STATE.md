@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Buy System
 status: executing
-stopped_at: Phase 6 plan 1 complete (1/3) — Order + OrderItem refactor + migration
-last_updated: "2026-08-02T08:10:49.063Z"
-last_activity: 2026-08-02 -- Phase 6 execution started
+stopped_at: Phase 6 plan 2 complete (2/3) — cart session + routes + cart page
+last_updated: "2026-08-02T08:35:58Z"
+last_activity: 2026-08-02 -- Phase 6 execution continued (06-02 cart session)
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 20
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 ## Current Position
 
 Phase: 6
-Plan: 06-01 complete (1/3) — Order + OrderItem refactor + migration
-Status: Executing (next: 06-02 cart session)
+Plan: 06-02 complete (2/3) — Cart session + routes + cart page
+Status: Executing (next: 06-03 checkout)
 Last activity: 2026-08-02
 
 ## Performance Metrics
@@ -67,6 +67,7 @@ Last activity: 2026-08-02
 | Phase 04-polish-deploy P04-02 | 16min | 4 tasks | 7 files |
 | Phase 04-polish-deploy P04-03 | 14min | 4 tasks | 1 files |
 | Phase 06-public-order-form P06-01 | 6min | 2 tasks | 2 files |
+| Phase 06-public-order-form P06-02 | 7min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,7 @@ Recent decisions affecting current work:
 - [Phase 04]: YOUR_DOMAIN placeholder kept in nginx.conf/Linux.md/README because no real domain was available at execution time — flagged prominently, must be replaced before go-live (D-03)
 - [Phase 04]: Phase 4 verification: SC-1..SC-5 all VERIFIED programmatically (40+ checks, isolated temp DBs), 4 non-blocking human UAT items (2x-DPR gallery sharpness, responsive visual audit, U+20AB glyph browser check, real-domain HTTPS go-live)
 - [Phase 6 06-01]: Order refactored -> Order + OrderItem: orders giữ customer+status (8 cột), order_items snapshot từng sản phẩm (FK order_id CASCADE, product_id nullable SET NULL, CheckConstraint quantity >= 1 / IN-03). init-db idempotent rebuild orders legacy (guard PRAGMA table_info, DROP chỉ khi 0 rows). Verified trên temp copies (5 cases A-E pass); data/app.db thật không bị đụng (vẫn v1.0)
+- [Phase 6 06-02]: Cart session ORD-10: session `{product_id(str): qty}` + CartForm + 4 public routes (cart_add/cart/cart_update/cart_remove). add thay thế qty (không cộng dồn); server re-validate 1 <= qty <= tồn kho + status available; mọi ghi session gán lại cả dict (mark modified). cart() filter stale: key không số -> skip, product deleted -> silent remove (không flash, tránh lộ id), out_of_stock/discontinued -> pop + flash info. ORD-10b: product_detail thay Messenger CTA bằng block add-to-cart status-gated (csrf, qty min=1 max=stock); ORD-03: block ẩn khi hết hàng/ngừng bán. Nav cart-link + cart-badge len(session['cart']) ẩn khi trống. CSRF chặn POST thiếu token (400). Không dependency mới; không đụng data/app.db thật; giữ nguyên form.html uncommitted
 
 ### Pending Todos
 
@@ -119,8 +121,8 @@ Items acknowledged and deferred at milestone close on 2026-08-02:
 
 ## Session Continuity
 
-Last session: 2026-08-02T08:10:49.051Z
-Stopped at: Phase 6 plan 1 complete (1/3) — Order + OrderItem refactor + migration
+Last session: 2026-08-02T08:35:58Z
+Stopped at: Phase 6 plan 2 complete (2/3) — cart session + routes + cart page
 Resume file: None
 
 ## Operator Next Steps
