@@ -33,6 +33,116 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8: Admin Stats** — Stats dashboard: revenue + profit (NULL-safe), orders by status, units sold, inventory counts (STAT-01, STAT-02, STAT-03, STAT-04)
 - [ ] **Phase 9: Polish + Deploy** — UI polish, full v1.1 verification harness, no v1.0 regression, deploy docs update (all v1.1 reqs)
 
+## Phase Details
+
+### Phase 5: Data Model + Migration
+
+**Goal**: Order model with snapshot pricing and Product cost_price column, safe idempotent migration for existing SQLite DBs, cost price field on admin product form
+**Depends on**: Phase 4
+**Requirements**: ORD-04, COST-01, COST-02, PLAT-05
+**Success Criteria** (what must be TRUE):
+
+  1. Order model exists storing customer info (name, phone, address, quantity, note) plus snapshot of product name, sale price, and cost price at order time
+  2. Product model has a nullable `cost_price` column
+  3. Migration is idempotent — adding the `cost_price` column and `orders` table runs safely on existing v1.0 SQLite DBs without data loss
+  4. Admin product create/edit form includes an optional cost price field
+  5. Cost price never appears on any public-facing page
+
+**Plans**: 3 plans
+**UI hint**: yes
+
+Plans:
+
+- [ ] 05-01-PLAN.md — Order + Product cost data model
+- [ ] 05-02-PLAN.md — Idempotent SQLite migration
+- [ ] 05-03-PLAN.md — Cost price on admin product form
+
+### Phase 6: Public Order Form
+
+**Goal**: Order placement form on product detail replacing the "Mua qua Messenger" CTA, with validation + CSRF + success feedback
+**Depends on**: Phase 5
+**Requirements**: ORD-01, ORD-02, ORD-03, ORD-05
+**Success Criteria** (what must be TRUE):
+
+  1. Product detail page shows an order form with fields: name, phone, address, quantity, note
+  2. Form requires name, phone, address; quantity ≥ 1 and ≤ current stock
+  3. Customer sees a success message after placing an order
+  4. Form is hidden when product is out of stock or discontinued
+  5. Public form has CSRF protection and basic spam protection
+
+**Plans**: 3 plans
+**UI hint**: yes
+
+Plans:
+
+- [ ] 06-01-PLAN.md — Order form UI on product detail
+- [ ] 06-02-PLAN.md — Order submit route + validation + CSRF
+- [ ] 06-03-PLAN.md — Success feedback + out-of-stock handling
+
+### Phase 7: Admin Order Tracking
+
+**Goal**: Order list (paginated, status filter) + detail view + forward-only status flow Chờ xác nhận → Đã gói → Đã gửi → Đã nhận (+ Đã hủy)
+**Depends on**: Phase 6
+**Requirements**: ORD-06, ORD-07, ORD-08, ORD-09
+**Success Criteria** (what must be TRUE):
+
+  1. Admin sees a paginated order list filterable by status
+  2. Admin sees an order detail view with customer info, product snapshot, quantity, price, note, and timestamps
+  3. Admin can advance order status Chờ xác nhận → Đã gói → Đã gửi → Đã nhận
+  4. Admin can cancel an order (Đã hủy) — admin only
+  5. Status only moves forward — cannot revert
+
+**Plans**: 3 plans
+**UI hint**: yes
+
+Plans:
+
+- [ ] 07-01-PLAN.md — Order list + status filter
+- [ ] 07-02-PLAN.md — Order detail view
+- [ ] 07-03-PLAN.md — Forward-only status transitions
+
+### Phase 8: Admin Stats
+
+**Goal**: Stats dashboard — revenue + profit (NULL-safe), orders by status, units sold, inventory counts
+**Depends on**: Phase 7
+**Requirements**: STAT-01, STAT-02, STAT-03, STAT-04
+**Success Criteria** (what must be TRUE):
+
+  1. Admin sees total revenue (only orders with status Đã gửi + Đã nhận)
+  2. Admin sees profit = revenue − cost price (NULL-safe)
+  3. Admin sees order counts by status and total units sold
+  4. Admin sees inventory counts (total, out of stock, discontinued)
+
+**Plans**: 3 plans
+**UI hint**: yes
+
+Plans:
+
+- [ ] 08-01-PLAN.md — Revenue + profit stats
+- [ ] 08-02-PLAN.md — Orders-by-status + units sold
+- [ ] 08-03-PLAN.md — Inventory counts dashboard
+
+### Phase 9: Polish + Deploy
+
+**Goal**: UI polish, full v1.1 verification harness, no v1.0 regression, deploy docs update
+**Depends on**: Phase 8
+**Requirements**: ORD-01, ORD-02, ORD-03, ORD-04, ORD-05, ORD-06, ORD-07, ORD-08, ORD-09, COST-01, COST-02, STAT-01, STAT-02, STAT-03, STAT-04, PLAT-05
+**Success Criteria** (what must be TRUE):
+
+  1. All 16 v1.1 requirements verified
+  2. No v1.0 regression (catalog, search, contact, admin CRUD all working)
+  3. Deploy docs updated with v1.1 migration/backup instructions
+  4. New order form + admin order views polished and responsive
+
+**Plans**: 3 plans
+**UI hint**: yes
+
+Plans:
+
+- [ ] 09-01-PLAN.md — UI polish pass
+- [ ] 09-02-PLAN.md — v1.1 verification harness
+- [ ] 09-03-PLAN.md — Deploy docs update
+
 </details>
 
 ## Progress
