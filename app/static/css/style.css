@@ -477,3 +477,15 @@ button.link-danger:hover { text-decoration: underline; }
 .order-meta dt { color: #6B7280; font-size: 14px; }
 .order-meta dd { color: #1F2937; margin: 0 0 8px 0; }
 .data-table .unit-price { color: #6B7280; font-size: 14px; font-variant-numeric: tabular-nums; }
+
+/* Order status stepper (Phase 7) */
+.order-progress { list-style: none; display: flex; align-items: center; gap: 8px; margin: 0 0 32px; padding: 0; overflow-x: auto; }
+.order-progress li { display: flex; align-items: center; gap: 8px; position: relative; font-size: 14px; color: #6B7280; white-space: nowrap; }
+.order-progress li + li { margin-left: 32px; }
+.order-progress li + li::before { content: ''; position: absolute; left: -32px; top: 50%; width: 32px; height: 2px; background: #D1D5DB; transform: translateY(-50%); }
+.order-progress li.is-done + li::before { background: #059669; }
+.order-progress .dot { width: 12px; height: 12px; border-radius: 50%; background: #D1D5DB; flex: 0 0 auto; }
+.order-progress li.is-done .dot { background: #059669; }
+.order-progress li.is-current .dot { background: #2563EB; box-shadow: 0 0 0 3px #DBEAFE; }
+.order-progress li.is-current { color: #1F2937; font-weight: 600; }
+.order-terminal { color: #6B7280; }
