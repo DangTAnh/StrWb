@@ -10,6 +10,17 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 ORDER_STATUSES = ('Chờ xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận', 'Đã hủy')
 
+# Forward-only status transition map (ORD-08, ORD-09).
+# Server-side single source of truth — never trust client-supplied next_status.
+# Empty set = terminal (no further transitions).
+TRANSITION_MAP = {
+    'Chờ xác nhận': {'Đã gói', 'Đã hủy'},
+    'Đã gói':       {'Đã gửi', 'Đã hủy'},
+    'Đã gửi':       {'Đã nhận'},
+    'Đã nhận':      set(),  # terminal — hết chuỗi
+    'Đã hủy':       set(),  # terminal, absorbing
+}
+
 
 @admin_bp.app_template_global()
 def _order_total(order):
@@ -142,6 +153,26 @@ def order_detail(order_id):
         flash('Không tìm thấy đơn.', 'error')
         return redirect(url_for('admin.orders'))
     return render_template('admin/orders/detail.html', order=order)
+
+
+@admin_bp.route('/orders/<int:order_id>/status', methods=['POST'])
+def update_order_status(order_id):
+    order = db.session.get(Order, order_id)
+    if order is None:
+        flash('Không tìm thấy đơn.', 'error')
+        return redirect(url_for('admin.orders'))
+    next_status = request.form.get('next_status', '')
+    valid = TRANSITION_MAP.get(order.status, set())
+    if next_status not in valid:
+        flash(f'Không thể chuyển trạng thái đơn #{order.id}.', 'error')
+        return redirect(url_for('admin.order_detail', order_id=order.id))
+    order.status = next_status
+    db.session.commit()
+    if next_status == 'Đã hủy':
+        flash(f'Đã hủy đơn #{order.id}.', 'success')
+    else:
+        flash(f'Đã chuyển đơn #{order.id} sang trạng thái “{next_status}”.', 'success')
+    return redirect(url_for('admin.order_detail', order_id=order.id))
 
 
 @admin_bp.route('/products', methods=['GET'])
