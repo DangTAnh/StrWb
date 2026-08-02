@@ -193,10 +193,18 @@ def stats():
     )
     total_orders = sum(status_counts.values())
 
+    # Q5 — inventory counts (STAT-04). Use .is_(True)/.is_(False) for boolean
+    # predicates (research anti-pattern: != True/False breaks on SQLite).
+    total_products = Product.query.count()
+    in_stock = Product.query.filter(Product.quantity > 0, Product.discontinued.is_(False)).count()
+    out_of_stock = Product.query.filter(Product.quantity == 0, Product.discontinued.is_(False)).count()
+    discontinued = Product.query.filter(Product.discontinued.is_(True)).count()
+
     return render_template(
         'admin/stats.html',
         revenue=revenue, profit=profit, profit_note=profit_note, units_sold=units_sold,
-        status_counts=status_counts, total_orders=total_orders
+        status_counts=status_counts, total_orders=total_orders,
+        total_products=total_products, in_stock=in_stock, out_of_stock=out_of_stock, discontinued=discontinued
     )
 
 
