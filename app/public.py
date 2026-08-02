@@ -199,6 +199,11 @@ def checkout():
             return redirect(url_for('public.cart'))
         items_to_save.append((product, qty))
 
+    # LW-02: giỏ chỉ chứa key không phải số -> không có món nào hợp lệ -> guard (tránh IndexError).
+    if not items_to_save:
+        flash('Giỏ hàng của bạn đang trống.', 'error')
+        return redirect(url_for('public.cart'))
+
     # BƯỚC 5 — Tạo 1 Order + nhiều OrderItem snapshot trong 1 commit (ORD-10a).
     # Snapshot product_name/price/cost_price tại thời điểm đặt từ product hiện tại.
     order = Order(
