@@ -185,11 +185,18 @@ def stats():
     if total_qual_items - profit_items > 0:
         profit_note = f'Lợi nhuận tính trên {profit_items} sản phẩm có giá nhập.'
 
-    # Note: units_sold is computed (Q1) but only rendered in plan 08-02 per the ROADMAP split.
-    # Pitfall 4 self-consistency: only pass vars this plan's template consumes.
+    # Q4 — orders by status. Same group_by pattern as admin.orders() (Phase 7 line 133-135).
+    # group_by omits statuses with zero orders (Pitfall 2): template MUST use
+    # status_counts.get(s, 0), never subscript.
+    status_counts = dict(
+        db.session.query(Order.status, db.func.count(Order.id)).group_by(Order.status).all()
+    )
+    total_orders = sum(status_counts.values())
+
     return render_template(
         'admin/stats.html',
-        revenue=revenue, profit=profit, profit_note=profit_note, units_sold=units_sold
+        revenue=revenue, profit=profit, profit_note=profit_note, units_sold=units_sold,
+        status_counts=status_counts, total_orders=total_orders
     )
 
 
