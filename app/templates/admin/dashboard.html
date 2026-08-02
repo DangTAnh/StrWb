@@ -12,6 +12,9 @@
       <a href="{{ url_for('admin.orders') }}">Đơn hàng</a>
       {% if orders_count > 0 %}<span class="badge">{{ orders_count }}</span>{% else %}<span class="badge">Chưa có đơn</span>{% endif %}
     </div>
+    <div class="nav-group">
+      <a href="{{ url_for('admin.stats') }}">Thống kê</a>
+    </div>
     <div class="nav-group logout-form">
       <form method="post" action="{{ url_for('auth.logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
