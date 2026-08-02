@@ -102,7 +102,7 @@ Plans:
 
 Plans:
 
-- [ ] 07-01-PLAN.md — Order list + status filter
+- [x] 07-01-PLAN.md — Order list + status filter
 - [ ] 07-02-PLAN.md — Order detail view
 - [ ] 07-03-PLAN.md — Forward-only status transitions
 
@@ -160,7 +160,7 @@ Plans:
 | 4. Polish + Deploy | v1.0 | 3/3 | Complete | 2026-08-01 |
 | 5. Data Model + Migration | v1.1 | 3/3 | Complete    | 2026-08-02 |
 | 6. Cart + Checkout (Public Order Form) | v1.1 | 3/3 | Complete | 2026-08-02 |
-| 7. Admin Order Tracking | v1.1 | 0/3 | Planned | — |
+| 7. Admin Order Tracking | v1.1 | 1/3 | In Progress|  |
 | 8. Admin Stats | v1.1 | 0/3 | Planned | — |
 | 9. Polish + Deploy | v1.1 | 0/3 | Planned | — |
 
