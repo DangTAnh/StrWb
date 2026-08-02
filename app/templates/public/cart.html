@@ -27,7 +27,7 @@
               {% endif %}
               <span class="product-name">{{ item.product.name }}</span>
             </td>
-            <td>{{ item.product.price | format_price }}</td>
+            <td class="unit-price">{{ item.product.price | format_price }}</td>
             <td>
               <form class="cart-qty-form" method="post" action="{{ url_for('public.cart_update', product_id=item.product.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -35,7 +35,7 @@
                 <button type="submit" class="btn btn-secondary">Cập nhật</button>
               </form>
             </td>
-            <td>{{ (item.product.price * item.quantity) | format_price }}</td>
+            <td class="line-total">{{ (item.product.price * item.quantity) | format_price }}</td>
             <td>
               <form method="post" action="{{ url_for('public.cart_remove', product_id=item.product.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
