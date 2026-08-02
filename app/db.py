@@ -37,6 +37,25 @@ def init_db_command():
             conn.execute(text('ALTER TABLE products ADD COLUMN cost_price INTEGER'))
             click.echo('Migrated: added products.cost_price (v1.0 -> v1.1).')
 
+        # Orders guard (06-01 / ORD-10a): rebuild the legacy Phase 5 orders table
+        # (snapshot columns on orders) into the customer-only schema. Only DROP when
+        # the legacy table is empty — never destroy data.
+        orders_exist = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='orders'")).fetchone()
+        if orders_exist:
+            ocols = [row[1] for row in conn.execute(text('PRAGMA table_info(orders)'))]
+            if 'product_name' in ocols:
+                order_count = conn.execute(text('SELECT COUNT(*) FROM orders')).scalar()
+                if order_count > 0:
+                    raise click.ClickException(
+                        'Manual migration required: orders has legacy snapshot schema with data. '
+                        'Migrate the data manually before running init-db.'
+                    )
+                conn.execute(text('DROP TABLE orders'))
+                click.echo('Migrated: rebuilt orders table (legacy snapshot schema -> customer-only schema).')
+
+    # Recreate the orders table (new schema) after the legacy DROP; no-op otherwise.
+    db.create_all()
+
     user = AdminUser.query.filter_by(username=admin_username).first()
     if user:
         user.password_hash = generate_password_hash(admin_password)
