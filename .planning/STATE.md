@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Buy System
-status: executing
-stopped_at: context exhaustion at 75% (2026-08-02)
-last_updated: "2026-08-02T03:35:22.973Z"
+status: ready_to_plan
+stopped_at: Phase 5 complete (3/3) — ready to discuss Phase 6
+last_updated: 2026-08-02T05:07:48.101Z
 last_activity: 2026-08-02 -- Phase 5 execution started
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
+  completed_plans: 3
   percent: 0
 ---
 
@@ -21,20 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-02)
 
 **Core value:** Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admin dễ dàng quản lý sản phẩm.
-**Current focus:** Phase 5 — data-model-migration
+**Current focus:** Phase 6 — public order form
 
 ## Current Position
 
-Phase: 5 (data-model-migration) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 5
-Last activity: 2026-08-02 -- Phase 5 execution started
+Phase: 6
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-02
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 12
+- Total plans completed: 15
 - Average duration: 15 min
 - Total execution time: 3.0 hours
 
@@ -46,6 +46,7 @@ Last activity: 2026-08-02 -- Phase 5 execution started
 | 2 | 3 | 59min | 20min |
 | 3 | 3 | 21min | 7min |
 | 4 | 3 | 50min | 17min |
+| 5 | 3 | - | - |
 
 **Recent Trend:**
 

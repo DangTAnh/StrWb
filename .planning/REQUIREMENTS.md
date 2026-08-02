@@ -12,7 +12,7 @@ Requirements for milestone v1.1 Buy System. Each maps to roadmap phases.
 - [ ] **ORD-01**: Khách đặt hàng qua form trên trang chi tiết (tên, SĐT, địa chỉ, số lượng, ghi chú) — thay nút "Mua qua Messenger"
 - [ ] **ORD-02**: Form yêu cầu bắt buộc tên, SĐT, địa chỉ; số lượng ≥ 1 và ≤ tồn kho
 - [ ] **ORD-03**: Khách thấy thông báo thành công sau khi đặt; form không hiện khi sản phẩm hết hàng/ngừng bán
-- [ ] **ORD-04**: Mỗi đơn = 1 sản phẩm, lưu snapshot tên sản phẩm + giá bán + giá nhập tại thời điểm đặt
+- [x] **ORD-04**: Mỗi đơn = 1 sản phẩm, lưu snapshot tên sản phẩm + giá bán + giá nhập tại thời điểm đặt
 - [ ] **ORD-05**: Form công khai có CSRF + chống spam cơ bản
 
 ### Theo dõi đơn — Admin
@@ -24,8 +24,8 @@ Requirements for milestone v1.1 Buy System. Each maps to roadmap phases.
 
 ### Giá nhập
 
-- [ ] **COST-01**: Admin nhập giá nhập tùy chọn (chỉ admin thấy) cho sản phẩm
-- [ ] **COST-02**: Giá nhập không bao giờ hiển thị cho khách
+- [x] **COST-01**: Admin nhập giá nhập tùy chọn (chỉ admin thấy) cho sản phẩm
+- [x] **COST-02**: Giá nhập không bao giờ hiển thị cho khách
 
 ### Thống kê
 
@@ -36,7 +36,7 @@ Requirements for milestone v1.1 Buy System. Each maps to roadmap phases.
 
 ### Nền tảng
 
-- [ ] **PLAT-05**: Migration an toàn cho DB cũ — thêm cột `cost_price` + bảng `orders` (idempotent, không mất dữ liệu)
+- [x] **PLAT-05**: Migration an toàn cho DB cũ — thêm cột `cost_price` + bảng `orders` (idempotent, không mất dữ liệu)
 
 ## v2 Requirements
 
@@ -72,19 +72,19 @@ Deferred to future release. Tracked but not in current roadmap.
 | ORD-01 | 6 | Pending |
 | ORD-02 | 6 | Pending |
 | ORD-03 | 6 | Pending |
-| ORD-04 | 5 | Pending |
+| ORD-04 | 5 | Complete |
 | ORD-05 | 6 | Pending |
 | ORD-06 | 7 | Pending |
 | ORD-07 | 7 | Pending |
 | ORD-08 | 7 | Pending |
 | ORD-09 | 7 | Pending |
-| COST-01 | 5 | Pending |
-| COST-02 | 5 | Pending |
+| COST-01 | 5 | Complete |
+| COST-02 | 5 | Complete |
 | STAT-01 | 8 | Pending |
 | STAT-02 | 8 | Pending |
 | STAT-03 | 8 | Pending |
 | STAT-04 | 8 | Pending |
-| PLAT-05 | 5 | Pending |
+| PLAT-05 | 5 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 16 total
