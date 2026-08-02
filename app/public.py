@@ -144,6 +144,10 @@ def cart_update(product_id):
         flash('Số lượng vượt quá tồn kho.', 'error')
         return redirect(url_for('public.cart'))
     cart = session.get('cart', {})
+    if str(product_id) not in cart:
+        # MD-01: route "update" không upsert — sản phẩm chưa có trong giỏ thì không thêm.
+        flash('Sản phẩm không có trong giỏ hàng.', 'error')
+        return redirect(url_for('public.cart'))
     cart[str(product_id)] = qty
     session['cart'] = cart
     flash('Giỏ hàng đã cập nhật.', 'success')
