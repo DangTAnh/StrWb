@@ -10,6 +10,10 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Đăng nhập')
 
 
+class CartForm(FlaskForm):
+    quantity = IntegerField('Số lượng', validators=[InputRequired(message='Vui lòng nhập số lượng'), NumberRange(min=1, message='Số lượng phải từ 1 trở lên')])
+
+
 class ProductForm(FlaskForm):
     name = StringField('Tên sản phẩm', validators=[DataRequired(message='Vui lòng nhập tên sản phẩm'), Length(max=200)])
     price = IntegerField('Giá (VND)', validators=[InputRequired(message='Vui lòng nhập giá'), NumberRange(min=0, message='Giá không được âm')])

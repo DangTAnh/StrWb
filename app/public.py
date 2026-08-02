@@ -2,9 +2,10 @@ import unicodedata
 from types import SimpleNamespace
 from urllib.parse import urlsplit
 
-from flask import Blueprint, render_template, request, abort, redirect, url_for
+from flask import Blueprint, render_template, request, abort, redirect, url_for, flash, session
 
 from .db import db
+from .forms import CartForm
 from .models import Product, ProductImage
 
 public_bp = Blueprint('public', __name__)
@@ -82,3 +83,77 @@ def search():
     if page < 1:
         return redirect(url_for('public.search', q=q, page=1))
     return render_template('public/search.html', q=q, products=pagination.items, pagination=pagination)
+
+
+@public_bp.route('/cart/add/<int:product_id>', methods=['POST'])
+def cart_add(product_id):
+    product = db.session.get(Product, product_id)
+    if product is None:
+        abort(404)
+    form = CartForm()
+    if product.status != 'available':
+        flash('Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.', 'error')
+        return redirect(url_for('public.product_detail', product_id=product.id))
+    if not form.validate():
+        flash('Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.', 'error')
+        return redirect(url_for('public.product_detail', product_id=product.id))
+    qty = form.quantity.data
+    if not (1 <= qty <= product.quantity):
+        flash('Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.', 'error')
+        return redirect(url_for('public.product_detail', product_id=product.id))
+    cart = session.get('cart', {})
+    cart[str(product_id)] = qty
+    session['cart'] = cart
+    flash(f'Đã thêm {qty} sản phẩm vào giỏ.', 'success')
+    return redirect(url_for('public.cart'))
+
+
+@public_bp.route('/cart', methods=['GET'])
+def cart():
+    cart = session.get('cart', {})
+    items = []
+    total = 0
+    for pid_str, qty in list(cart.items()):
+        if not pid_str.isdigit():
+            continue  # T-06-02: bỏ key không phải số
+        product = db.session.get(Product, int(pid_str))
+        if product is None:
+            # T-06-02: sản phẩm đã bị xóa -> xóa khỏi giỏ, KHÔNG flash (tránh lộ thông tin id)
+            cart.pop(pid_str, None)
+        elif product.status != 'available':
+            flash(f"Sản phẩm '{product.name}' đã ngừng bán hoặc hết hàng và được xóa khỏi giỏ.", 'info')
+            cart.pop(pid_str, None)
+        else:
+            items.append(SimpleNamespace(product=product, quantity=qty))
+            total += product.price * qty
+    session['cart'] = cart
+    return render_template('public/cart.html', items=items, total=total)
+
+
+@public_bp.route('/cart/update/<int:product_id>', methods=['POST'])
+def cart_update(product_id):
+    product = db.session.get(Product, product_id)
+    if product is None:
+        abort(404)
+    form = CartForm()
+    if not form.validate():
+        flash('Số lượng vượt quá tồn kho.', 'error')
+        return redirect(url_for('public.cart'))
+    qty = form.quantity.data
+    if product.status != 'available' or not (1 <= qty <= product.quantity):
+        flash('Số lượng vượt quá tồn kho.', 'error')
+        return redirect(url_for('public.cart'))
+    cart = session.get('cart', {})
+    cart[str(product_id)] = qty
+    session['cart'] = cart
+    flash('Giỏ hàng đã cập nhật.', 'success')
+    return redirect(url_for('public.cart'))
+
+
+@public_bp.route('/cart/remove/<int:product_id>', methods=['POST'])
+def cart_remove(product_id):
+    cart = session.get('cart', {})
+    cart.pop(str(product_id), None)
+    session['cart'] = cart
+    flash('Đã xóa sản phẩm khỏi giỏ.', 'success')
+    return redirect(url_for('public.cart'))
