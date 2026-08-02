@@ -25,6 +25,7 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Integer, nullable=False)  # VND, Integer only (D-05; never Float)
+    cost_price = db.Column(db.Integer, nullable=True)  # VND, Integer only (D-05; never Float); NULL = not entered (COST-01)
     brand = db.Column(db.String(100), nullable=True)
     measurements = db.Column(db.Text, nullable=True)  # D-07 free text, e.g. "60x40x2cm" or "M / L / XL"
     description = db.Column(db.Text, nullable=True)
@@ -67,3 +68,23 @@ class ProductImage(db.Model):
         if not self.filename or not self.filename.endswith('.jpg'):
             return None
         return self.filename[:-4] + '_thumb.jpg'
+
+
+class Order(db.Model):
+    __tablename__ = 'orders'
+
+    id = db.Column(db.Integer, primary_key=True)  # order number = incrementing id (no formatted code)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='SET NULL'), nullable=True)
+    product_name = db.Column(db.String(200), nullable=False)  # snapshot at order time (ORD-04)
+    product_price = db.Column(db.Integer, nullable=False)  # sale price VND, Integer only (D-05)
+    product_cost_price = db.Column(db.Integer, nullable=True)  # cost price VND; NULL if product has none
+    quantity = db.Column(db.Integer, nullable=False)  # >= 1 enforced at Phase 6 form
+    customer_name = db.Column(db.String(100), nullable=False)
+    customer_phone = db.Column(db.String(20), nullable=False)
+    customer_address = db.Column(db.Text, nullable=False)
+    customer_note = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default='Chờ xác nhận', nullable=False)  # VN label (decision); forward-only in Phase 7
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    product = db.relationship('Product', backref=db.backref('orders', passive_deletes=True))
