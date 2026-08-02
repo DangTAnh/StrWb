@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Buy System
-status: executing
-stopped_at: Phase 8 UI-SPEC approved
-last_updated: "2026-08-02T17:39:06.671Z"
+status: ready_to_plan
+stopped_at: Phase 8 complete (3/3) — ready to discuss Phase 9
+last_updated: 2026-08-02T19:46:45.410Z
 last_activity: 2026-08-02 -- Phase 8 execution started
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 12
-  completed_plans: 9
+  completed_plans: 12
   percent: 60
 ---
 
@@ -21,20 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-02)
 
 **Core value:** Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admin dễ dàng quản lý sản phẩm.
-**Current focus:** Phase 8 — Admin Stats
+**Current focus:** Phase 9 — polish + deploy
 
 ## Current Position
 
-Phase: 8 (Admin Stats) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 8
-Last activity: 2026-08-02 -- Phase 8 execution started
+Phase: 9
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-02
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 18
+- Total plans completed: 21
 - Average duration: 15 min
 - Total execution time: 3.0 hours
 
@@ -48,6 +48,7 @@ Last activity: 2026-08-02 -- Phase 8 execution started
 | 4 | 3 | 50min | 17min |
 | 5 | 3 | - | - |
 | 7 | 3 | - | - |
+| 8 | 3 | - | - |
 
 **Recent Trend:**
 

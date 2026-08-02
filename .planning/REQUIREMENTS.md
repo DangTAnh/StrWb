@@ -32,10 +32,10 @@ Requirements for milestone v1.1 Buy System. Each maps to roadmap phases.
 
 ### Thống kê
 
-- [ ] **STAT-01**: Admin xem tổng doanh thu (chỉ tính đơn Đã gửi + Đã nhận)
-- [ ] **STAT-02**: Admin xem lợi nhuận = doanh thu − giá nhập (đơn đã gửi/nhận, xử lý NULL)
-- [ ] **STAT-03**: Admin xem số đơn theo trạng thái + tổng sản phẩm đã bán
-- [ ] **STAT-04**: Admin xem số sản phẩm trong kho (tổng, hết hàng, ngừng bán)
+- [x] **STAT-01**: Admin xem tổng doanh thu (chỉ tính đơn Đã gửi + Đã nhận)
+- [x] **STAT-02**: Admin xem lợi nhuận = doanh thu − giá nhập (đơn đã gửi/nhận, xử lý NULL)
+- [x] **STAT-03**: Admin xem số đơn theo trạng thái + tổng sản phẩm đã bán
+- [x] **STAT-04**: Admin xem số sản phẩm trong kho (tổng, hết hàng, ngừng bán)
 
 ### Nền tảng
 
@@ -85,10 +85,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | ORD-09 | 7 | Complete |
 | COST-01 | 5 | Complete |
 | COST-02 | 5 | Complete |
-| STAT-01 | 8 | Pending |
-| STAT-02 | 8 | Pending |
-| STAT-03 | 8 | Pending |
-| STAT-04 | 8 | Pending |
+| STAT-01 | 8 | Complete |
+| STAT-02 | 8 | Complete |
+| STAT-03 | 8 | Complete |
+| STAT-04 | 8 | Complete |
 | PLAT-05 | 5 | Complete |
 
 **Coverage:**
