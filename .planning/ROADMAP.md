@@ -133,7 +133,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 08-03-PLAN.md — Inventory counts dashboard
+- [x] 08-03-PLAN.md — Inventory counts dashboard
 
 ### Phase 9: Polish + Deploy
 
@@ -169,7 +169,7 @@ Plans:
 | 5. Data Model + Migration | v1.1 | 3/3 | Complete    | 2026-08-02 |
 | 6. Cart + Checkout (Public Order Form) | v1.1 | 3/3 | Complete | 2026-08-02 |
 | 7. Admin Order Tracking | v1.1 | 3/3 | Complete    | 2026-08-02 |
-| 8. Admin Stats | v1.1 | 2/3 | In Progress|  |
+| 8. Admin Stats | v1.1 | 3/3 | Complete   | 2026-08-02 |
 | 9. Polish + Deploy | v1.1 | 0/3 | Planned | — |
 
 ---
