@@ -136,6 +136,22 @@ None.
 - Plan 07-03 complete: full forward-only status flow from list → detail → transition → redirect.
 - Remaining in Phase 7 (if any): Phase 8 stats page will reuse `TRANSITION_MAP` and `_order_total` for revenue/cost aggregation.
 
+## Self-Check
+
+**PASSED** — all 3 tasks complete, all verification scripts exit 0 (Task 1 TASK_OK, Task 2 TASK_OK, Task 3 TASK_OK, combined ALL_TASKS_OK), full forward-only transition logic verified against temp SQLite DB (BASE_DIR patched), real `data/app.db` untouched, no new dependencies.
+
+| Check | Result |
+|-------|--------|
+| Files exist | FOUND: app/admin.py, app/templates/admin/orders/detail.html, app/static/css/style.css, 07-03-SUMMARY.md |
+| Commits exist | dcd5896, 0e76b1e, 3de0f18, bb5cbef |
+| TRANSITION_MAP correct | Chờ xác nhận → {Đã gói, Đã hủy}, Đã gói → {Đã gửi, Đã hủy}, Đã gửi → {Đã nhận}, Đã nhận/Đã hủy → set() |
+| Forward-only enforce | valid advance changes DB, backward/cancel-from-shipped/terminal rejected (no DB change, no 500) |
+| Invalid transition flash | "Không thể chuyển trạng thái đơn #N" — verified |
+| Missing order flash | "Không tìm thấy đơn." — verified |
+| CSRF no token | 400 — verified |
+| Stepper render | 5 statuses render correctly (stepper+buttons / terminal notes) |
+| CSS | .order-progress + .dot + is-done/is-current + connector + .order-terminal all present |
+
 ---
 
 *Phase: 07-admin-order-tracking*
