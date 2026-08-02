@@ -82,7 +82,7 @@ Plans:
 
 - [x] 06-01-PLAN.md — Order → Order + OrderItem refactor + migration
 - [x] 06-02-PLAN.md — Cart (session) + add/update/remove + total
-- [ ] 06-03-PLAN.md — Checkout form + submit route + CSRF/honeypot + success
+- [x] 06-03-PLAN.md — Checkout form + submit route + CSRF/honeypot + success
 
 ### Phase 7: Admin Order Tracking
 
@@ -159,7 +159,7 @@ Plans:
 | 3. Public Catalog + Search + Contact | v1.0 | 3/3 | Complete | 2026-08-01 |
 | 4. Polish + Deploy | v1.0 | 3/3 | Complete | 2026-08-01 |
 | 5. Data Model + Migration | v1.1 | 3/3 | Complete    | 2026-08-02 |
-| 6. Public Order Form | v1.1 | 2/3 | In Progress | — |
+| 6. Public Order Form | v1.1 | 3/3 | Complete   | 2026-08-02 |
 | 7. Admin Order Tracking | v1.1 | 0/3 | Planned | — |
 | 8. Admin Stats | v1.1 | 0/3 | Planned | — |
 | 9. Polish + Deploy | v1.1 | 0/3 | Planned | — |

@@ -9,11 +9,11 @@ Requirements for milestone v1.1 Buy System. Each maps to roadmap phases.
 
 ### Đặt hàng
 
-- [ ] **ORD-01**: Khách đặt hàng qua form trên trang chi tiết (tên, SĐT, địa chỉ, số lượng, ghi chú) — thay nút "Mua qua Messenger"
-- [ ] **ORD-02**: Form yêu cầu bắt buộc tên, SĐT, địa chỉ; số lượng ≥ 1 và ≤ tồn kho
+- [x] **ORD-01**: Khách đặt hàng qua form trên trang chi tiết (tên, SĐT, địa chỉ, số lượng, ghi chú) — thay nút "Mua qua Messenger"
+- [x] **ORD-02**: Form yêu cầu bắt buộc tên, SĐT, địa chỉ; số lượng ≥ 1 và ≤ tồn kho
 - [x] **ORD-03**: Khách thấy thông báo thành công sau khi đặt; form không hiện khi sản phẩm hết hàng/ngừng bán
 - [x] **ORD-04**: Mỗi đơn = 1 sản phẩm, lưu snapshot tên sản phẩm + giá bán + giá nhập tại thời điểm đặt
-- [ ] **ORD-05**: Form công khai có CSRF + chống spam cơ bản
+- [x] **ORD-05**: Form công khai có CSRF + chống spam cơ bản
 - [x] **ORD-10**: Giỏ hàng nhiều sản phẩm — khách thêm/sửa số lượng/xóa sản phẩm trong giỏ (lưu session), xem tổng tiền
 - [x] **ORD-10a**: Checkout tạo một đơn nhiều sản phẩm (refactor `Order` → `Order` + `OrderItem`, snapshot từng sản phẩm) — thay thế form đặt hàng 1 sản phẩm
 - [x] **ORD-10b**: Trang chi tiết có nút "Thêm vào giỏ hàng" (chọn số lượng, ≤ tồn kho); form đặt hàng đơn bị bỏ; dải liên hệ Messenger giữ nguyên
@@ -71,11 +71,11 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ORD-01 | 6 | Pending |
-| ORD-02 | 6 | Pending |
+| ORD-01 | 6 | Complete |
+| ORD-02 | 6 | Complete |
 | ORD-03 | 6 | Complete |
 | ORD-04 | 5 | Complete |
-| ORD-05 | 6 | Pending |
+| ORD-05 | 6 | Complete |
 | ORD-10 | 6 | Complete |
 | ORD-10a | 6 | Complete |
 | ORD-10b | 6 | Complete |
