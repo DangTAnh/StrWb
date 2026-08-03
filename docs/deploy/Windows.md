@@ -16,10 +16,12 @@ bind `127.0.0.1:8000` và đứng sau nginx (hoặc tầng proxy/HTTPS khác) �
 cd C:\path\to\storewweb
 python -m venv venv
 venv\Scripts\activate
+if not exist data mkdir data
 pip install -r requirements.txt
 ```
 
-`requirements.txt` đã gồm `waitress==3.0.2` — không cần cài riêng.
+`requirements.txt` đã gồm `waitress==3.0.2` — không cần cài riêng. Thư mục `data\`
+chứa SQLite DB (`data\app.db`) — phải tồn tại trước khi chạy `flask init-db` (bước 3).
 
 ## 2. Tạo file .env
 
@@ -104,9 +106,13 @@ cùng lúc, hoặc dùng `sqlite3.exe ".backup"` (WAL-safe). Luôn sao lưu cả
 **Phương pháp 1 — sqlite3 .backup (khuyến nghị):**
 
 ```bat
-"C:\path\to\storewweb\data\app.db" > nul 2>&1
+if not exist C:\backups mkdir C:\backups
 sqlite3.exe "C:\path\to\storewweb\data\app.db" ".backup C:\backups\app-%date:~-4,4%%date:~-10,2%%date:~-7,2%.db"
 ```
+
+> Tên file dùng chuỗi `%date%` theo định dạng locale en-US (`YYYYMMDD`). Máy dùng
+> ngôn ngữ/locale khác có thể cho tên sai định dạng — khi đó hãy đặt tên file cố định
+> (ví dụ `app.db.bak`) hoặc điều chỉnh chuỗi cắt theo locale của bạn.
 
 **Phương pháp 2 — copy file (dừng app trước):** dừng waitress, copy `app.db` + `app.db-wal`
 + `app.db-shm` cùng lúc, rồi mở app lại.

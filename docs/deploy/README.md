@@ -43,7 +43,6 @@ Nâng cấp một cài đặt v1.0 lên v1.1 (thêm giỏ hàng / đặt hàng /
 2. **Chạy idempotent migration:**
 
 ```bat
-set FLASK_APP=wsgi
 flask --app wsgi init-db
 ```
 
