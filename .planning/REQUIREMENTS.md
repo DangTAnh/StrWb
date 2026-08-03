@@ -51,20 +51,20 @@ Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BATCH-01 | — | Pending |
-| BATCH-02 | — | Pending |
-| BATCH-03 | — | Pending |
-| BATCH-04 | — | Pending |
-| BATCH-05 | — | Pending |
-| BATCH-06 | — | Pending |
-| BATCH-07 | — | Pending |
-| BATCH-08 | — | Pending |
+| BATCH-01 | Phase 10 | Pending |
+| BATCH-02 | Phase 10 | Pending |
+| BATCH-03 | Phase 10 | Pending |
+| BATCH-04 | Phase 11 | Pending |
+| BATCH-05 | Phase 10 | Pending |
+| BATCH-06 | Phase 12 | Pending |
+| BATCH-07 | Phase 12 | Pending |
+| BATCH-08 | Phase 10 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 8 total
-- Mapped to phases: 0
-- Unmapped: 8 ⚠️
+- Mapped to phases: 8 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-08-03*
-*Last updated: 2026-08-03 after initial definition*
+*Last updated: 2026-08-03 after roadmap creation*
