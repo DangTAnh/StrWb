@@ -21,7 +21,7 @@ class ProductForm(FlaskForm):
     brand = StringField('Thương hiệu', validators=[Optional(), Length(max=100)])
     measurements = TextAreaField('Số đo', validators=[Optional()])
     description = TextAreaField('Mô tả', validators=[Optional()])
-    quantity = IntegerField('Tồn kho', validators=[InputRequired(message='Vui lòng nhập tồn kho'), NumberRange(min=0, message='Tồn kho không được âm')], default=0)
+    quantity = IntegerField('Tồn kho', validators=[InputRequired(message='Vui lòng nhập tồn kho'), NumberRange(min=0, message='Tồn kho không được âm')], default=1)
     discontinued = BooleanField('Ngừng bán sản phẩm này')
     sku = StringField('Mã sản phẩm (SKU)', validators=[Optional(), Length(max=100)])
     sort_order = IntegerField('Thứ tự hiển thị', validators=[Optional()], default=0)

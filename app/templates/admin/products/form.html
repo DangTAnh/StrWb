@@ -9,79 +9,7 @@
     <div class="flash error">Vui lòng kiểm tra lại các trường nhập.</div>
     {% endif %}
 
-    <div class="form-field">
-      {{ form.name.label }}
-      {{ form.name(class="input", placeholder="Tự động: Sản phẩm 001, Sản phẩm 002… (để trống để tự động)") }}
-      <p class="help-text">Để trống — tên sẽ tự động gán theo STT.</p>
-      {% for error in form.name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-    </div>
-
-    <div class="form-row-2">
-      <div class="form-field">
-        {{ form.price.label }}<span class="required" aria-hidden="true"> *</span>
-        {{ form.price(class="input", required=True, aria_required="true", min="0", step="1") }}
-        {% for error in form.price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-      </div>
-      <div class="form-field">
-        {{ form.brand.label }}
-        {{ form.brand(class="input") }}
-        {% for error in form.brand.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-      </div>
-    </div>
-
-    <div class="form-field">
-      <label for="cost_price">Giá nhập (VND)</label>
-      {{ form.cost_price(class="input", min="0", step="1") }}
-      <p class="help-text">Chỉ quản trị viên xem được</p>
-      {% for error in form.cost_price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-    </div>
-
-    <div class="form-row-2">
-      <div class="form-field">
-        {{ form.sku.label }}
-        {{ form.sku(class="input") }}
-        {% for error in form.sku.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-      </div>
-      <div class="form-field">
-        {{ form.sort_order.label }}
-        {{ form.sort_order(class="input") }}
-        {% for error in form.sort_order.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-      </div>
-    </div>
-
-    <div class="form-field">
-      {{ form.measurements.label }}
-      {{ form.measurements(class="input", placeholder="Ví dụ: 60×40×2cm hoặc M/L/XL") }}
-      {% for error in form.measurements.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-    </div>
-
-    <div class="form-field">
-      {{ form.description.label }}
-      {{ form.description(class="input") }}
-      {% for error in form.description.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-    </div>
-
-    <div class="form-row-2">
-      <div class="form-field">
-        {{ form.quantity.label }}<span class="required" aria-hidden="true"> *</span>
-        {{ form.quantity(class="input", required=True, aria_required="true", min="0", step="1") }}
-        {% for error in form.quantity.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-      </div>
-      <div class="form-field checkbox-field">
-        <label class="checkbox-label">
-          {{ form.discontinued(class="checkbox") }}
-          {{ form.discontinued.label.text }}
-        </label>
-      </div>
-    </div>
-
-    <div class="form-field">
-      {{ form.admin_note.label }}
-      {{ form.admin_note(class="input") }}
-      <p class="help-text">Chỉ quản trị viên xem được</p>
-      {% for error in form.admin_note.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-    </div>
-
+    {# Gallery on top #}
     <div class="gallery-section">
       <h3>Ảnh sản phẩm</h3>
       <p class="help-text">Ảnh đầu tiên là ảnh chính — dùng làm ảnh đại diện. Kéo/sắp xếp lại để đổi ảnh chính.</p>
@@ -96,15 +24,109 @@
           {% if loop.first %}<span class="badge-primary">Ảnh chính</span>{% endif %}
           <div class="gallery-actions">
             <button type="button" class="reorder-btn" data-dir="-1" aria-label="Chuyển lên" {% if loop.first %}disabled{% endif %}>↑</button>
+            <button type="button" class="delete-btn" data-id="{{ img.id }}" aria-label="Xóa ảnh {{ img.original_filename or ('ảnh ' ~ loop.index) }}">✕</button>
             <button type="button" class="reorder-btn" data-dir="1" aria-label="Chuyển xuống" {% if loop.last %}disabled{% endif %}>↓</button>
           </div>
-          <button type="button" class="delete-btn" data-id="{{ img.id }}" aria-label="Xóa ảnh {{ img.original_filename or ('ảnh ' ~ loop.index) }}">✕</button>
         </div>
         {% endfor %}
       </div>
       <div class="gallery-upload">
         <label class="btn btn-secondary" for="gallery-file">Chọn ảnh</label>
         <input type="file" id="gallery-file" name="images" multiple accept=".jpg,.jpeg,.png,.webp" hidden>
+      </div>
+    </div>
+
+    {# Upper group: name + selling price #}
+    <div class="form-group-upper">
+      <div class="form-field">
+        {{ form.name.label }}
+        {{ form.name(class="input", placeholder="Sản phẩm N") }}
+        <p class="help-text">Để trống — tên sẽ tự động gán theo STT.</p>
+        {% for error in form.name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+
+      <div class="form-field">
+        {{ form.price.label }}<span class="required" aria-hidden="true"> *</span>
+        {{ form.price(class="input", required=True, aria_required="true", min="0", step="1") }}
+        {% for error in form.price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+    </div>
+
+    {# Collapsible middle group: brand/sku/order/measurements/description/stock+discontinued/note #}
+    <div class="form-group-collapsible" data-collapse-key="product-details">
+      <button type="button" class="collapse-toggle" aria-expanded="true">
+        <span class="caret">▼</span>
+        <span class="collapse-title">Chi tiết sản phẩm</span>
+      </button>
+      <div class="collapse-body">
+        <div class="form-row-2">
+          <div class="form-field">
+            {{ form.brand.label }}
+            {{ form.brand(class="input") }}
+            {% for error in form.brand.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+          </div>
+          <div class="form-field">
+            {{ form.sku.label }}
+            {{ form.sku(class="input") }}
+            {% for error in form.sku.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+          </div>
+        </div>
+
+        <div class="form-field">
+          {{ form.sort_order.label }}
+          {{ form.sort_order(class="input") }}
+          <p class="help-text">Số càng nhỏ hiện càng lên đầu.</p>
+          {% for error in form.sort_order.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="form-field">
+          {{ form.measurements.label }}
+          {{ form.measurements(class="input", placeholder="Ví dụ: 60×40×2cm hoặc M/L/XL") }}
+          {% for error in form.measurements.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="form-field">
+          {{ form.description.label }}
+          {{ form.description(class="input") }}
+          {% for error in form.description.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-field">
+            {{ form.quantity.label }}<span class="required" aria-hidden="true"> *</span>
+            {{ form.quantity(class="input", required=True, aria_required="true", min="0", step="1", value="1") }}
+            {% for error in form.quantity.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+          </div>
+          <div class="form-field checkbox-field">
+            <label class="checkbox-label">
+              {{ form.discontinued(class="checkbox") }}
+              {{ form.discontinued.label.text }}
+            </label>
+          </div>
+        </div>
+
+        <div class="form-field">
+          {{ form.admin_note.label }}
+          {{ form.admin_note(class="input") }}
+          <p class="help-text">Chỉ quản trị viên xem được</p>
+          {% for error in form.admin_note.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+        </div>
+      </div>
+    </div>
+
+    {# Cost price moved into collapsible group (admin-only) #}
+    <div class="form-group-collapsible cost-group" data-collapse-key="cost-price">
+      <button type="button" class="collapse-toggle" aria-expanded="true">
+        <span class="caret">▼</span>
+        <span class="collapse-title">Giá nhập & ghi chú riêng tư</span>
+      </button>
+      <div class="collapse-body">
+        <div class="form-field">
+          <label for="cost_price">Giá nhập (VND)</label>
+          {{ form.cost_price(class="input", min="0", step="1") }}
+          <p class="help-text">Chỉ quản trị viên xem được</p>
+          {% for error in form.cost_price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+        </div>
       </div>
     </div>
 
@@ -115,4 +137,5 @@
   </form>
 </div>
 <script src="{{ url_for('static', filename='js/form-gallery.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-collapse.js') }}"></script>
 {% endblock %}
