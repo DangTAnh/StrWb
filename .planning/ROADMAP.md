@@ -159,7 +159,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [ ] 09-02-PLAN.md — v1.1 verification harness (16 reqs + v1.0 smoke + V-01/V-02)
-- [ ] 09-03-PLAN.md — Deploy docs update (migration v1.1 + backup)
+- [x] 09-03-PLAN.md — Deploy docs update (migration v1.1 + backup)
 
 </details>
 
@@ -175,7 +175,7 @@ Plans:
 | 6. Cart + Checkout (Public Order Form) | v1.1 | 3/3 | Complete | 2026-08-02 |
 | 7. Admin Order Tracking | v1.1 | 3/3 | Complete    | 2026-08-02 |
 | 8. Admin Stats | v1.1 | 3/3 | Complete    | 2026-08-02 |
-| 9. Polish + Deploy | v1.1 | 1/3 | In Progress|  |
+| 9. Polish + Deploy | v1.1 | 2/3 | In Progress|  |
 
 ---
 
