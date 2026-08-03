@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Buy System
-status: milestone_complete
-stopped_at: Milestone complete (Phase 09 was final phase)
-last_updated: 2026-08-03T05:47:58.649Z
-last_activity: 2026-08-03 -- Phase 09 execution started
+status: Awaiting next milestone
+stopped_at: context exhaustion at 76% (2026-08-03)
+last_updated: "2026-08-03T07:06:41.223Z"
+last_activity: 2026-08-03 — Milestone v1.1 completed and archived
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 15
-  completed_plans: 14
-  percent: 80
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 
 ## Current Position
 
-Phase: 09
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-08-03
+Phase: Milestone v1.1 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-03 — Milestone v1.1 completed and archived
 
 ## Performance Metrics
 
@@ -122,11 +122,16 @@ None yet.
 
 ## Deferred Items
 
-Items acknowledged and deferred at milestone close on 2026-08-02:
+Items acknowledged and deferred at milestone close:
 
 | Category | Item | Status |
 |----------|------|--------|
-| verification_gap | 02-VERIFICATION.md human_needed (Phase 2 visual UAT, 3 items) | pending |
+| verification_gap | 02-VERIFICATION.md human_needed (Phase 2 visual UAT, 3 items) — v1.0 | pending |
+| verification_gap | 05-VERIFICATION.md human_needed (Phase 5 visual UAT: admin cost-price field layout) — v1.1 | pending |
+| verification_gap | 06-VERIFICATION.md human_needed (Phase 6 visual UAT: add-to-cart block, cart table, nav badge, checkout form, success flash — 5 items) — v1.1 | pending |
+| tech_debt | Admin subpage navigation — only dashboard links to sections; orders/stats/products lack persistent nav (WARNING from integration check) | pending |
+| tech_debt | v1.1 harness does not re-assert image batch-upload E2E (unchanged v1.0 code) | pending |
+| quick_task | 260802-4eb fix-required-asterisk — marked complete in SUMMARY; audit-open scan reports missing (scan quirk) | verified |
 
 ## Session Continuity
 

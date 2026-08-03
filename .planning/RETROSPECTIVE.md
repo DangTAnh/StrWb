@@ -42,6 +42,44 @@
 
 ---
 
+## Milestone: v1.1 — Buy System
+
+**Shipped:** 2026-08-03
+**Phases:** 5 | **Plans:** 15 | **Tasks:** 22
+
+### What Was Built
+- Session cart + single-page checkout (CSRF + honeypot), Order + OrderItem snapshot refactor (ORD-10/10a)
+- Admin order tracking: list (filter/paginate) + detail + forward-only status stepper (ORD-06..09)
+- Admin stats: NULL-safe revenue/profit, orders-by-status, units sold, inventory (STAT-01..04)
+- cost_price column + idempotent v1.0→v1.1 SQLite migration (COST-01/02, PLAT-05)
+- Full 16-req verification harness (TASK_OK) + 15/15 responsive screenshots + deploy docs v1.1
+
+### What Worked
+- Verify-first + harness-on-temp-DB pattern matured (verify_08 → verify_11_full.py), never touches real DB
+- Granular plans (3/phase) giữ execute nhỏ; atomic commits per task; worktree executor với safety commit
+- Status/transition strings centralized (ORDER_STATUSES/TRANSITION_MAP) — zero label drift across 4 surfaces
+
+### What Was Inefficient
+- Worktree merge lost `09-02-SUMMARY.md` (committed on dangling branch, not merged) — phát hiện khi audit phase 9 partial; phải khôi phục từ git show
+- ROIADMAP checkboxes phase 7/8/9 chưa tick khi milestone đánh dấu complete — roadmap.analyze báo partial
+- Garbled MILESTONES.md accomplishments ("PASSED", "Plan:") khi CLI extract từ SUMMARY không có one_liner frontmatter
+
+### Patterns Established
+- Deployment: waitress Windows + gunicorn/systemd Linux + nginx HTTPS + admin rate-limit (giữ từ v1.0)
+- Migration: idempotent PRAGMA-guarded ALTER + rebuild-when-empty với `Manual migration required` guard
+- Stats: SUM coalesce NULL-safe, re-query per GET (no cache drift)
+
+### Key Lessons
+- Khi merge executor worktree, verify từng file artifact (SUMMARY/VERIFICATION) hiện diện trên master — đừng tin commit message
+- SUMMARY.md nên có `requirements_completed` frontmatter để CLI extract đúng — tránh accomplishments lỗi
+- ROADMAP checkbox phải sync ngay khi phase đóng — `roadmap.analyze` dựa vào đó
+
+### Cost Observations
+- Sessions: ~6-8 (phases 5-9, mỗi phase 1-2 session)
+- Notable: 15 plans, context exhaustion ở 76% (2026-08-03) — autonomous resume cần STATE.md chính xác
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
