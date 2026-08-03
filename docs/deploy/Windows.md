@@ -47,6 +47,11 @@ flask init-db
 
 Lệnh này tạo bảng và tạo/cập nhật tài khoản admin trong `.env`.
 
+> **Nâng cấp v1.0 → v1.1:** trên một cài đặt v1.0 hiện có, lệnh `flask init-db` trên đây
+> cũng thực hiện migration v1.1 một cách idempotent — thêm cột `products.cost_price` nếu
+> chưa có, và rebuild lại bảng `orders` legacy chỉ khi bảng rỗng (không bao giờ xóa dữ liệu;
+> nếu có hàng sẽ báo `Manual migration required`). **Sao lưu `data\app.db` trước khi chạy.**
+
 ## 4. Chạy production (waitress)
 
 ```bat
@@ -91,6 +96,28 @@ Khi có nginx Windows làm reverse proxy + HTTPS:
 - Tham chiếu template `nginx.conf` trong thư mục này (sửa đường dẫn + domain thật).
 - Cấu hình `proxy_pass http://127.0.0.1:8000` trỏ đúng waitress.
 
----
+## Sao lưu (Backup)
 
-*Xem `README.md` trong thư mục này để chọn đường deploy (Windows hay Linux) + checklist go-live.*
+SQLite chạy ở WAL mode — bản sao an toàn cần có `app.db` + `app.db-wal` (cùng `app.db-shm`)
+cùng lúc, hoặc dùng `sqlite3.exe ".backup"` (WAL-safe). Luôn sao lưu cả thư mục `uploads`.
+
+**Phương pháp 1 — sqlite3 .backup (khuyến nghị):**
+
+```bat
+"C:\path\to\storewweb\data\app.db" > nul 2>&1
+sqlite3.exe "C:\path\to\storewweb\data\app.db" ".backup C:\backups\app-%date:~-4,4%%date:~-10,2%%date:~-7,2%.db"
+```
+
+**Phương pháp 2 — copy file (dừng app trước):** dừng waitress, copy `app.db` + `app.db-wal`
++ `app.db-shm` cùng lúc, rồi mở app lại.
+
+**Uploads:**
+
+```bat
+robocopy app\static\uploads C:\backups\uploads /MIR
+```
+
+**Lên lịch tự động với Task Scheduler:** tạo task chạy hàng ngày (ví dụ 2:00 sáng), action =
+lệnh batch sao lưu trên, "Start in" = `C:\path\to\storewweb`. Chọn *Run whether user is logged
+on or not*. Thêm bước **Delete files older than 14 days** ở tab Settings để giữ chỉ N bản
+sao. (Xem Linux.md §6 để cấu hình tương đương trên cron.)

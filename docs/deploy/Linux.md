@@ -55,6 +55,12 @@ Chạy bằng user `storeweb` (user của systemd service) để `data/app.db` d
 không bị root sở hữu khiến service không ghi được. Lệnh tạo bảng + upsert admin từ `.env`
 (`ADMIN_PASSWORD` phải đặt trước — xem bước `.env` ở trên).
 
+> **Nâng cấp v1.0 → v1.1:** trên một cài đặt v1.0 hiện có, lệnh `flask init-db` ở trên cũng
+> thực hiện migration v1.1 một cách idempotent — thêm cột `products.cost_price` nếu chưa có,
+> và rebuild lại bảng `orders` legacy chỉ khi bảng rỗng (không bao giờ xóa dữ liệu; nếu có
+> hàng sẽ báo `Manual migration required`). **Sao lưu `data/app.db` trước khi chạy** (xem
+> §6).
+
 ## 3. Gunicorn workers
 
 Công thức **2×CPU+1** dựa trên `nproc`:
@@ -121,24 +127,25 @@ sudo systemctl status certbot.timer   # active; gia hạn tự động 2 lần/n
 
 ## 6. Backup SQLite
 
-Sao lưu database hàng ngày (chạy khi app chạy vẫn an toàn nhờ WAL + `.backup`):
+Sao lưu database hàng ngày (chạy khi app chạy vẫn an toàn nhờ WAL + `.backup`). Lệnh
+`sqlite3 .backup` là WAL-safe — không cần dừng app, và copy nhất quát được cả `app.db-wal`/`-shm`.
 
 ```bash
 mkdir -p /srv/backups
 sqlite3 /srv/storewweb/data/app.db ".backup '/srv/backups/app-$(date +%F).db'"
 ```
 
-Cron hàng ngày:
+Cron hàng ngày (bao gồm cả uploads trong routine):
 
 ```bash
 sudo crontab -e
 # 2:00 sáng mỗi ngày
 # LƯU Ý (WR-04): trong crontab, % bị thay bằng newline — phải escape thành %% để `date +%%F`
 # ra đúng ngày. Dòng dưới đã escape; đừng sửa thành %F kẻo backup âm thầm không chạy.
-0 2 * * * sqlite3 /srv/storewweb/data/app.db ".backup '/srv/backups/app-$(date +%%F).db'" && find /srv/backups -name 'app-*.db' -mtime +14 -delete
+0 2 * * * sqlite3 /srv/storewweb/data/app.db ".backup '/srv/backups/app-$(date +%%F).db'" && rsync -a /srv/storewweb/app/static/uploads /srv/backups/uploads/ && find /srv/backups -name 'app-*.db' -mtime +14 -delete
 ```
 
-Giữ backup 14 ngày. Nếu muốn backup thư mục upload, thêm `rsync -a /srv/storewweb/app/static/uploads /srv/backups/uploads/`.
+Giữ backup 14 ngày. `rsync` đồng bộ `uploads` cùng lúc — phần nằm trong routine hàng ngày.
 
 ## 7. Đồng bộ ảnh upload lên VPS
 

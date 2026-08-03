@@ -1,6 +1,7 @@
 # StoreWeb
 
 Web bán hàng tiếng Việt để trưng bày và quản lý sản phẩm. Backend Python Flask, tự host.
+Đặt hàng qua giỏ hàng, theo dõi đơn và thống kê (v1.1).
 
 ## Cài đặt
 

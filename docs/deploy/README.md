@@ -24,7 +24,8 @@ xem template [`nginx.conf`](./nginx.conf). Admin chỉ bảo vệ bằng app log
 2. **Cài dependencies:** `pip install -r requirements.txt` (đã gồm waitress; gunicorn cài
    riêng trên Linux — xem Linux.md).
 3. **Khởi tạo database + admin:** `flask --app wsgi init-db` (tạo bảng + tài khoản admin
-   đầu tiên từ `.env`, PLAT-04).
+   đầu tiên từ `.env`, PLAT-04). Trên DB v1.0 hiện có, lệnh này cũng thực hiện migration v1.1 —
+   sao lưu trước khi chạy.
 4. **nginx.conf:** thay mọi `YOUR_DOMAIN` bằng domain thật của bạn (D-03 — không deploy
    placeholder), rồi copy vào `/etc/nginx/sites-available/storeweb`.
 5. **HTTPS:** cấp chứng chỉ **trước khi** `nginx -t`:
@@ -34,7 +35,40 @@ xem template [`nginx.conf`](./nginx.conf). Admin chỉ bảo vệ bằng app log
 
 ---
 
-## Verify production (checklist sau go-live)
+## Migration v1.1
+
+Nâng cấp một cài đặt v1.0 lên v1.1 (thêm giỏ hàng / đặt hàng / đơn hàng / thống kê). Quy trình:
+
+1. **Sao lưu** `data/app.db` trước tiên — xem `## Sao lưu (Backup)` bên dưới.
+2. **Chạy idempotent migration:**
+
+```bat
+set FLASK_APP=wsgi
+flask --app wsgi init-db
+```
+
+```bash
+cd /srv/storewweb && sudo -u storeweb venv/bin/flask --app wsgi init-db
+```
+
+- `ADMIN_PASSWORD` phải đặt hợp lệ (≥8 ký tự, không `change-me`) **trước** khi chạy — lệnh sẽ báo lỗi nếu thiếu.
+- **Không có migration script riêng** (PLAT-05). `init-db` tự động thực hiện migration an toàn:
+  - `db.create_all()` tạo bảng mới nếu chưa tồn tại (không ALTER bảng hiện có).
+  - **Migration guard:** nếu bảng `products` chưa có cột `cost_price` → `ALTER TABLE products ADD COLUMN cost_price INTEGER` (idempotent — chỉ thêm một lần).
+  - **Legacy orders guard:** nếu bảng `orders` tồn tại với schema snapshot cũ (có `product_name`):
+    - Nếu bảng **rỗng** → DROP và tạo lại schema mới.
+    - Nếu bảng **có dữ liệu** → lệnh dừng lại với thông báo `Manual migration required: orders has legacy snapshot schema with data.` — **không bao giờ xóa dữ liệu**.
+  - Upserts tài khoản admin từ `.env`.
+
+## Sao lưu (Backup)
+
+SQLite chạy ở WAL mode — một bản sao an toàn cần sao chép cùng lúc cả `data/app.db` và `data/app.db-wal` (cùng `data/app.db-shm`), hoặc dùng `sqlite3 .backup` (WAL-safe). Luôn sao lưu cả `app/static/uploads/`.
+
+- **sqlite3 .backup (khuyến nghị):** `sqlite3 data/app.db ".backup /path/to/backup/app.db"` — copy nhất quán ngay cả khi app đang chạy.
+- **Copy file:** dừng app trước, copy `data/app.db` + `data/app.db-wal` + `data/app.db-shm` cùng lúc.
+- **Uploads:** `rsync -a app/static/uploads/ /path/to/backup/uploads/` (Linux) hoặc `robocopy app\static\uploads C:\backups\uploads` (Windows).
+
+Lên lịch tự động: xem `Windows.md` (Task Scheduler) và `Linux.md` (cron).
 
 Chạy các kiểm tra sau sau khi deploy lên production:
 
@@ -52,6 +86,9 @@ Chạy các kiểm tra sau sau khi deploy lên production:
    hoặc giá trị `.env`; `.env` có quyền `600` (Linux) và không bị commit.
 6. **Static + uploads:** `https://YOUR_DOMAIN/static/...` trả ảnh/asset trực tiếp từ nginx
    (không đi qua WSGI), HTTP 200 + header `Cache-Control`.
+7. **Re-audit v1.1 (sau init-db trên DB thật):** sau khi operator chạy `flask --app wsgi init-db`
+   cho migration, mở giỏ hàng với session đã populated — xác nhận sản phẩm + giá cộng dồn được
+   hiển thị đúng (không lỗi do schema mới `cost_price` / bảng `orders`).
 
 ---
 
