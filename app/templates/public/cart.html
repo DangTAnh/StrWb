@@ -21,7 +21,7 @@
           <tr>
             <td>
               {% if item.product.primary_image %}
-              <img src="{{ url_for('static', filename='uploads/' + item.product.primary_image.thumb_filename) }}" alt="{{ item.product.name }}" width="80" height="80" style="object-fit: cover; border-radius: 4px; vertical-align: middle;">
+              <img src="{{ url_for('static', filename='uploads/' + item.product.primary_image.thumb_filename) }}" alt="{{ item.product.name }}" width="80" height="80" class="cart-thumb">
               {% else %}
               <span class="thumb-placeholder">—</span>
               {% endif %}
@@ -48,7 +48,7 @@
       </table>
     </div>
     <div class="cart-total">
-      <span class="cart-total-label">Tổng cộng:</span>
+      <span class="cart-total-label">Tổng cộng</span>
       <span class="cart-total-value">{{ total | format_price }}</span>
     </div>
     <div class="cart-actions">
