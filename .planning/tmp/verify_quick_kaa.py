@@ -4,6 +4,9 @@ Never touches data/app.db — mirrors verify_0701.py pattern.
 import os, sys, tempfile
 from werkzeug.security import generate_password_hash
 
+os.environ['SECRET_KEY'] = 'test'  # khớp pattern verify_11_full.py / verify_08_stats_full.py
+os.environ['FLASK_DEBUG'] = '0'
+
 import app as app_module
 TMP = tempfile.mkdtemp(prefix='gsd_verify_kaa_')
 app_module.BASE_DIR = TMP
