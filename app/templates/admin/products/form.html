@@ -98,7 +98,7 @@
             <button type="button" class="reorder-btn" data-dir="-1" aria-label="Chuyển lên" {% if loop.first %}disabled{% endif %}>↑</button>
             <button type="button" class="reorder-btn" data-dir="1" aria-label="Chuyển xuống" {% if loop.last %}disabled{% endif %}>↓</button>
           </div>
-          <label class="img-delete"><input type="checkbox" class="img-delete-cb" value="{{ img.id }}" aria-label="Xóa ảnh {{ img.original_filename or ('ảnh ' ~ loop.index) }}"> Xóa</label>
+          <button type="button" class="delete-btn" data-id="{{ img.id }}" aria-label="Xóa ảnh {{ img.original_filename or ('ảnh ' ~ loop.index) }}">✕</button>
         </div>
         {% endfor %}
       </div>

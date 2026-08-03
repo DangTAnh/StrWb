@@ -277,8 +277,7 @@ label { font-size: 14px; }
 .checkbox-field { display: flex; align-items: flex-end; padding-bottom: 4px; }
 .checkbox-label { display: flex !important; align-items: center; gap: 8px; margin-bottom: 0 !important; cursor: pointer; }
 .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; }
-.checkbox-label input[type="checkbox"]:focus-visible,
-.img-delete input[type="checkbox"]:focus-visible {
+.checkbox-label input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -322,8 +321,14 @@ label { font-size: 14px; }
 .reorder-btn:hover:not(:disabled) { color: var(--accent); background: #F9FAFB; }
 .reorder-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .reorder-btn:disabled { color: #9CA3AF; cursor: default; }
-.img-delete { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 14px; }
-.img-delete input[type="checkbox"] { width: 18px; height: 18px; }
+.delete-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; margin-left: 4px; padding: 0; border: 0;
+  background: transparent; color: #9CA3AF; font-size: 14px; line-height: 1;
+  border-radius: 4px; cursor: pointer;
+}
+.delete-btn:hover { color: #DC2626; background: #FEF2F2; }
+.delete-btn:focus-visible { outline: 2px solid #DC2626; outline-offset: 1px; }
 .gallery-upload { margin-top: 16px; }
 
 /* Responsive */

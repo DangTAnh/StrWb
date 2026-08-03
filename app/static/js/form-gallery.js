@@ -1,8 +1,12 @@
-/* Product form gallery: reorder + delete + multi-file upload (D-12/D-13/D-17).
-   Extracted from app/templates/admin/products/form.html inline script so the
-   product form paste-to-upload feature can share the same file-input flow.
-   Zero framework — reads/writes the hidden image_order + delete_images fields
-   the server-side _process_image_batch expects (new:<i> tokens). */
+/* Product form gallery: reorder + direct-delete + multi-file upload (D-12/D-13/D-17).
+   Extracted from app/templates/admin/products/form.html inline script.
+   Zero framework — reads/writes hidden image_order + delete_images fields that
+   the server-side _process_image_batch expects (new:<i> tokens).
+
+   Delete UX: each gallery item has a ✕ delete-btn. For existing images, the
+   item's data-id is appended to delete_images (server removes the row + file on
+   submit). For new/unsaved uploads, the item is removed from newItems/newFiles
+   + the file input is re-synced immediately (no server round-trip). */
 (function () {
   'use strict';
   var grid = document.getElementById('gallery-grid');
@@ -25,13 +29,7 @@
     });
     orderField.value = order.join(',');
   }
-  function syncDelete() {
-    var ids = [];
-    grid.querySelectorAll('.img-delete-cb:checked').forEach(function (cb) {
-      ids.push(cb.value);
-    });
-    deleteField.value = ids.join(',');
-  }
+  // deleteField is populated directly by markExistingDeleted() (direct-delete UX).
   function syncFileInput() {
     var dt = new DataTransfer();
     newFiles.forEach(function (f) { dt.items.add(f); });
@@ -59,6 +57,32 @@
       items[0].insertBefore(badge, items[0].firstChild);
     }
   }
+  // Remove a new (unsaved) upload item from the gallery + the file list.
+  function removeNewItem(item) {
+    var idx = newItems.indexOf(item);
+    if (idx >= 0) {
+      newFiles.splice(idx, 1);
+      newItems.splice(idx, 1);
+    }
+    if (item.parentNode) item.parentNode.removeChild(item);
+    syncFileInput();
+    syncOrder();
+    updateDisabled();
+    updatePrimaryBadge();
+  }
+  // Mark an existing (saved) image for deletion on submit (soft — removed visually too).
+  function markExistingDeleted(item) {
+    var id = item.getAttribute('data-id');
+    if (id) {
+      var current = deleteField.value ? deleteField.value.split(',') : [];
+      if (current.indexOf(id) === -1) current.push(id);
+      deleteField.value = current.join(',');
+    }
+    if (item.parentNode) item.parentNode.removeChild(item);
+    syncOrder();
+    updateDisabled();
+    updatePrimaryBadge();
+  }
   function makeNewItem(file) {
     var item = document.createElement('div');
     item.className = 'gallery-item';
@@ -80,17 +104,13 @@
       b.textContent = dir === '-1' ? '↑' : '↓';
       actions.appendChild(b);
     });
+    // direct delete button (no checkbox) — removes the new upload immediately
+    var del = document.createElement('button');
+    del.type = 'button'; del.className = 'delete-btn';
+    del.setAttribute('aria-label', 'Xóa ảnh');
+    del.textContent = '✕';
+    actions.appendChild(del);
     item.appendChild(actions);
-    // delete control for a newly-pasted/file-chosen upload (mirrors existing UI)
-    var label = document.createElement('label');
-    label.className = 'img-delete';
-    var cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.className = 'img-delete-cb';
-    cb.value = 'new'; cb.setAttribute('aria-label', 'Xóa ảnh mới');
-    cb.addEventListener('change', syncDelete);
-    label.appendChild(cb);
-    label.append(' Xóa');
-    item.appendChild(label);
     return item;
   }
   function renderNew() {
@@ -123,7 +143,23 @@
     updatePrimaryBadge();
   }
   grid.addEventListener('click', function (e) {
-    var btn = e.target.closest('.reorder-btn');
+    var target = e.target;
+    // direct-delete button: existing image -> mark for server delete; new upload -> remove from file list
+    var delBtn = target.closest('.delete-btn');
+    if (delBtn) {
+      e.preventDefault();
+      var item = delBtn.closest('.gallery-item');
+      if (!item) return;
+      var newIdx = newItems.indexOf(item);
+      if (newIdx >= 0) {
+        removeNewItem(item);
+      } else {
+        markExistingDeleted(item);
+      }
+      return;
+    }
+    // reorder buttons (unchanged behavior)
+    var btn = target.closest('.reorder-btn');
     if (!btn) return;
     e.preventDefault();
     var item = btn.closest('.gallery-item');
@@ -134,9 +170,6 @@
     } else {
       moveExisting(item, dir);
     }
-  });
-  grid.addEventListener('change', function (e) {
-    if (e.target.classList.contains('img-delete-cb')) syncDelete();
   });
   fileInput.addEventListener('change', function () {
     newFiles = Array.prototype.slice.call(fileInput.files);

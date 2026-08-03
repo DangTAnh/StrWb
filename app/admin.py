@@ -6,7 +6,7 @@ from .forms import ProductForm
 from .image_utils import delete_image_files, save_image_file, validate_image_upload
 from .models import Product, ProductImage, Order, OrderItem
 
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+admin_bp = Blueprint('admin', __name__, url_prefix='')
 
 ORDER_STATUSES = ('Chờ xác nhận', 'Đã xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận', 'Đã hủy')
 # STAT-01 locked: only shipped + received orders count toward revenue. Tuple (not set)
@@ -118,13 +118,6 @@ def _process_image_batch(new_files, order_stream, delete_ids, product):
         img.sort_order = idx
         img.is_primary = (idx == 0)
     return None
-
-
-@admin_bp.route('/', methods=['GET'])
-def dashboard():
-    products_count = Product.query.count()
-    orders_count = Order.query.count()
-    return render_template('admin/dashboard.html', products_count=products_count, orders_count=orders_count)
 
 
 @admin_bp.route('/orders', methods=['GET'])
@@ -264,8 +257,15 @@ def products():
 def new_product():
     form = ProductForm()
     if form.validate_on_submit():
+        # STT-01: auto-generate a sequential name when the field is left blank.
+        # STT = next product number by id order (count + 1). A manually-typed
+        # name is always preserved. Zero-padded to 3 digits (Sản phẩm 001...).
+        raw_name = (form.name.data or '').strip()
+        if not raw_name:
+            next_seq = db.session.query(db.func.max(Product.id)).scalar() or 0
+            raw_name = 'Sản phẩm {:03d}'.format(next_seq + 1)
         product = Product(
-            name=form.name.data.strip(),
+            name=raw_name,
             price=form.price.data,
             cost_price=form.cost_price.data,  # Optional() yields None on empty; 0 VND preserved
             brand=form.brand.data or None,
