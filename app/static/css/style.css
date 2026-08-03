@@ -359,6 +359,11 @@ label { font-size: 14px; }
   .search-form { max-width: 480px; margin-left: auto; }
 }
 
+.site-nav { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.site-nav a { font-size: 14px; font-weight: 600; color: #1F2937; }
+.site-nav a:hover { color: #2563EB; text-decoration: none; }
+.logout-form button { flex-shrink: 0; /* inherits .btn size/44px touch target */ }
+
 /* ============ Phase 3: Product grid + card ============ */
 .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
