@@ -1,31 +1,47 @@
 ---
-phase: quick-260804-2iv
+phase: quick-260804
 plan: 1
 type: execute
 status: complete
 ---
 
-# Quick 260804-2iv: Header layout refine — drop brand, nav left of search — Summary
+# Quick 260804 header work — Summary
 
-## What was done
+## Tasks completed
 
-Refined the header layout so the section nav sits left of the search bar, the "Quản lý hàng" brand link is removed (the **Trang chủ** link in the nav already covers home), and all header elements (nav, search, cart) align on one baseline.
+### 260804-10g — bỏ /admin prefix + nav/logout header wiring
+- Routes `/products`, `/orders`, `/stats` (no `/admin` prefix). Verified `routes-ok`.
+- Created `app/templates/_admin_nav.html` (shared nav partial: Trang chủ/Sản phẩm/Đơn hàng/Thống kê + POST logout with csrf_token).
+- Created `app/templates/admin/base.html` (admin header base extending root base.html).
+- Wired nav into 6 admin templates (`extends "admin/base.html"`) + into home header (`public/_nav.html`).
+- Added `.site-nav`/`.logout-form` CSS.
+- Commits: `3fa4b7a`, `eeefb1a`.
 
-- `app/templates/public/_nav.html`: removed the `<a class="brand">` link; moved `{% include "_admin_nav.html" %}` to the **left** of `<form class="search-form">` so the Trang chủ/Sản phẩm/Đơn hàng/Thống kê links render left of the search input. Existing search form + cart link preserved.
-- `app/templates/admin/base.html`: removed the brand link (nav partial is now the only header child).
-- `app/static/css/style.css`: `.site-nav` now has `align-items: center; flex-shrink: 0;` and `.logout-form` is `inline-flex; align-items: stretch; flex-shrink: 0` so nav/search/cart share a single vertical alignment.
+### 260804-2iv — header layout refine
+- Removed the "Quản lý hàng" brand link (Trang chủ in nav covers home).
+- Moved site-nav left of the search form in `public/_nav.html`.
+- Balanced nav/search/cart height (align-items center).
+- Commit: `bd3bd0d`.
+
+### 260804-2iv (continued) — hamburger nav for mobile
+- Converted `_admin_nav.html` to a pure-CSS checkbox hamburger: on mobile the nav
+  collapses into a dropdown toggled by `.nav-toggle__btn`; on desktop (md+) it
+  lays out inline and the toggle is hidden.
+- Added `.nav-group`/`.nav-toggle`/`.nav-toggle__btn`/`.nav-toggle__icon` CSS
+  with `@media (min-width:768px)` desktop override.
+- Zero JS — matches project's zero-JS-bundle constraint (CLAUDE.md).
+- Commit: `afc44b8`.
 
 ## Verification
-- Route registration: `routes-ok` — `/products`, `/orders`, `/stats` present; no `/admin*` rules.
-- `/products`, `/orders`, `/stats` all 302 → `/login` (auth gate intact).
-- `/login` → 200; login page extends `base.html` (no admin nav header).
-- Jinja render smoke test: `_admin_nav.html` + `admin/base.html` render without errors.
+- `routes-ok` (no `/admin*` rules).
+- `/products`, `/orders`, `/stats` → 302 `/login` (auth gate intact).
+- `/login` → 200, extends `base.html` (no admin nav).
+- Render smoke test: `_admin_nav.html`, `admin/base.html`, `public/base.html` all OK.
 
 ## Manual Verify (Pending)
-Not run interactively — layout is CSS+template only. Open `/` and `/products` in a browser: confirm nav links (Trang chủ/Sản phẩm/Đơn hàng/Thống kê) appear to the left of the search bar on the same row as the cart link and are vertically aligned. Confirm "Quản lý hàng" brand link is gone from both the home and admin headers.
+Open `/` and `/products` in a browser at both desktop width and a narrow phone width:
+- Desktop: nav links + Đăng xuất sit left of the search bar, same row as cart, brand gone.
+- Mobile: hamburger icon shows; tapping it opens the dropdown with all links + Đăng xuất;
+  tap Đăng xuất → redirected to login (no nav on login page).
 
-## Commit
-`bd3bd0d` — ui(quick-260804-2iv): header layout — drop brand, nav left of search, height balance
-
-## Deviations
-None.
+## Self-Check: PASSED
