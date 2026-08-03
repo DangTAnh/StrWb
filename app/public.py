@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from urllib.parse import urlsplit
 
 from flask import Blueprint, render_template, request, abort, redirect, url_for, flash, session
+from flask_login import current_user
 
 from .db import db
 from .forms import CartForm, CheckoutForm
@@ -33,6 +34,10 @@ def _manual_pagination(page, per_page, total):
 
 @public_bp.route('/', methods=['GET'])
 def home():
+    # Web internal: chỉ admin đăng nhập mới xem danh sách hàng để nhập đơn.
+    # Đơn của khách đến qua Messenger (ngoài web), admin vào đây quản lí/đặt hàng.
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
     page = request.args.get('page', 1, type=int)
     pagination = Product.query.order_by(Product.sort_order.asc(), Product.id.asc()).paginate(
         page=page, per_page=12, error_out=False
