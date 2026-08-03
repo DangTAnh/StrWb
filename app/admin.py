@@ -8,7 +8,7 @@ from .models import Product, ProductImage, Order, OrderItem
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-ORDER_STATUSES = ('Chờ xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận', 'Đã hủy')
+ORDER_STATUSES = ('Chờ xác nhận', 'Đã xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận', 'Đã hủy')
 # STAT-01 locked: only shipped + received orders count toward revenue. Tuple (not set)
 # keeps iteration order deterministic for the IN-clause filter.
 REVENUE_STATUSES = ('Đã gửi', 'Đã nhận')
@@ -17,7 +17,8 @@ REVENUE_STATUSES = ('Đã gửi', 'Đã nhận')
 # Server-side single source of truth — never trust client-supplied next_status.
 # Empty set = terminal (no further transitions).
 TRANSITION_MAP = {
-    'Chờ xác nhận': {'Đã gói', 'Đã hủy'},
+    'Chờ xác nhận': {'Đã xác nhận', 'Đã hủy'},
+    'Đã xác nhận':  {'Đã gói', 'Đã hủy'},
     'Đã gói':       {'Đã gửi', 'Đã hủy'},
     'Đã gửi':       {'Đã nhận'},
     'Đã nhận':      set(),  # terminal — hết chuỗi
@@ -35,6 +36,7 @@ def _order_total(order):
 def order_badge_class(status):
     return {
         'Chờ xác nhận': 'badge-order-pending',
+        'Đã xác nhận': 'badge-order-confirmed',
         'Đã gói': 'badge-order-packed',
         'Đã gửi': 'badge-order-shipped',
         'Đã nhận': 'badge-order-delivered',
@@ -230,6 +232,16 @@ def update_order_status(order_id):
     if next_status not in valid:
         flash(f'Không thể chuyển trạng thái đơn #{order.id}.', 'error')
         return redirect(url_for('admin.order_detail', order_id=order.id))
+    if next_status == 'Đã xác nhận':
+        # Stock decrement (ORD-11): trừ theo OrderItem.quantity, sàn 0, bỏ qua
+        # item có product đã bị xóa (product_id NULL qua ON DELETE SET NULL).
+        # Idempotent nhờ forward-only TRANSITION_MAP: edge 'Chờ xác nhận' ->
+        # 'Đã xác nhận' duy nhất, nên POST lặp sẽ bị reject ở trên (không trừ kép).
+        # ponytail: không hoàn lại tồn kho khi hủy đơn sau khi xác nhận — phạm vi
+        # yêu cầu chỉ chiều xác nhận → trừ; admin chỉnh quantity thủ công nếu cần.
+        for item in order.items.all():
+            if item.product is not None:
+                item.product.quantity = max(0, item.product.quantity - item.quantity)
     order.status = next_status
     db.session.commit()
     if next_status == 'Đã hủy':

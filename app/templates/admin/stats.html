@@ -34,6 +34,7 @@
         <ul class="status-breakdown">
           <li><a href="{{ url_for('admin.orders') }}">Tất cả <span class="badge badge-neutral">{{ total_orders }}</span></a></li>
           <li><a href="{{ url_for('admin.orders', status='Chờ xác nhận') }}">Chờ xác nhận <span class="badge {{ order_badge_class('Chờ xác nhận') }}">{{ status_counts.get('Chờ xác nhận', 0) }}</span></a></li>
+          <li><a href="{{ url_for('admin.orders', status='Đã xác nhận') }}">Đã xác nhận <span class="badge {{ order_badge_class('Đã xác nhận') }}">{{ status_counts.get('Đã xác nhận', 0) }}</span></a></li>
           <li><a href="{{ url_for('admin.orders', status='Đã gói') }}">Đã gói <span class="badge {{ order_badge_class('Đã gói') }}">{{ status_counts.get('Đã gói', 0) }}</span></a></li>
           <li><a href="{{ url_for('admin.orders', status='Đã gửi') }}">Đã gửi <span class="badge {{ order_badge_class('Đã gửi') }}">{{ status_counts.get('Đã gửi', 0) }}</span></a></li>
           <li><a href="{{ url_for('admin.orders', status='Đã nhận') }}">Đã nhận <span class="badge {{ order_badge_class('Đã nhận') }}">{{ status_counts.get('Đã nhận', 0) }}</span></a></li>
