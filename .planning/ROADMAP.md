@@ -152,9 +152,14 @@ Plans:
 
 Plans:
 
-- [ ] 09-01-PLAN.md — UI polish pass
-- [ ] 09-02-PLAN.md — v1.1 verification harness
-- [ ] 09-03-PLAN.md — Deploy docs update
+**Wave 1**
+
+- [ ] 09-01-PLAN.md — UI polish pass (F-01..F-06 + R-01/R-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 09-02-PLAN.md — v1.1 verification harness (16 reqs + v1.0 smoke + V-01/V-02)
+- [ ] 09-03-PLAN.md — Deploy docs update (migration v1.1 + backup)
 
 </details>
 
