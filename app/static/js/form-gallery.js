@@ -96,6 +96,8 @@
     item.appendChild(a);
     var actions = document.createElement('div');
     actions.className = 'gallery-actions';
+    // reorder buttons: up first, then DOWN, then we insert delete between up and down
+    var downBtn = null;
     ['-1', '1'].forEach(function (dir) {
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'reorder-btn';
@@ -103,13 +105,14 @@
       b.setAttribute('aria-label', dir === '-1' ? 'Chuyển lên' : 'Chuyển xuống');
       b.textContent = dir === '-1' ? '↑' : '↓';
       actions.appendChild(b);
+      if (dir === '1') downBtn = b;
     });
-    // direct delete button (no checkbox) — removes the new upload immediately
+    // direct delete button (no checkbox), placed BETWEEN the up/down reorder buttons
     var del = document.createElement('button');
     del.type = 'button'; del.className = 'delete-btn';
     del.setAttribute('aria-label', 'Xóa ảnh');
     del.textContent = '✕';
-    actions.appendChild(del);
+    if (downBtn) actions.insertBefore(del, downBtn); else actions.appendChild(del);
     item.appendChild(actions);
     return item;
   }

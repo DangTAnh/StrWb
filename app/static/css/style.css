@@ -328,6 +328,7 @@ label { font-size: 14px; }
   border-radius: 4px; cursor: pointer;
 }
 .delete-btn:hover { color: #DC2626; background: #FEF2F2; }
+.product-form .input::placeholder { color: #9CA3AF; }
 .delete-btn:focus-visible { outline: 2px solid #DC2626; outline-offset: 1px; }
 .gallery-upload { margin-top: 16px; }
 
