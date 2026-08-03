@@ -8,11 +8,23 @@ Web bán hàng tiếng Việt để trưng bày và quản lý sản phẩm. Kh�
 
 Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admin dễ dàng quản lý sản phẩm.
 
+## Current Milestone: v1.2 Đợt bán (Sale Batches)
+
+**Goal:** Chia catalog thành các đợt bán — admin tạo đợt, gán sản phẩm (nhiều đợt được), ẩn/hiện từng đợt sau khi đã chuẩn bị xong sản phẩm; public chỉ thấy các đợt đang hiện.
+
+**Target features:**
+- Admin tạo/sửa/xóa đợt bán (chỉ tên + thứ tự + cờ ẩn/hiện)
+- Admin gán sản phẩm vào nhiều đợt (many-to-many)
+- Admin ẩn/hiện từng đợt bán (toggle)
+- Trang chủ hiển thị từng section theo đợt đang hiện, theo thứ tự sắp xếp
+- Sản phẩm chưa gán vào đợt nào = ẩn khỏi public (search, chi tiết, giỏ hàng cũng không thấy)
+- Admin vẫn thấy toàn bộ sản phẩm trong quản trị
+
 ## Current State
 
 **Đã shipped v1.1 Buy System (2026-08-03):** hệ thống đặt hàng nhiều sản phẩm (session cart + checkout với CSRF/honeypot), Order + OrderItem snapshot, theo dõi đơn admin (forward-only status), thống kê doanh thu/lợi nhuận NULL-safe, migration SQLite idempotent. Audit PASSED 19/19 reqs, 5/5 phases.
 
-**Next:** Planning milestone kế tiếp (questioning → research → requirements → roadmap) qua `/gsd:new-milestone`.
+**Next:** Milestone v1.2 Đợt bán đang planning (requirements → roadmap). Sau roadmap: `/gsd:plan-phase [N]`.
 
 ## Requirements
 
@@ -57,7 +69,11 @@ Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admi
 
 ### Active
 
-*(Chưa có — planning milestone kế tiếp)*
+- [ ] Admin tạo/sửa/xóa đợt bán (BATCH-01/02/03) — v1.2
+- [ ] Admin gán sản phẩm vào nhiều đợt (BATCH-04) — v1.2
+- [ ] Admin ẩn/hiện từng đợt bán (BATCH-05) — v1.2
+- [ ] Trang chủ hiển thị section theo từng đợt đang hiện, đúng thứ tự (BATCH-06/07) — v1.2
+- [ ] Sản phẩm chưa gán đợt = ẩn khỏi public (search, chi tiết, giỏ hàng) (BATCH-08) — v1.2
 
 ### Out of Scope
 
@@ -89,7 +105,7 @@ Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admi
 |----------|-----------|---------|
 | Giao dịch qua Messenger, không tích hợp thanh toán | Người dùng yêu cầu | ✓ Validated — v1.0 (CONT-01/02) |
 | Chỉ một tài khoản admin | Người dùng yêu cầu | ✓ Validated — v1.0 (AUTH-01..04) |
-| Không phân loại sản phẩm | Người dùng yêu cầu, catalog phẳng | ✓ Validated — v1.0 |
+| Không phân loại sản phẩm | Người dùng yêu cầu, catalog phẳng | ⚠️ Revisit — v1.2 thêm "đợt bán" (grouping theo đợt bán, không phải danh mục thông thường) |
 | SQLite cho dữ liệu | Nhẹ, phù hợp tự host | ✓ Validated — v1.0 (PLAT-03, WAL) |
 | Flask app factory + 3 blueprints (public/admin/auth) | Phân tách rõ ràng, chuẩn Flask | ✓ Good — v1.0 |
 | Werkzeug generate/check_password_hash | Mật khẩu admin băm scrypt/pbkdf2 | ✓ Good — v1.0 |
@@ -102,6 +118,10 @@ Khách xem được list hàng rõ ràng (ảnh + giá + trạng thái) và admi
 | Giá nhập tùy chọn, chỉ admin thấy; dùng tính lợi nhuận | Người dùng chốt trong questioning v1.1 | ✓ Validated — v1.1 (COST-01/02) |
 | Trạng thái đơn: Chờ xác nhận → Đã gói → Đã gửi → Đã nhận (+ Đã hủy), forward-only | Người dùng yêu cầu | ✓ Validated — v1.1 (ORD-08/09) |
 | Tồn kho không tự giảm khi đặt hàng (ORD-12 deferred v2) | Đơn giản hóa v1.1, tránh race | ⚠️ Revisit — deferred v2 |
+| Đợt bán chỉ giữ tên + thứ tự + cờ ẩn/hiện (không mô tả/ảnh bìa) | Người dùng chọn trong questioning v1.2 | ✓ Pending — v1.2 |
+| Sản phẩm ↔ đợt bán many-to-many (1 sản phẩm nhiều đợt) | Người dùng chọn trong questioning v1.2 | ✓ Pending — v1.2 |
+| Public hiển thị từng section theo thứ tự trên trang chủ (không thêm route riêng) | Người dùng chọn trong questioning v1.2 | ✓ Pending — v1.2 |
+| Sản phẩm chưa gán đợt = ẩn khỏi public (search/chi tiết/giỏ hàng) | Người dùng chọn trong questioning v1.2 | ✓ Pending — v1.2 |
 
 ## Evolution
 
@@ -121,4 +141,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-03 after v1.1 milestone*
+*Last updated: 2026-08-03 after v1.2 milestone start*

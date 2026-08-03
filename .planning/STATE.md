@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: milestone
-status: Awaiting next milestone
-stopped_at: context exhaustion at 75% (2026-08-03)
-last_updated: "2026-08-03T07:14:10.008Z"
-last_activity: 2026-08-03 — Completed quick task 260803-kaa: thêm state Đã xác nhận cho đơn hàng + trừ tồn kho khi xác nhận
+milestone: v1.2
+milestone_name: Đợt bán (Sale Batches)
+status: planning
+last_updated: "2026-08-03T08:21:01.327Z"
+last_activity: 2026-08-03
 progress:
   total_phases: 0
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 
 ## Current Position
 
-Phase: Milestone v1.1 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-08-03 — Completed quick task 260803-kaa: thêm state Đã xác nhận cho đơn hàng + trừ tồn kho khi xác nhận
+Status: Defining requirements
+Last activity: 2026-08-03 — Milestone v1.2 started
 
 ## Performance Metrics
 
