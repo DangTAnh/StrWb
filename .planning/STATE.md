@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 Phase: Phase 10 (not started)
 Plan: TBD
 Status: Defining roadmap
-Last activity: 2026-08-03 — Completed quick task 260803-w8p: chuyển web thành internal admin
+Last activity: 2026-08-04 — Completed quick task 260804-10g: bỏ /admin prefix + nav/logout header wiring
 
 ## Performance Metrics
 
@@ -81,6 +81,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260803-w8p | sửa lại thành web internal cho admin (cửa hàng → quản lí hàng) | 2026-08-03 | e982481 | [260803-w8p-s-a-l-i-th-nh-web-internal-cho-admin-ch-](./quick/260803-w8p-s-a-l-i-th-nh-web-internal-cho-admin-ch-/) |
+| 260804-10g | bỏ /admin prefix + nav/logout header wiring | 2026-08-04 | 3fa4b7a, eeefb1a | [260804-10g-b-ti-n-t-admin-kh-i-c-c-route-admin-admi](./quick/260804-10g-b-ti-n-t-admin-kh-i-c-c-route-admin-admi/) |
 
 ## Deferred Items
 
