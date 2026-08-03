@@ -54,6 +54,7 @@
       {% elif order.status == 'Đã nhận' %}
         <ol class="order-progress">
           <li class="is-done"><span class="dot"></span>Chờ xác nhận</li>
+          <li class="is-done"><span class="dot"></span>Đã xác nhận</li>
           <li class="is-done"><span class="dot"></span>Đã gói</li>
           <li class="is-done"><span class="dot"></span>Đã gửi</li>
           <li class="is-done"><span class="dot"></span>Đã nhận</li>
@@ -61,13 +62,25 @@
         <p class="order-terminal">Đơn đã hoàn thành.</p>
       {% else %}
         <ol class="order-progress">
-          {% set flow = ['Chờ xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận'] %}
+          {% set flow = ['Chờ xác nhận', 'Đã xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận'] %}
           {% for s in flow %}
           <li {% if s == order.status %}class="is-current" aria-current="step"{% elif loop.index0 < flow.index(order.status) %}class="is-done"{% endif %}><span class="dot"></span>{{ s }}</li>
           {% endfor %}
         </ol>
         <div class="action-row">
           {% if order.status == 'Chờ xác nhận' %}
+            <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.id) }}" class="inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="next_status" value="Đã xác nhận">
+              <button type="submit" class="btn btn-primary">Chuyển sang: Đã xác nhận</button>
+            </form>
+            <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.id) }}" class="inline-form"
+                  onsubmit="return confirm('Hủy đơn #{{ order.id }}? Hành động này không thể hoàn tác.');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="next_status" value="Đã hủy">
+              <button type="submit" class="btn btn-danger">Hủy đơn</button>
+            </form>
+          {% elif order.status == 'Đã xác nhận' %}
             <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.id) }}" class="inline-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="next_status" value="Đã gói">
