@@ -1,19 +1,19 @@
-<a class="product-card{% if p.status != 'available' %} is-unavailable{% endif %}"
+<a class="product-card group block bg-white border border-gray-200 rounded-lg overflow-hidden text-text transition-all duration-200 hover:border-accent hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent animate-fade-in-up {% if p.status != 'available' %}opacity-75{% endif %}"
    href="{{ url_for('public.product_detail', product_id=p.id) }}">
-  <div class="product-card-thumb">
+  <div class="product-card-thumb relative block aspect-square overflow-hidden bg-gray-100">
     {% if p.primary_image %}
-    <img src="{{ url_for('static', filename='uploads/' + p.primary_image.thumb_filename) }}" alt="{{ p.name }}" width="400" height="400" loading="lazy">
+    <img src="{{ url_for('static', filename='uploads/' + p.primary_image.thumb_filename) }}" alt="{{ p.name }}" width="400" height="400" loading="lazy" class="w-full h-full object-cover">
     {% else %}
-    <span class="product-card-placeholder">—</span>
+    <span class="product-card-placeholder flex items-center justify-center w-full h-full text-2xl text-gray-400">—</span>
     {% endif %}
     {% if p.status == 'out_of_stock' %}
-    <span class="badge badge-out_of_stock badge-overlay">Hết hàng</span>
+    <span class="badge badge-out_of_stock absolute top-2 left-2 z-10">Hết hàng</span>
     {% elif p.status == 'discontinued' %}
-    <span class="badge badge-discontinued badge-overlay">Ngừng bán</span>
+    <span class="badge badge-discontinued absolute top-2 left-2 z-10">Ngừng bán</span>
     {% endif %}
   </div>
-  <div class="product-card-body">
-    <h3 class="product-card-name">{{ p.name }}</h3>
-    <p class="product-card-price">{{ p.price | format_price }}</p>
+  <div class="product-card-body p-4">
+    <h3 class="product-card-name text-sm font-semibold text-text line-clamp-2 h-10">{{ p.name }}</h3>
+    <p class="product-card-price mt-1 text-sm font-semibold text-accent">{{ p.price | format_price }}</p>
   </div>
 </a>

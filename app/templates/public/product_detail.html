@@ -1,61 +1,61 @@
 {% extends "public/base.html" %}
 {% block title %}{{ product.name }} — Quản lý hàng{% endblock %}
 {% block content %}
-<div class="container">
-  <a class="back-link" href="{{ back_url or url_for('public.home') }}">Quay lại</a>
-  <div class="product-detail">
-    <div class="product-gallery">
-      <div class="main-image-box">
+<div class="container max-w-7xl mx-auto px-4 py-6">
+  <a class="back-link inline-block mb-4 text-sm text-accent hover:text-blue-700" href="{{ back_url or url_for('public.home') }}">← Quay lại</a>
+  <div class="product-detail animate-fade-in flex flex-col md:flex-row md:gap-8">
+    <div class="product-gallery w-full md:w-96 md:flex-shrink-0">
+      <div class="main-image-box aspect-square bg-white border border-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
         {% if product.primary_image %}
-        <img id="main-image" src="{{ url_for('static', filename='uploads/' + product.primary_image.filename) }}" alt="{{ product.name }}" width="440" height="440">
+        <img id="main-image" src="{{ url_for('static', filename='uploads/' + product.primary_image.filename) }}" alt="{{ product.name }}" width="440" height="440" class="w-full h-full object-contain">
         {% else %}
-        <span class="main-placeholder">—</span>
+        <span class="main-placeholder text-gray-400 text-2xl">—</span>
         {% endif %}
       </div>
       {% if images|length > 1 %}
-      <div class="gallery-thumbs">
+      <div class="gallery-thumbs flex gap-2 mt-2 flex-wrap">
         {% for img in images %}
-        <button type="button" class="gallery-thumb{% if loop.first %} is-active{% endif %}"{% if loop.first %} aria-current="true"{% endif %} aria-label="Xem ảnh {{ loop.index }}"
+        <button type="button" class="gallery-thumb w-[72px] h-[72px] p-0 border border-gray-200 rounded cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent {% if loop.first %}border-accent is-active{% endif %}"{% if loop.first %} aria-current="true"{% endif %} aria-label="Xem ảnh {{ loop.index }}"
                 data-src="{{ url_for('static', filename='uploads/' + img.filename) }}" data-alt="{{ product.name }}">
-          <img src="{{ url_for('static', filename='uploads/' + img.thumb_filename) }}" alt="{{ product.name }}" width="72" height="72" loading="lazy">
+          <img src="{{ url_for('static', filename='uploads/' + img.thumb_filename) }}" alt="{{ product.name }}" width="72" height="72" loading="lazy" class="w-full h-full object-cover block">
         </button>
         {% endfor %}
       </div>
       {% endif %}
     </div>
-    <div class="product-info">
-      <h1>{{ product.name }}</h1>
-      <p class="product-price">{{ product.price | format_price }}</p>
-      <div class="product-status">
+    <div class="product-info flex-1 min-w-0 mt-6 md:mt-0">
+      <h1 class="text-3xl font-semibold text-text mb-2">{{ product.name }}</h1>
+      <p class="product-price text-3xl font-semibold text-accent mb-2">{{ product.price | format_price }}</p>
+      <div class="product-status mb-4">
         {% if product.status == 'available' %}<span class="badge badge-available">Còn hàng</span>
         {% elif product.status == 'out_of_stock' %}<span class="badge badge-out_of_stock">Hết hàng</span>
         {% else %}<span class="badge badge-discontinued">Ngừng bán</span>{% endif %}
       </div>
       {% if product.status == 'available' %}
-      <form class="add-to-cart-form" method="post" action="{{ url_for('public.cart_add', product_id=product.id) }}">
+      <form class="add-to-cart-form max-w-sm mb-6" method="post" action="{{ url_for('public.cart_add', product_id=product.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-field">
-          <label for="cart-quantity">Số lượng</label>
+          <label for="cart-quantity" class="block text-sm font-medium text-text mb-1">Số lượng</label>
           <input type="number" id="cart-quantity" name="quantity"
                  min="1" max="{{ product.quantity }}"
-                 value="1" required>
-          <p class="help-text">Còn {{ product.quantity }} sản phẩm trong kho</p>
+                 value="1" required class="w-full h-11 px-3 border border-border rounded-lg text-base text-text bg-white focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:border-accent">
+          <p class="help-text text-sm text-gray-500 mt-1">Còn {{ product.quantity }} sản phẩm trong kho</p>
         </div>
-        <button type="submit" class="btn btn-primary cart-cta">Thêm vào giỏ hàng</button>
+        <button type="submit" class="btn btn-primary cart-cta w-full">Thêm vào giỏ hàng</button>
       </form>
       {% elif product.status == 'out_of_stock' %}
-      <p class="out-of-stock-note">Sản phẩm hiện đang hết hàng.</p>
+      <p class="out-of-stock-note text-red-600 text-sm mb-2">Sản phẩm hiện đang hết hàng.</p>
       {% endif %}
       {% if product.brand or product.measurements %}
-      <dl class="product-meta">
-        {% if product.brand %}<div class="product-meta-row"><dt>Thương hiệu:</dt><dd>{{ product.brand }}</dd></div>{% endif %}
-        {% if product.measurements %}<div class="product-meta-row"><dt>Số đo:</dt><dd>{{ product.measurements }}</dd></div>{% endif %}
+      <dl class="product-meta mb-6">
+        {% if product.brand %}<div class="product-meta-row flex gap-2 mb-1"><dt class="text-sm text-gray-500">Thương hiệu:</dt><dd class="text-base text-text m-0">{{ product.brand }}</dd></div>{% endif %}
+        {% if product.measurements %}<div class="product-meta-row flex gap-2 mb-1"><dt class="text-sm text-gray-500">Số đo:</dt><dd class="text-base text-text m-0">{{ product.measurements }}</dd></div>{% endif %}
       </dl>
       {% endif %}
       {% if product.description %}
-      <section class="product-description">
-        <h2>Mô tả</h2>
-        <p>{{ product.description }}</p>
+      <section class="product-description border-t border-gray-200 pt-6 mt-6">
+        <h2 class="text-sm font-semibold mb-1 text-text">Mô tả</h2>
+        <p class="whitespace-pre-line text-gray-700">{{ product.description }}</p>
       </section>
       {% endif %}
     </div>

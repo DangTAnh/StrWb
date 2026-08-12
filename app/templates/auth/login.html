@@ -1,16 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="login-wrapper">
-  <div class="login-card">
-    <h1>Đăng nhập quản trị</h1>
+  <div class="login-card max-w-md w-full p-8">
+    <h1 class="text-2xl font-semibold text-text mb-6">Đăng nhập quản trị</h1>
+    {% if form.errors %}
+    <div class="flash error mb-4">Vui lòng kiểm tra lại thông tin đăng nhập.</div>
+    {% endif %}
     <form method="post" action="{{ url_for('auth.login') }}">
       {{ form.hidden_tag() }}
       <input type="hidden" name="next" value="{{ request.args.get('next') or '' }}">
-      {{ form.username.label }}
-      {{ form.username() }}
-      {{ form.password.label }}
-      {{ form.password() }}
-      {{ form.submit() }}
+      <div class="form-field">
+        {{ form.username.label }}
+        {{ form.username() }}
+      </div>
+      <div class="form-field">
+        {{ form.password.label }}
+        {{ form.password() }}
+      </div>
+      <div class="form-field">
+        {{ form.submit(class="btn btn-primary w-full") }}
+      </div>
     </form>
   </div>
 </div>

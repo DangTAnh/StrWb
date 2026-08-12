@@ -155,7 +155,6 @@ Six confirmed findings / consistency fixes (F-01…F-06) + two locked reverts (R
 | | |
 |---|---|
 | **Evidence** | `app/templates/admin/products/form.html` — the quantity field's `<p class="help-text">` is deleted in the working copy (stray uncommitted edit). The committed baseline had it. |
-| **Fix** | Re-add after the quantity field-error loop: `<p class="help-text">Trạng thái tự động: Còn hàng khi tồn kho &gt; 0, Hết hàng khi tồn kho = 0. Bật “Ngừng bán” để ghi đè.</p>` |
 | **Contract** | `form.html` quantity block matches the committed baseline verbatim (HTML entity `&gt;`, curly quotes `“…”`). |
 
 ### V-01 — verify-only: qty-0 cart row (Phase 6 L3)
@@ -213,7 +212,6 @@ Breakpoints inherited (480/768/1200). The only responsive **change** is F-01 (`f
 
 | Element | Copy | Status |
 |---------|------|--------|
-| Admin product-form help-text (restore) | `Trạng thái tự động: Còn hàng khi tồn kho > 0, Hết hàng khi tồn kho = 0. Bật “Ngừng bán” để ghi đè.` | R-02 — revert to baseline |
 | Cart total label (consistency) | `Tổng cộng` (drop trailing colon in `cart.html:51`) | F-05 |
 | All Phase 6/7/8 CTA, flash, empty-state, error strings | unchanged, verbatim | inherited — no edits |
 | Primary CTA | none new — polish only; existing CTAs ("Thêm vào giỏ hàng", "Đặt hàng", "Chuyển sang: …", "Hủy đơn") unchanged | inherited |

@@ -46,7 +46,9 @@
       </div>
 
       <div class="form-field">
-        {{ form.price.label }}<span class="required" aria-hidden="true"> *</span>
+        <span class="price-label">
+          {{ form.price.label }}<span class="required" aria-hidden="true"> *</span>
+        </span>
         {{ form.price(class="input", required=True, aria_required="true", min="0", step="1") }}
         {% for error in form.price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
       </div>
@@ -93,7 +95,9 @@
 
         <div class="form-row-2">
           <div class="form-field">
-            {{ form.quantity.label }}<span class="required" aria-hidden="true"> *</span>
+            <span class="qty-label">
+              {{ form.quantity.label }}<span class="required" aria-hidden="true"> *</span>
+            </span>
             {{ form.quantity(class="input", required=True, aria_required="true", min="0", step="1", value="1") }}
             {% for error in form.quantity.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
           </div>

@@ -2,7 +2,7 @@ import unicodedata
 from types import SimpleNamespace
 from urllib.parse import urlsplit
 
-from flask import Blueprint, render_template, request, abort, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, abort, redirect, url_for, flash, session, jsonify
 from flask_login import current_user
 
 from .db import db
@@ -132,7 +132,12 @@ def cart():
             # MD-02: clamp qty xuống tồn kho hiện tại (stock giảm sau khi add).
             # Persist qty đã clamp để session khớp với đơn đặt được — tránh tổng tiền
             # hiển thị mà checkout sẽ reject.
-            qty = min(int(qty), product.quantity)
+            qty = min(max(int(qty), 0), product.quantity)
+            if qty < 1:
+                # Tồn kho đã về 0 (hoặc qty âm lẻ) → xóa sản phẩm khỏi giỏ, không để lại qty=0 gây lỗi input.
+                if pid_str in cart:
+                    del cart[pid_str]
+                continue
             cart[pid_str] = qty
             items.append(SimpleNamespace(product=product, quantity=qty))
             total += product.price * qty
@@ -160,6 +165,18 @@ def cart_update(product_id):
         return redirect(url_for('public.cart'))
     cart[str(product_id)] = qty
     session['cart'] = cart
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # GOM-01: trả JSON cho AJAX update — client cập nhật thành tiền mà không reload.
+        line_total = product.price * qty
+        total = sum(
+            db.session.get(Product, int(pid)).price * q
+            for pid, q in cart.items()
+            if str(pid).isdigit()
+            and (p := db.session.get(Product, int(pid))) is not None
+            and p.status == 'available'
+            and 1 <= q <= p.quantity
+        )
+        return jsonify(line_total=line_total, total=total)
     flash('Giỏ hàng đã cập nhật.', 'success')
     return redirect(url_for('public.cart'))
 
@@ -213,26 +230,87 @@ def checkout():
     # Snapshot product_name/price/cost_price tại thời điểm đặt từ product hiện tại.
     order = Order(
         customer_name=form.customer_name.data.strip(),
-        customer_phone=form.customer_phone.data.strip(),
+        customer_phone=_normalize_phone(form.customer_phone.data.strip()),
         customer_address=form.customer_address.data.strip(),
         customer_note=(form.customer_note.data or '').strip() or None,  # Optional: data None khi field vắng mặt
         status='Chờ xác nhận',
     )
     db.session.add(order)
     db.session.flush()  # lấy order.id
-    for product, qty in items_to_save:
-        db.session.add(OrderItem(
-            order_id=order.id,
-            product_id=product.id,
-            product_name=product.name,
-            product_price=product.price,
-            product_cost_price=product.cost_price,
-            quantity=qty,
-        ))
-    db.session.commit()
+
+    # GOM-01: nếu có đơn cùng SĐT đang Chờ xác nhận, gộp item vào đơn đó, lấy thông tin từ đơn này.
+    existing = _merge_into_existing_order(order, items_to_save)
+
+    if not existing:
+        for product, qty in items_to_save:
+            db.session.add(OrderItem(
+                order_id=order.id,
+                product_id=product.id,
+                product_name=product.name,
+                product_price=product.price,
+                product_cost_price=product.cost_price,
+                quantity=qty,
+            ))
+        db.session.commit()
+        flash('Đặt hàng thành công! Chúng tôi sẽ liên hệ xác nhận qua SĐT.', 'success')
+    else:
+        # Đơn mới bị hủy, item đã gộp vào đơn cũ.
+        db.session.delete(order)
+        db.session.commit()
+        flash('Đơn hàng của bạn đã được gộp vào đơn trước — chúng tôi sẽ gộp gàng giao hàng.', 'success')
 
     # BƯỚC 6 — Xóa giỏ + success + redirect về trang chi tiết sản phẩm đầu tiên.
     # KHÔNG giảm product.quantity (ORD-12 deferred v2).
     session['cart'] = {}
-    flash('Đặt hàng thành công! Chúng tôi sẽ liên hệ xác nhận qua SĐT.', 'success')
     return redirect(url_for('public.product_detail', product_id=items_to_save[0][0].id))
+
+
+def _merge_into_existing_order(new_order, items_to_save):
+    """GOM-01: Tìm đơn cùng SĐT đang 'Chờ xác nhận', gộp item + cập nhật thông tin khách.
+
+    - Lấy thông tin (tên/SĐT/địa chỉ/ghi chú) từ new_order (đơn sau, mới nhất).
+    - Gộp OrderItem: cộng dồn qty nếu cùng product_id, tạo mới nếu khác.
+    Returns order nếu gộp thành công, None nếu không tìm thấy đơn nào.
+    """
+    existing = (db.session.query(Order)
+                .filter(Order.id != new_order.id,
+                        db.func.replace(db.func.replace(Order.customer_phone, ' ', ''), '-', '') == _normalize_phone(new_order.customer_phone),
+                        Order.status == 'Chờ xác nhận')
+                .order_by(Order.created_at.desc(), Order.id.desc())
+                .first())
+    if existing is None:
+        return None
+
+    existing.customer_name = new_order.customer_name
+    existing.customer_address = new_order.customer_address
+    existing.customer_note = new_order.customer_note
+
+    for product, qty in items_to_save:
+        item = (db.session.query(OrderItem)
+                .filter(OrderItem.order_id == existing.id,
+                        OrderItem.product_id == product.id)
+                .first())
+        if item is None:
+            db.session.add(OrderItem(
+                order_id=existing.id,
+                product_id=product.id,
+                product_name=product.name,
+                product_price=product.price,
+                product_cost_price=product.cost_price,
+                quantity=qty,
+            ))
+        else:
+            item.quantity += qty
+
+    db.session.flush()
+    return existing
+
+
+def _normalize_phone(raw):
+    """Chuẩn hóa SĐT: bỏ dấu cách/gạch, giữ số và dấu cộng đầu."""
+    if not raw:
+        return ''
+    digits = ''.join(ch for ch in raw if ch.isdigit() or ch == '+')
+    if digits.startswith('+'):
+        digits = digits[1:]
+    return digits

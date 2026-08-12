@@ -274,7 +274,6 @@ Checked whether the implemented code delivers what the phase goal promised — n
 **Reverts verified:**
 
 - **R-01** `README.md:1` → `# StoreWeb` (leading-space heading marker restored). ✓
-- **R-02** `form.html` quantity block → `<p class="help-text">Trạng thái tự động: Còn hàng khi tồn kho &gt; 0, Hết hàng khi tồn kho = 0. Bật "Ngừng bán" để ghi đè.</p>` restored. ✓
 
 ---
 

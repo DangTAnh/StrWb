@@ -1,8 +1,8 @@
-{% extends "public/base.html" if not (request.path.startswith('/admin/') or request.path.startswith('/auth/')) else "base.html" %}
+{% extends "base.html" %}
 {% block content %}
 <div class="error-page">
-  <h1 class="display">Trang không tìm thấy</h1>
-  <p>Trang bạn đang tìm không tồn tại hoặc đã bị di chuyển.</p>
-  <a href="{{ url_for('public.home') }}">Quay lại trang chủ</a>
+  <h1 class="display text-6xl font-bold text-text">404</h1>
+  <p class="text-gray-600">Trang bạn đang tìm không tồn tại hoặc đã bị di chuyển.</p>
+  <a class="btn btn-primary" href="{{ url_for('public.home') }}">Quay lại trang chủ</a>
 </div>
 {% endblock %}

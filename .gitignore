@@ -7,6 +7,10 @@ __pycache__/
 .venv/
 venv/
 instance/
+.claude
+.planning
+CLAUDE.md
+MEMORY.md
 
 # Uploaded product images (user data, never committed)
 app/static/uploads/

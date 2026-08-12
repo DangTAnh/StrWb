@@ -64,7 +64,6 @@ Both files now contain zero inline `style=` attributes.
 ### Task 3: Revert restoration (verify-only)
 
 - **R-01** — `README.md:1` is `# StoreWeb` (already at committed baseline).
-- **R-02** — `app/templates/admin/products/form.html:68` contains the help-text `<p class="help-text">Trạng thái tự động: Còn hàng khi tồn kho &gt; 0, Hết hàng khi tồn kho = 0. Bật "Ngừng bán" để ghi đè.</p>` with HTML entity `&gt;` and curly quotes (already at committed baseline).
 
 Both `git diff README.md` and `git diff app/templates/admin/products/form.html` are empty — reverts already clean on worktree creation. No edits needed.
 

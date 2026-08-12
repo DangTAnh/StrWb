@@ -62,7 +62,6 @@ Close-out phase của milestone v1.1 Buy System: polish UI các bề mặt mới
 ## Specific Ideas
 
 - Khôi phục heading README repo (`# StoreWeb`) — bị lạc mất khi chỉnh sửa trước đó.
-- Hoàn nguyên help-text form.html — thông tin "Trạng thái tự động: Còn hàng khi tồn kho > 0..." có ích cho admin, không nên bỏ.
 - Harness verify phải chạy trên temp DB (không đụng `data/app.db` thật) — pattern đã xác lập từ phase 6/8.
 
 </specifics>

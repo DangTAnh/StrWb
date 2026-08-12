@@ -32,7 +32,7 @@ def login():
             session.permanent = True
             next_url = request.values.get('next')
             if not next_url or urlsplit(next_url).netloc or not next_url.startswith('/'):
-                next_url = url_for('admin.dashboard')
+                next_url = url_for('public.home')
             return redirect(next_url)
         flash('Sai tên đăng nhập hoặc mật khẩu', 'error')
     return render_template('auth/login.html', form=form)

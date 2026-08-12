@@ -1,67 +1,97 @@
 {% extends "admin/base.html" %}
 {% block content %}
-<div class="admin-page">
-  <div class="admin-header"><h1>Thống kê</h1></div>
-  <div class="admin-card admin-card--wide">
-    <section class="stats-group">
-      <h2 class="stats-group-title">Doanh thu &amp; Lợi nhuận</h2>
-      <div class="stats-grid">
-        <article class="stat-card">
-          <p class="stat-label">Tổng doanh thu</p>
-          <p class="stat-value stat-value--display stat-value--accent">{{ revenue | format_price }}</p>
-          <p class="stat-hint">Chỉ tính đơn Đã gửi và Đã nhận.</p>
+<div class="admin-page max-w-7xl mx-auto px-4 py-6">
+  <div class="admin-header flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-semibold text-text">Thống kê</h1>
+  </div>
+  <div class="admin-card bg-card rounded-lg shadow p-0 overflow-hidden">
+    <section class="stats-group p-6 border-b border-gray-200">
+      <h2 class="stats-group-title text-sm font-semibold mb-4 text-text">Doanh thu &amp; Lợi nhuận</h2>
+      <div class="stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <article class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p class="stat-label text-sm text-gray-500">Tổng doanh thu</p>
+          <p class="stat-value stat-value--display text-3xl font-semibold mt-1 text-accent">{{ revenue | format_price }}</p>
+          <p class="stat-hint text-sm text-gray-500 mt-2">Chỉ tính đơn Đã gửi và Đã nhận.</p>
         </article>
-        <article class="stat-card">
-          <p class="stat-label">Lợi nhuận</p>
-          <p class="stat-value stat-value--display">{{ profit | format_price }}</p>
-          {% if profit_note %}<p class="stat-note">{{ profit_note }}</p>{% endif %}
-          <p class="stat-hint">Doanh thu trừ giá nhập.</p>
+        <article class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p class="stat-label text-sm text-gray-500">Lợi nhuận</p>
+          <p class="stat-value text-2xl font-semibold mt-1">{{ profit | format_price }}</p>
+          {% if profit_note %}<p class="stat-note text-sm text-amber-800 mt-2">{{ profit_note }}</p>{% endif %}
+          <p class="stat-hint text-sm text-gray-500 mt-2">Doanh thu trừ giá nhập.</p>
         </article>
-        <article class="stat-card">
-          <p class="stat-label">Sản phẩm đã bán</p>
-          <p class="stat-value">{{ units_sold }}</p>
-          <p class="stat-hint">Từ các đơn Đã gửi và Đã nhận.</p>
+        <article class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p class="stat-label text-sm text-gray-500">Sản phẩm đã bán</p>
+          <p class="stat-value text-2xl font-semibold mt-1">{{ units_sold }}</p>
+          <p class="stat-hint text-sm text-gray-500 mt-2">Từ các đơn Đã gửi và Đã nhận.</p>
         </article>
       </div>
     </section>
 
-    <section class="stats-group">
-      <h2 class="stats-group-title">Đơn hàng</h2>
-      <div class="stat-card">
-        <p class="stat-label">Tổng số đơn</p>
-        <p class="stat-value">{{ total_orders }}</p>
-        <p class="stat-hint">Gồm cả đơn đã hủy.</p>
-        <ul class="status-breakdown">
-          <li><a href="{{ url_for('admin.orders') }}">Tất cả <span class="badge badge-neutral">{{ total_orders }}</span></a></li>
-          <li><a href="{{ url_for('admin.orders', status='Chờ xác nhận') }}">Chờ xác nhận <span class="badge {{ order_badge_class('Chờ xác nhận') }}">{{ status_counts.get('Chờ xác nhận', 0) }}</span></a></li>
-          <li><a href="{{ url_for('admin.orders', status='Đã xác nhận') }}">Đã xác nhận <span class="badge {{ order_badge_class('Đã xác nhận') }}">{{ status_counts.get('Đã xác nhận', 0) }}</span></a></li>
-          <li><a href="{{ url_for('admin.orders', status='Đã gói') }}">Đã gói <span class="badge {{ order_badge_class('Đã gói') }}">{{ status_counts.get('Đã gói', 0) }}</span></a></li>
-          <li><a href="{{ url_for('admin.orders', status='Đã gửi') }}">Đã gửi <span class="badge {{ order_badge_class('Đã gửi') }}">{{ status_counts.get('Đã gửi', 0) }}</span></a></li>
-          <li><a href="{{ url_for('admin.orders', status='Đã nhận') }}">Đã nhận <span class="badge {{ order_badge_class('Đã nhận') }}">{{ status_counts.get('Đã nhận', 0) }}</span></a></li>
-          <li><a href="{{ url_for('admin.orders', status='Đã hủy') }}">Đã hủy <span class="badge {{ order_badge_class('Đã hủy') }}">{{ status_counts.get('Đã hủy', 0) }}</span></a></li>
+    <section class="stats-group p-6 border-b border-gray-200">
+      <h2 class="stats-group-title text-sm font-semibold mb-4 text-text">Đơn hàng</h2>
+      <div class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <p class="stat-label text-sm text-gray-500">Tổng số đơn</p>
+        <p class="stat-value text-2xl font-semibold mt-1">{{ total_orders }}</p>
+        <p class="stat-hint text-sm text-gray-500 mt-2">Gồm cả đơn đã hủy.</p>
+        <ul class="status-breakdown list-none m-0 p-0">
+          <li class="border-t border-gray-200 first:border-0">
+            <a class="flex items-center justify-between min-h-11 px-2 text-base text-text hover:bg-gray-100" href="{{ url_for('admin.orders') }}">
+              Tất cả <span class="badge badge-neutral text-gray-500 bg-gray-100 border border-gray-200">{{ total_orders }}</span>
+            </a>
+          </li>
+          <li class="border-t border-gray-200">
+            <a class="flex items-center justify-between min-h-11 px-2 text-base text-text hover:bg-gray-100" href="{{ url_for('admin.orders', status='Chờ xác nhận') }}">
+              Chờ xác nhận <span class="badge badge-order-pending text-blue-700 bg-blue-100 border border-blue-200">{{ status_counts.get('Chờ xác nhận', 0) }}</span>
+            </a>
+          </li>
+          <li class="border-t border-gray-200">
+            <a class="flex items-center justify-between min-h-11 px-2 text-base text-text hover:bg-gray-100" href="{{ url_for('admin.orders', status='Đã xác nhận') }}">
+              Đã xác nhận <span class="badge badge-order-confirmed text-purple-700 bg-purple-100 border border-purple-200">{{ status_counts.get('Đã xác nhận', 0) }}</span>
+            </a>
+          </li>
+          <li class="border-t border-gray-200">
+            <a class="flex items-center justify-between min-h-11 px-2 text-base text-text hover:bg-gray-100" href="{{ url_for('admin.orders', status='Đã gói') }}">
+              Đã gói <span class="badge badge-order-packed text-amber-700 bg-amber-50 border border-amber-200">{{ status_counts.get('Đã gói', 0) }}</span>
+            </a>
+          </li>
+          <li class="border-t border-gray-200">
+            <a class="flex items-center justify-between min-h-11 px-2 text-base text-text hover:bg-gray-100" href="{{ url_for('admin.orders', status='Đã gửi') }}">
+              Đã gửi <span class="badge badge-order-shipped text-blue-700 bg-blue-100 border border-blue-200">{{ status_counts.get('Đã gửi', 0) }}</span>
+            </a>
+          </li>
+          <li class="border-t border-gray-200">
+            <a class="flex items-center justify-between min-h-11 px-2 text-base text-text hover:bg-gray-100" href="{{ url_for('admin.orders', status='Đã nhận') }}">
+              Đã nhận <span class="badge badge-order-delivered text-green-700 bg-green-50 border border-green-200">{{ status_counts.get('Đã nhận', 0) }}</span>
+            </a>
+          </li>
+          <li class="border-t border-gray-200">
+            <a class="flex items-center justify-between min-h-11 px-2 text-base text-text hover:bg-gray-100" href="{{ url_for('admin.orders', status='Đã hủy') }}">
+              Đã hủy <span class="badge badge-order-cancelled text-gray-500 bg-gray-100 border border-gray-200">{{ status_counts.get('Đã hủy', 0) }}</span>
+            </a>
+          </li>
         </ul>
       </div>
     </section>
 
-    <section class="stats-group">
-      <h2 class="stats-group-title">Kho</h2>
-      <div class="stats-grid">
-        <article class="stat-card">
-          <p class="stat-label">Tổng sản phẩm</p>
-          <p class="stat-value">{{ total_products }}</p>
-          <p class="stat-hint">Gồm cả sản phẩm ngừng bán.</p>
+    <section class="stats-group p-6">
+      <h2 class="stats-group-title text-sm font-semibold mb-4 text-text">Kho</h2>
+      <div class="stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <article class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p class="stat-label text-sm text-gray-500">Tổng sản phẩm</p>
+          <p class="stat-value text-2xl font-semibold mt-1">{{ total_products }}</p>
+          <p class="stat-hint text-sm text-gray-500 mt-2">Gồm cả sản phẩm ngừng bán.</p>
         </article>
-        <article class="stat-card">
-          <p class="stat-label">Còn hàng</p>
-          <p class="stat-value">{{ in_stock }}</p>
+        <article class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p class="stat-label text-sm text-gray-500">Còn hàng</p>
+          <p class="stat-value text-2xl font-semibold text-green-600 mt-1">{{ in_stock }}</p>
         </article>
-        <article class="stat-card">
-          <p class="stat-label">Hết hàng</p>
-          <p class="stat-value">{{ out_of_stock }}</p>
+        <article class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p class="stat-label text-sm text-gray-500">Hết hàng</p>
+          <p class="stat-value text-2xl font-semibold text-amber-600 mt-1">{{ out_of_stock }}</p>
         </article>
-        <article class="stat-card">
-          <p class="stat-label">Ngừng bán</p>
-          <p class="stat-value">{{ discontinued }}</p>
+        <article class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p class="stat-label text-sm text-gray-500">Ngừng bán</p>
+          <p class="stat-value text-2xl font-semibold text-gray-500 mt-1">{{ discontinued }}</p>
         </article>
       </div>
     </section>

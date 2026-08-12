@@ -9,21 +9,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+VN:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-  <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
+<body class="font-sans text-text bg-bg">
+  <a class="skip-link absolute left-[-9999px] top-0 p-2 bg-card z-50 focus:left-0" href="#main-content">Bỏ qua đến nội dung chính</a>
   {% block header %}{% endblock %}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div class="flash-zone">
-        {% for category, message in messages %}
-          <div class="flash {{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
+    <div class="flash-zone max-w-7xl mx-auto px-4 pt-4">
+      {% for category, message in messages %}
+      <div class="flash px-4 py-2 mb-2 rounded text-sm {% if category == 'error' %}text-red-700 bg-red-50 border border-red-200{% elif category == 'success' %}text-green-700 bg-green-50 border border-green-200{% else %}text-amber-700 bg-amber-50 border border-amber-200{% endif %}">{{ message }}</div>
+      {% endfor %}
+    </div>
     {% endif %}
   {% endwith %}
   <main id="main-content">
     {% block content %}{% endblock %}
   </main>
-  <footer class="container">© {{ current_year }} Quản lý hàng</footer>
+  <footer class="container mx-auto px-4 py-8 text-center text-sm text-text-muted">© {{ current_year }} Quản lý hàng</footer>
 </body>
 </html>

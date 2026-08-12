@@ -183,7 +183,6 @@ All copy in Vietnamese (PLAT-01). Inherited Phase 1 standard: page `lang="vi"`, 
   - "Tồn kho" (required, integer ≥ 0 — PROD-05)
   - Checkbox "Ngừng bán sản phẩm này" (D-08)
   - "Ghi chú nội bộ" (optional, D-06; textarea; help "Chỉ quản trị viên xem được")
-- Derived-status hint under Tồn kho: "Trạng thái tự động: Còn hàng khi tồn kho > 0, Hết hàng khi tồn kho = 0. Bật “Ngừng bán” để ghi đè." (D-08)
 - Gallery section heading: "Ảnh sản phẩm"
 - Gallery help: "Ảnh đầu tiên là ảnh chính — dùng làm ảnh đại diện. Kéo/sắp xếp lại để đổi ảnh chính." (D-12)
 - File input button: "Chọn ảnh" — `multiple`, accept `.jpg,.jpeg,.png,.webp` (D-11, D-16)
@@ -298,7 +297,6 @@ All copy in Vietnamese (PLAT-01). Inherited Phase 1 standard: page `lang="vi"`, 
 - Price input: `type="number"`, `step="1"`, `min="0"` — integer VND (PROD-06).
 - Quantity input: `type="number"`, `min="0"`, integer (PROD-05).
 - Sort order input: `type="number"`, integer, may be negative.
-- Derived-status hint: Label 14px #6B7280, below Tồn kho — "Trạng thái tự động: Còn hàng khi tồn kho > 0, Hết hàng khi tồn kho = 0. Bật “Ngừng bán” để ghi đè." (D-08)
 
 ### Gallery Section
 
