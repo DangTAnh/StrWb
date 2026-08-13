@@ -95,22 +95,75 @@ def cart_add(product_id):
     product = db.session.get(Product, product_id)
     if product is None:
         abort(404)
-    form = CartForm()
+
+    form = CartForm(formdata=request.form)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     if product.status != 'available':
-        flash('Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.', 'error')
-        return redirect(url_for('public.product_detail', product_id=product.id))
+        msg = 'Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg, 'product_id': product.id, 'max_reached': False})
+        flash(msg, 'error')
+        return redirect(request.referrer or url_for('public.home'))
+
     if not form.validate():
-        flash('Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.', 'error')
-        return redirect(url_for('public.product_detail', product_id=product.id))
+        msg = 'Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg, 'product_id': product.id, 'max_reached': False})
+        flash(msg, 'error')
+        return redirect(request.referrer or url_for('public.home'))
+
     qty = form.quantity.data
     if not (1 <= qty <= product.quantity):
-        flash('Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.', 'error')
-        return redirect(url_for('public.product_detail', product_id=product.id))
+        msg = 'Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg, 'product_id': product.id, 'max_reached': False})
+        flash(msg, 'error')
+        return redirect(request.referrer or url_for('public.home'))
+
     cart = session.get('cart', {})
-    cart[str(product_id)] = qty
+    current_qty = 0
+    try:
+        current_qty = int(cart.get(str(product_id), 0))
+    except (TypeError, ValueError):
+        current_qty = 0
+
+    if current_qty + qty > product.quantity:
+        msg = 'Số lượng không hợp lệ hoặc sản phẩm đã hết hàng.'
+        if is_ajax:
+            return jsonify({
+                'success': False,
+                'error': msg,
+                'product_id': product.id,
+                'cart_quantity': current_qty,
+                'max_quantity': product.quantity,
+                'max_reached': current_qty >= product.quantity,
+            })
+        flash(msg, 'error')
+        return redirect(request.referrer or url_for('public.home'))
+
+    cart[str(product_id)] = current_qty + qty
     session['cart'] = cart
-    flash(f'Đã thêm {qty} sản phẩm vào giỏ.', 'success')
-    return redirect(url_for('public.cart'))
+    msg = f'Đã thêm {qty} sản phẩm vào giỏ.'
+    total_qty = sum(int(v) for v in cart.values() if str(v).isdigit())
+
+    if is_ajax:
+        new_qty = cart[str(product_id)]
+        return jsonify({
+            'success': True,
+            'message': msg,
+            'cart_count': total_qty,
+            'product_id': product.id,
+            'cart_quantity': new_qty,
+            'max_quantity': product.quantity,
+            'max_reached': new_qty >= product.quantity,
+        })
+
+    flash(msg, 'success')
+    referrer = request.referrer
+    if referrer and urlsplit(referrer).hostname == request.host.split(':')[0]:
+        return redirect(referrer)
+    return redirect(url_for('public.home'))
 
 
 @public_bp.route('/cart', methods=['GET'])

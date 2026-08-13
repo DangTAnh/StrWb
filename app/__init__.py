@@ -2,7 +2,7 @@ import os
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 from sqlalchemy import event
@@ -59,7 +59,18 @@ def create_app():
 
     @app.context_processor
     def inject_year():
-        return {'current_year': datetime.now(timezone.utc).year}
+        cart = session.get('cart', {})
+        total_qty = 0
+        for qty in cart.values():
+            try:
+                total_qty += int(qty)
+            except (TypeError, ValueError):
+                pass
+        return {
+            'current_year': datetime.now(timezone.utc).year,
+            'cart_total_quantity': total_qty,
+            'cart_quantities': cart
+        }
 
     @app.template_filter('format_price')
     def format_price(value):

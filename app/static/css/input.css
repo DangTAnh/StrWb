@@ -35,6 +35,26 @@
   .flash.warning {
     @apply text-amber-700;
   }
+  #toast-container {
+    @apply fixed top-20 right-4 z-50 flex flex-col items-end gap-3 pointer-events-none;
+  }
+  .toast {
+    @apply pointer-events-auto min-w-[220px] max-w-[360px] rounded-lg border px-4 py-3 text-sm font-medium shadow-lg opacity-0 translate-y-[-8px] transition-all duration-200 ease-out;
+    background: rgba(17, 24, 39, 0.96);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .toast.show {
+    @apply opacity-100 translate-y-0;
+  }
+  .toast-error {
+    background: rgba(127, 29, 29, 0.96);
+    border-color: rgba(248, 113, 113, 0.4);
+  }
+  .toast-success {
+    background: rgba(20, 83, 45, 0.96);
+    border-color: rgba(52, 211, 153, 0.4);
+  }
 
   /* Container */
   .container {
@@ -462,37 +482,11 @@
     position: relative;
     transition: all 0.2s ease-in-out;
   }
-  .nav-toggle__btn .nav-toggle__icon:nth-child(2) {
-    position: absolute;
-    top: -6px;
-  }
-  .nav-toggle__btn .nav-toggle__icon:nth-child(3) {
-    position: absolute;
-    top: 6px;
-  }
-  .nav-toggle:checked + .nav-toggle__btn .nav-toggle__icon:nth-child(1) {
-    transform: rotate(23deg) translate(6px, 6px);
-  }
-  .nav-toggle:checked + .nav-toggle__btn .nav-toggle__icon:nth-child(2) {
-    opacity: 0;
-  }
-  .nav-toggle:checked + .nav-toggle__btn .nav-toggle__icon:nth-child(3) {
-    transform: rotate(-23deg) translate(6px, -6px);
-  }
   .site-nav {
     @apply hidden absolute top-full left-0 right-0 bg-card border border-gray-200 rounded-lg shadow-lg z-50;
   }
   .site-nav[aria-hidden="true"] {
     @apply hidden;
-  }
-  .nav-toggle:checked + .nav-toggle__btn .nav-toggle__icon {
-    @apply bg-transparent;
-  }
-  .nav-toggle:checked + .nav-toggle__btn .nav-toggle__icon::before {
-    transform: rotate(23deg) translate(6px, 6px);
-  }
-  .nav-toggle:checked + .nav-toggle__btn .nav-toggle__icon::after {
-    transform: rotate(-23deg) translate(6px, -6px);
   }
   .nav-toggle:checked ~ .site-nav {
     @apply flex flex-col gap-2 p-4;
@@ -572,16 +566,14 @@
   .login-card button,
   .form-field input:not([type="checkbox"]),
   .form-field textarea,
-  .search-form input[type="search"],
-  .order-filter select {
+  .search-form input[type="search"] {
     @apply w-full h-11 px-3 border border-border rounded-lg text-base text-text bg-white;
     font-family: inherit;
   }
   .login-card input:focus-visible,
   .form-field input:focus-visible,
   .form-field textarea:focus-visible,
-  .search-form input[type="search"]:focus-visible,
-  .order-filter select:focus-visible {
+  .search-form input[type="search"]:focus-visible {
     @apply outline-2 outline-offset-0 outline-accent border-accent;
   }
   .cart-total {
@@ -625,7 +617,7 @@
     }
   }
   .product-card {
-    @apply block bg-white border border-gray-200 rounded-lg overflow-hidden text-text;
+    @apply block bg-white border border-gray-200 rounded-lg overflow-visible text-text;
   }
   .product-card {
     transition-property: transform, box-shadow, border-color;
@@ -868,8 +860,39 @@
   .order-filter {
     @apply flex items-center gap-4 mb-4;
   }
-  .order-filter select {
-    @apply h-11 px-3 border border-border rounded-lg text-base bg-white;
+  .order-filter-native {
+    @apply absolute opacity-0 pointer-events-none overflow-hidden;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .custom-select {
+    @apply relative block w-full;
+    max-width: 28rem;
+  }
+  .custom-select__button {
+    @apply w-full h-11 px-3 flex items-center justify-between bg-white border border-blue-600 rounded-xl text-base cursor-pointer;
+  }
+  .custom-select__button:focus-visible {
+    @apply outline-2 outline-offset-0 outline-accent;
+  }
+  .custom-select__dropdown {
+    @apply absolute top-full left-0 right-0 hidden bg-white border border-gray-300 rounded-xl overflow-hidden z-[100] shadow-lg;
+    margin-top: 4px;
+  }
+  .custom-select.is-open .custom-select__dropdown {
+    @apply block;
+  }
+  .custom-select__option {
+    @apply px-3 py-2 cursor-pointer;
+  }
+  .custom-select__option:hover,
+  .custom-select__option.active {
+    @apply bg-gray-200;
   }
 
   /* ===== Status breakdown ===== */
@@ -1051,9 +1074,6 @@
     }
     .order-filter {
       @apply flex-col items-stretch gap-2;
-    }
-    .order-filter button {
-      @apply w-full;
     }
     .stats-group {
       @apply p-4;

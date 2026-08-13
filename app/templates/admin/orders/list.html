@@ -4,16 +4,40 @@
   <div class="admin-header flex justify-between items-center mb-4">
     <h1 class="text-2xl font-semibold text-text">Đơn hàng</h1>
   </div>
-  <form class="order-filter flex items-center gap-4 mb-4" method="get" action="{{ url_for('admin.orders') }}">
+  <div class="order-filter flex items-center gap-4 mb-4">
     <label class="visually-hidden" for="status-filter">Lọc theo trạng thái</label>
-    <select id="status-filter" name="status" class="h-11 px-3 border border-border rounded-lg text-base bg-white">
+    <select id="status-filter" name="status" class="order-filter-native h-11 px-3 border border-border rounded-lg text-base bg-white">
       <option value="">Tất cả ({{ total_orders }})</option>
       {% for s in order_statuses %}
       <option value="{{ s }}" {% if current_status == s %}selected{% endif %}>{{ s }} ({{ status_counts.get(s, 0) }})</option>
       {% endfor %}
     </select>
-    <button class="btn btn-primary" type="submit">Lọc</button>
-  </form>
+
+    <div class="custom-select order-filter-mobile" data-select-root>
+      <button
+        type="button"
+        class="custom-select__button"
+        data-select-toggle
+        aria-haspopup="listbox"
+        aria-expanded="false"
+      >
+        <span class="custom-select__label">
+          {% if current_status %}
+          {{ current_status }} ({{ status_counts.get(current_status, 0) }})
+          {% else %}
+          Tất cả ({{ total_orders }})
+          {% endif %}
+        </span>
+        <span aria-hidden="true">▾</span>
+      </button>
+      <div class="custom-select__dropdown" role="listbox" aria-label="Lọc theo trạng thái">
+        <button type="button" class="custom-select__option{% if not current_status %} active{% endif %}" data-value="">Tất cả ({{ total_orders }})</button>
+        {% for s in order_statuses %}
+        <button type="button" class="custom-select__option{% if current_status == s %} active{% endif %}" data-value="{{ s }}">{{ s }} ({{ status_counts.get(s, 0) }})</button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
   <div class="admin-card bg-card rounded-lg shadow overflow-hidden">
     {% if orders %}
     <div class="table-scroll overflow-x-auto">
@@ -55,7 +79,7 @@
     {% else %}
     <div class="empty-state flex flex-col items-center gap-4 p-8 text-center">
       {% if current_status %}
-      <h2 class="text-base font-semibold text-text">Không có đơn nào ở trạng thái "{‌{ current_status }}"</h2>
+      <h2 class="text-base font-semibold text-text">Không có đơn nào ở trạng thái "{{ current_status }}"</h2>
       <p class="text-gray-500">Thử chọn trạng thái khác hoặc chọn "Tất cả".</p>
       {% else %}
       <h2 class="text-base font-semibold text-text">Chưa có đơn nào</h2>
@@ -65,4 +89,92 @@
     {% endif %}
   </div>
 </div>
+
+<script>
+document.querySelectorAll('[data-select-root]').forEach(function (root) {
+  var toggle = root.querySelector('[data-select-toggle]');
+  var label = root.querySelector('.custom-select__label');
+  var options = root.querySelectorAll('.custom-select__option');
+  
+  if (!toggle || !label) return;
+
+  function closeDropdown() {
+    root.classList.remove('is-open');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function syncLabel(selectedValue) {
+    var optionsList = root.querySelectorAll('.custom-select__option');
+    optionsList.forEach(function (option) {
+      if (option.dataset.value === selectedValue) {
+        option.classList.add('active');
+        label.textContent = option.textContent;
+      } else {
+        option.classList.remove('active');
+      }
+    });
+  }
+
+  function loadFilteredOrders(statusValue) {
+    var url = '/orders?status=' + encodeURIComponent(statusValue) + '&ajax=1';
+    
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(function (response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.text();
+    })
+    .then(function (html) {
+      var container = document.querySelector('.admin-card');
+      if (container) {
+        container.innerHTML = html;
+      }
+    })
+    .catch(function (error) {
+      console.error('Fetch error:', error);
+    });
+  }
+
+  // Toggle dropdown on button click
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var isOpen = root.classList.toggle('is-open');
+    toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  // Handle option selection
+  options.forEach(function (option) {
+    option.addEventListener('click', function (e) {
+      e.preventDefault();
+      var selectedValue = option.dataset.value;
+      syncLabel(selectedValue);
+      closeDropdown();
+      loadFilteredOrders(selectedValue);
+    });
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function (event) {
+    if (!root.contains(event.target)) {
+      closeDropdown();
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+      closeDropdown();
+    }
+  });
+
+  // Initialize on page load
+  var urlParams = new URLSearchParams(window.location.search);
+  var currentStatus = urlParams.get('status') || '';
+  syncLabel(currentStatus);
+});
+</script>
 {% endblock %}

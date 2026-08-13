@@ -2,7 +2,6 @@
 {% block title %}{{ product.name }} — Quản lý hàng{% endblock %}
 {% block content %}
 <div class="container max-w-7xl mx-auto px-4 py-6">
-  <a class="back-link inline-block mb-4 text-sm text-accent hover:text-blue-700" href="{{ back_url or url_for('public.home') }}">← Quay lại</a>
   <div class="product-detail animate-fade-in flex flex-col md:flex-row md:gap-8">
     <div class="product-gallery w-full md:w-96 md:flex-shrink-0">
       <div class="main-image-box aspect-square bg-white border border-gray-200 rounded-lg overflow-hidden flex items-center justify-center">

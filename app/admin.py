@@ -131,8 +131,7 @@ def orders():
     status_counts = dict(
         db.session.query(Order.status, db.func.count(Order.id)).group_by(Order.status).all()
     )
-    return render_template(
-        'admin/orders/list.html',
+    context = dict(
         pagination=pagination,
         orders=pagination.items,
         current_status=status,
@@ -140,6 +139,9 @@ def orders():
         total_orders=sum(status_counts.values()),
         order_statuses=ORDER_STATUSES,
     )
+    if request.args.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template('admin/orders/_content.html', **context)
+    return render_template('admin/orders/list.html', **context)
 
 
 @admin_bp.route('/stats', methods=['GET'])

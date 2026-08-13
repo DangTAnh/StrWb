@@ -30,6 +30,7 @@ Web bán hàng tiếng Việt để trưng bày và quản lý sản phẩm. Bac
 6. Chạy ứng dụng:
    ```
    flask --app wsgi run
+
    ```
 
 Mở trình duyệt tại `http://127.0.0.1:5000` để xem trang chủ và `/login` để đăng nhập quản trị.
