@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="admin-page max-w-2xl mx-auto px-4 py-6">
+  <a class="back-link inline-block mb-4 text-sm text-accent hover:text-blue-700" href="{{ url_for('admin.order_detail', order_id=order.id) }}">← Quay lại</a>
+  <div class="admin-card bg-card rounded-lg shadow p-6">
+    <h1 class="text-2xl font-semibold text-text mb-4">Xóa đơn #{{ order.id }}</h1>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <p class="text-sm text-red-800">
+        <strong>Cảnh báo:</strong> Thao tác này sẽ xóa vĩnh viễn đơn hàng này cùng tất cả sản phẩm trong đơn. Hành động này <strong>không thể hoàn tác</strong>.
+      </p>
+    </div>
+    <dl class="grid grid-cols-[120px_1fr] gap-2 mb-6">
+      <dt class="text-sm text-gray-500">Trạng thái</dt><dd class="text-base text-text m-0">{{ order.status }}</dd>
+      <dt class="text-sm text-gray-500">Tổng cộng</dt><dd class="text-base text-text m-0">{{ _order_total(order) | format_price }}</dd>
+      <dt class="text-sm text-gray-500">Ngày tạo</dt><dd class="text-base text-text m-0">{{ order.created_at | strftime('%d/%m/%Y %H:%M') }}</dd>
+    </dl>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="flex gap-3">
+        <button type="submit"
+                class="btn btn-danger">Xác nhận xóa</button>
+        <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="btn btn-secondary">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

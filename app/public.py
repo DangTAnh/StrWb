@@ -305,7 +305,7 @@ def checkout():
                 quantity=qty,
             ))
         db.session.commit()
-        flash('Đặt hàng thành công! Chúng tôi sẽ liên hệ xác nhận qua SĐT.', 'success')
+        flash('Tạo đơn hàng thành công!', 'success')
     else:
         # Đơn mới bị hủy, item đã gộp vào đơn cũ.
         db.session.delete(order)

@@ -1,12 +1,13 @@
 {% extends "admin/base.html" %}
 {% block content %}
 <div class="admin-page">
-  <a class="back-link" href="{{ url_for('admin.products') }}">Quay lại</a>
-  <h1>{% if is_new %}Thêm sản phẩm{% else %}Sửa sản phẩm{% endif %}</h1>
   <form method="post" action="" enctype="multipart/form-data" class="admin-card product-form">
+    <h1>{% if is_new %}Thêm sản phẩm{% else %}Sửa sản phẩm{% endif %}</h1>
     {{ form.hidden_tag() }}
     {% if form.errors %}
-    <div class="flash error">Vui lòng kiểm tra lại các trường nhập.</div>
+    <div class="flash-zone mb-4">
+      <div class="flash px-4 py-2 rounded text-sm text-red-700 bg-red-50 border border-red-200">Vui lòng kiểm tra lại các trường nhập.</div>
+    </div>
     {% endif %}
 
     {# Gallery on top #}

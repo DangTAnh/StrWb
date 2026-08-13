@@ -159,6 +159,15 @@ def stats():
         .one()
     )
 
+    # Q1b — confirmed revenue: orders sitting at "Đã xác nhận" (not yet shipped).
+    # Same aggregate as Q1, filtered to the single confirmed status.
+    confirmed_revenue = (
+        db.session.query(db.func.coalesce(db.func.sum(OrderItem.product_price * OrderItem.quantity), 0))
+        .join(Order, OrderItem.order_id == Order.id)
+        .filter(Order.status == 'Đã xác nhận')
+        .scalar()
+    )
+
     # Q2 — profit, NULL-safe: only cost-bearing items contribute. NULL cost items are
     # excluded (never treated as 0 -> avoids overstating profit), per STAT-02 / #Pitfall 3.
     profit, profit_items = (
@@ -169,6 +178,15 @@ def stats():
         .join(Order, OrderItem.order_id == Order.id)
         .filter(Order.status.in_(REVENUE_STATUSES), OrderItem.product_cost_price.isnot(None))
         .one()
+    )
+
+    # Q2b — confirmed profit: same aggregate as Q2, but filtered to "Đã xác nhận" orders only.
+    # NULL cost items excluded (same STAT-02 rule) — never treated as 0.
+    confirmed_profit = (
+        db.session.query(db.func.coalesce(db.func.sum((OrderItem.product_price - OrderItem.product_cost_price) * OrderItem.quantity), 0))
+        .join(Order, OrderItem.order_id == Order.id)
+        .filter(Order.status == 'Đã xác nhận', OrderItem.product_cost_price.isnot(None))
+        .scalar()
     )
 
     # Q3 — total qualifying items -> derive the conditional profit note.
@@ -200,6 +218,7 @@ def stats():
     return render_template(
         'admin/stats.html',
         revenue=revenue, profit=profit, profit_note=profit_note, units_sold=units_sold,
+        confirmed_revenue=confirmed_revenue, confirmed_profit=confirmed_profit,
         status_counts=status_counts, total_orders=total_orders,
         total_products=total_products, in_stock=in_stock, out_of_stock=out_of_stock, discontinued=discontinued
     )
@@ -214,6 +233,22 @@ def order_detail(order_id):
         flash('Không tìm thấy đơn.', 'error')
         return redirect(url_for('admin.orders'))
     return render_template('admin/orders/detail.html', order=order)
+
+
+@admin_bp.route('/orders/<int:order_id>/delete', methods=['GET', 'POST'])
+def delete_order(order_id):
+    """Hard-delete an order and its items (ORD-99). GET shows confirm; POST performs delete."""
+    order = db.session.get(Order, order_id)
+    if order is None:
+        flash('Không tìm thấy đơn.', 'error')
+        return redirect(url_for('admin.orders'))
+    if request.method == 'POST':
+        order_id = order.id
+        db.session.delete(order)
+        db.session.commit()
+        flash(f'Đã xóa đơn #{order_id}.', 'success')
+        return redirect(url_for('admin.orders'))
+    return render_template('admin/orders/delete.html', order=order)
 
 
 @admin_bp.route('/orders/<int:order_id>/status', methods=['POST'])
