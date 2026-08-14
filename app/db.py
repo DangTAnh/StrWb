@@ -3,7 +3,7 @@ import os
 import click
 from flask.cli import with_appcontext
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
+from sqlalchemy import case, text, update as sa_update
 from werkzeug.security import generate_password_hash
 
 db = SQLAlchemy()
@@ -64,3 +64,59 @@ def init_db_command():
         db.session.add(AdminUser(username=admin_username, password_hash=generate_password_hash(admin_password)))
         click.echo(f'Created admin "{admin_username}".')
     db.session.commit()
+
+
+def resequence_product_ids():
+    """Close gaps in products.id (1,2,4,5 -> 1,2,3,4) and re-point child FKs.
+
+    ponytail: renumbering PKs is destructive, so this is a no-op unless gaps exist.
+    Runs in a FK-disabled transaction; child FKs (ProductImage, OrderItem) are
+    remapped first. Negative temp ids buffer the in-place swap so no two rows ever
+    share an id mid-update. Auto SKUs ('#<id>') are realigned to the new id;
+    manually-typed SKUs are preserved (SKU-01 rule).
+    """
+    from .models import OrderItem, Product, ProductImage
+
+    ids = [r[0] for r in db.session.query(Product.id).order_by(Product.id.asc()).all()]
+    n = len(ids)
+    if n == 0 or ids == list(range(1, n + 1)):
+        return 0  # already contiguous — touch nothing
+
+    mapping = {old: new for new, old in enumerate(ids, 1)}
+
+    conn = db.session.connection()
+    prev_fk = conn.exec_driver_sql('PRAGMA foreign_keys').scalar()
+    conn.exec_driver_sql('PRAGMA foreign_keys=OFF')
+    try:
+        for old, new in mapping.items():
+            if new == old:
+                continue
+            # 1. re-point children to negative temp
+            db.session.execute(
+                sa_update(ProductImage).where(ProductImage.product_id == old).values(product_id=-new)
+            )
+            db.session.execute(
+                sa_update(OrderItem).where(OrderItem.product_id == old).values(product_id=-new)
+            )
+            # 2. move parent to negative temp
+            db.session.execute(sa_update(Product).where(Product.id == old).values(id=-old))
+        for old, new in mapping.items():
+            if new == old:
+                continue
+            # 3. flip children back to positive new id
+            db.session.execute(
+                sa_update(ProductImage).where(ProductImage.product_id == -new).values(product_id=new)
+            )
+            db.session.execute(
+                sa_update(OrderItem).where(OrderItem.product_id == -new).values(product_id=new)
+            )
+            # 4. flip parent back to positive new id; realign auto SKU
+            db.session.execute(
+                sa_update(Product)
+                .where(Product.id == -old)
+                .values(id=new, sku=case((Product.sku == f'#{old}', f'#{new}'), else_=Product.sku))
+            )
+        db.session.commit()
+    finally:
+        conn.exec_driver_sql(f'PRAGMA foreign_keys={"ON" if prev_fk else "OFF"}')
+    return n

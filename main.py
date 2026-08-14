@@ -3,6 +3,7 @@ import secrets
 from pathlib import Path
 
 from app import create_app
+from app.db import resequence_product_ids
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -61,10 +62,17 @@ def initialize_database_if_needed():
     result = app.test_cli_runner().invoke(init_db_command)
     if result.exit_code != 0:
         raise RuntimeError(result.output.strip() or 'Database initialization failed.')
+    
+def resequence_product_ids_on_startup():
+    with app.app_context():
+        n = resequence_product_ids()
+        if n:
+            print(f'[resequence] compacted product ids: {n} products re-indexed')
 
 
 if __name__ == '__main__':
     initialize_database_if_needed()
+    resequence_product_ids_on_startup()
     app.run(host='0.0.0.0', port=int(__import__('os').environ.get('PORT', 10990)))
 
 

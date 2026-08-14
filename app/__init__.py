@@ -103,4 +103,15 @@ def create_app():
         flash('Tập tin quá lớn. Tối đa 16MB cho mỗi lần tải ảnh.', 'error')
         return redirect(request.referrer or url_for('admin.products'))
 
+    @app.after_request
+    def _cache_product_images(response):
+        # IMG-CACHE: product uploads use UUID filenames — immutable, safe to cache forever.
+        # Scoped to /static/uploads/ so CSS/JS (unversioned) keep their default short cache.
+        # ponytail: 1y + immutable; if a UUID collision were ever to happen, bust via URL change.
+        if request.path.startswith('/static/uploads/'):
+            response.cache_control.public = True
+            response.cache_control.max_age = 31536000
+            response.cache_control.immutable = True
+        return response
+
     return app

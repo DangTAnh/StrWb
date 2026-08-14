@@ -800,7 +800,7 @@ html {
     --tw-border-opacity: 1;
     border-color: rgb(229 231 235/var(--tw-border-opacity, 1));
     padding: .5rem 4px;
-    text-align: left
+    text-align: center
 }
 
 .data-table thead th {
@@ -823,7 +823,8 @@ html {
 }
 
 .data-table .product-name {
-    font-weight: 600
+    font-weight: 600;
+    text-align: left
 }
 
 .data-table .price-cell {
@@ -838,7 +839,7 @@ html {
 
 .data-table .actions-cell {
     white-space: nowrap;
-    text-align: right
+    text-align: center
 }
 
 .data-table .actions-cell a {
@@ -1798,7 +1799,7 @@ button.link-danger:hover {
     }
 
     .mobile-search-shell {
-        width: 40vw;
+        width: auto;
         display: flex;
         flex: 1 1 0%;
         min-width: 0;

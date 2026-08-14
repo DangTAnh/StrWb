@@ -70,7 +70,7 @@
           </div>
           <div class="form-field">
             {{ form.sku.label }}
-            {{ form.sku(class="input") }}
+            {{ form.sku(class="input", placeholder="Để trống tự động điền #1, #2, ...") }}
             {% for error in form.sku.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
           </div>
         </div>
