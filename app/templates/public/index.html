@@ -1,4 +1,5 @@
 {% extends "public/base.html" %}
+{% from "_pagination.html" import pagination_nav %}
 {% block content %}
 <div class="container max-w-7xl mx-auto px-4 py-6">
   <h1 class="page-heading text-2xl font-semibold mb-6 text-text">Sản phẩm</h1>
@@ -7,21 +8,7 @@
   <div class="product-grid stagger-children grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6" style="--stagger-delay: 40ms">
     {% for p in products %}{% include "public/_product_card.html" %}{% endfor %}
   </div>
-  {% if pagination.pages > 1 %}
-  <nav class="pagination pagination--center flex justify-center items-center gap-4 mt-8 text-sm text-gray-500" aria-label="Điều hướng trang">
-    {% if pagination.has_prev %}
-    <a class="text-accent hover:text-blue-700" href="{{ url_for('public.home', page=pagination.prev_num) }}">Trước</a>
-    {% else %}
-    <span class="text-gray-300" aria-disabled="true">Trước</span>
-    {% endif %}
-    <span class="page-indicator">Trang {{ pagination.page }} / {{ pagination.pages }}</span>
-    {% if pagination.has_next %}
-    <a class="text-accent hover:text-blue-700" href="{{ url_for('public.home', page=pagination.next_num) }}">Sau</a>
-    {% else %}
-    <span class="text-gray-300" aria-disabled="true">Sau</span>
-    {% endif %}
-  </nav>
-  {% endif %}
+  {{ pagination_nav(pagination, 'public.home', center=True) }}
   {% else %}
   <div class="empty-state animate-fade-in-down flex flex-col items-center gap-4 p-8 text-center">
     <h2 class="text-base font-semibold text-text">Chưa có sản phẩm nào</h2>

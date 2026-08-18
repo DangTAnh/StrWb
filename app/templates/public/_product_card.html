@@ -11,11 +11,11 @@
       <span class="product-card-placeholder flex items-center justify-center w-full h-full text-2xl text-gray-400">—</span>
       {% endif %}
       {% if p.status == 'out_of_stock' %}
-      <span class="badge badge-out_of_stock absolute top-2 left-2 z-10">Hết hàng</span>
+      <span class="badge badge-out_of_stock absolute bottom-2 left-2 z-10">Hết hàng</span>
       {% elif p.status == 'discontinued' %}
-      <span class="badge badge-discontinued absolute top-2 left-2 z-10">Ngừng bán</span>
+      <span class="badge badge-discontinued absolute bottom-2 left-2 z-10">Ngừng bán</span>
       {% elif is_maxed_in_cart %}
-      <span class="badge badge-maxed absolute top-2 left-2 z-10 cart-maxed-badge">Tối đa</span>
+      <span class="badge badge-maxed absolute bottom-2 left-2 z-10 cart-maxed-badge">Tối đa</span>
       {% endif %}
     </div>
     <div class="product-card-body p-4">
@@ -37,6 +37,18 @@
       </svg>
     </button>
   </form>
+
+  {% if current_user.is_authenticated %}
+  <a class="product-edit-btn"
+     href="{{ url_for('admin.edit_product', product_id=p.id) }}"
+     onclick="event.stopPropagation();"
+     aria-label="Sửa {{ p.name }}">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+    </svg>
+    Sửa
+  </a>
+  {% endif %}
 </div>
 <script>
 function updateMaxedCardState(form, isMaxed) {
@@ -68,7 +80,7 @@ function updateMaxedCardState(form, isMaxed) {
     var thumb = wrapper.querySelector('.product-card-thumb');
     if (thumb) {
       badge = document.createElement('span');
-      badge.className = 'badge badge-maxed absolute top-2 left-2 z-10 cart-maxed-badge';
+      badge.className = 'badge badge-maxed absolute bottom-2 left-2 z-10 cart-maxed-badge';
       badge.textContent = 'Tối đa';
       thumb.appendChild(badge);
     }

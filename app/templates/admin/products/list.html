@@ -1,4 +1,5 @@
 {% extends "admin/base.html" %}
+{% from "_pagination.html" import pagination_nav %}
 {% block content %}
 <div class="admin-page max-w-7xl mx-auto px-4 py-6">
   <div class="admin-header flex justify-between items-center mb-4 flex-col sm:flex-row sm:gap-2">
@@ -53,21 +54,7 @@
         </tbody>
       </table>
     </div>
-    {% if pagination.pages > 1 %}
-    <nav class="pagination flex items-center justify-end gap-2 p-4 text-sm text-gray-500" aria-label="Điều hướng trang">
-      {% if pagination.has_prev %}
-      <a class="text-accent hover:text-blue-700" href="{{ url_for('admin.products', page=pagination.prev_num) }}">Trước</a>
-      {% else %}
-      <span class="text-gray-300" aria-disabled="true">Trước</span>
-      {% endif %}
-      <span class="page-indicator">Trang {{ pagination.page }} / {{ pagination.pages }}</span>
-      {% if pagination.has_next %}
-      <a class="text-accent hover:text-blue-700" href="{{ url_for('admin.products', page=pagination.next_num) }}">Sau</a>
-      {% else %}
-      <span class="text-gray-300" aria-disabled="true">Sau</span>
-      {% endif %}
-    </nav>
-    {% endif %}
+    {{ pagination_nav(pagination, 'admin.products') }}
     {% else %}
     <div class="empty-state flex flex-col items-center gap-4 p-8 text-center">
       <h2 class="text-base font-semibold text-text">Chưa có sản phẩm nào</h2>

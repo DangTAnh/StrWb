@@ -22,13 +22,28 @@ def normalize_search_text(text):
 
 
 def _manual_pagination(page, per_page, total):
+    # ponytail: replicate SQLAlchemy's Pagination.iter_pages() so the shared
+    # pagination macro works on this hand-rolled object too.
     pages = max(1, -(-total // per_page))
     page = max(1, min(page, pages))
+
+    def iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1):
+        last = 0
+        for num in range(1, pages + 1):
+            if (num <= left_edge
+                    or (page - left_current - 1 < num < page + right_current)
+                    or num > pages - right_edge):
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
+
     return SimpleNamespace(
         page=page, pages=pages, per_page=per_page, total=total,
         has_prev=page > 1, has_next=page < pages,
         prev_num=page - 1 if page > 1 else None,
         next_num=page + 1 if page < pages else None,
+        iter_pages=iter_pages,
     )
 
 
