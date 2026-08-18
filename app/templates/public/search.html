@@ -2,7 +2,7 @@
 {% from "_pagination.html" import pagination_nav %}
 {% block title %}Tìm kiếm — Quản lý hàng{% endblock %}
 {% block content %}
-<div class="container max-w-7xl mx-auto px-4 py-6">
+<div class="container max-w-7xl mx-auto px-4 py-6 search-results">
   <h1 class="page-heading text-2xl font-semibold mb-6 text-text">{% if products is none %}Tìm kiếm sản phẩm{% else %}Kết quả tìm kiếm{% endif %}</h1>
   {% if products is none %}
   <div class="empty-state animate-fade-in-down flex flex-col items-center gap-4 p-8 text-center">

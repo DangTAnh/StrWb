@@ -79,13 +79,16 @@ def product_detail(product_id):
     )
 
 
-@public_bp.route('/search', methods=['GET'])
+@public_bp.route('/search', methods=['GET', 'POST'])
 def search():
-    q = (request.args.get('q') or '').strip()
+    is_ajax = request.form.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    q = (request.args.get('q') or request.form.get('q', '') or '').strip()
     nq = normalize_search_text(q)
-    page = request.args.get('page', 1, type=int)
+    page = request.args.get('page', request.form.get('page', 1), type=int)
     per_page = 12
     if not nq:
+        if is_ajax:
+            return jsonify(q=q, html='', pagination_html='')
         return render_template('public/search.html', q=q, products=None, pagination=None)
     all_products = Product.query.order_by(Product.sort_order.asc(), Product.id.asc()).all()
     matched = [
@@ -99,9 +102,20 @@ def search():
     # D-07 #2: mirror home() — out-of-range page -> 302 to last valid page (no silent clamp).
     # _manual_pagination clamps page, so compare the raw request page, not the clamped value.
     if pagination.total and page > pagination.pages:
-        return redirect(url_for('public.search', q=q, page=pagination.pages))
+        page = pagination.pages
+        pagination = _manual_pagination(page, per_page, len(matched))
+        start = (pagination.page - 1) * per_page
+        pagination.items = matched[start:start + per_page]
     if page < 1:
-        return redirect(url_for('public.search', q=q, page=1))
+        page = 1
+        pagination = _manual_pagination(page, per_page, len(matched))
+        start = (pagination.page - 1) * per_page
+        pagination.items = matched[start:start + per_page]
+    if is_ajax:
+        # Render product cards server-side so client gets ready-to-insert HTML.
+        html = render_template('public/_search_results.html', products=pagination.items)
+        pagination_html = render_template('public/_pagination.html', pagination=pagination, q=q, endpoint='public.search')
+        return jsonify(q=q, html=html, pagination_html=pagination_html)
     return render_template('public/search.html', q=q, products=pagination.items, pagination=pagination)
 
 
@@ -271,16 +285,35 @@ def checkout():
         flash('Giỏ hàng của bạn đang trống.', 'error')
         return redirect(url_for('public.cart'))
 
-    # BƯỚC 3 — Form validation (tên/SĐT/địa chỉ bắt buộc, SĐT 8-11 chữ số)
+    # BƯỚC 3 — Form validation (tên/SĐT/địa chỉ - tất cả Optional sau khi bỏ required)
     form = CheckoutForm()
     if not form.validate():
-        flash('Vui lòng nhập đầy đủ Họ và tên, Số điện thoại, và Địa chỉ.', 'error')
+        flash('Vui lòng kiểm tra lại thông tin đặt hàng.', 'error')
         return redirect(url_for('public.cart'))
+
+    # BƯỚC 3.5 — Chỉ đặt những sản phẩm được tick (CHECKOUT-01).
+    # Nếu không có selected_ids (form cũ / curl / JS off) → fallback đặt tất cả để backward-compat.
+    selected_ids_raw = request.form.getlist('selected_ids')
+    has_selected_field = 'selected_ids' in request.form
+    if has_selected_field:
+        # Validate: tất cả phải là số và nằm trong cart.
+        valid_ids = {pid for pid in cart.keys() if pid.isdigit()}
+        selected_ids = [sid for sid in selected_ids_raw if sid.isdigit() and sid in valid_ids]
+        if not selected_ids:
+            flash('Vui lòng chọn ít nhất một sản phẩm để đặt hàng.', 'error')
+            return redirect(url_for('public.cart'))
+        # Lọc cart theo selected_ids cho phần checkout, giữ nguyên session.
+        cart_to_checkout = {pid: cart[pid] for pid in selected_ids}
+        # Các pid đã đặt (để xóa khỏi session ở bước 6, giữ lại phần không chọn)
+        pids_to_remove = list(selected_ids)
+    else:
+        cart_to_checkout = dict(cart)
+        pids_to_remove = list(cart.keys())
 
     # BƯỚC 4 — Server re-validate từng món (T-06-03): không tin session cart.
     # Mỗi món: product còn tồn tại + available + 1 <= qty <= tồn kho. Sai -> không tạo đơn.
     items_to_save = []
-    for pid_str, qty in cart.items():
+    for pid_str, qty in cart_to_checkout.items():
         if not str(pid_str).isdigit():
             continue  # T-06-02: bỏ key không phải số
         product = db.session.get(Product, int(pid_str))
@@ -297,9 +330,9 @@ def checkout():
     # BƯỚC 5 — Tạo 1 Order + nhiều OrderItem snapshot trong 1 commit (ORD-10a).
     # Snapshot product_name/price/cost_price tại thời điểm đặt từ product hiện tại.
     order = Order(
-        customer_name=form.customer_name.data.strip(),
-        customer_phone=_normalize_phone(form.customer_phone.data.strip()),
-        customer_address=form.customer_address.data.strip(),
+        customer_name=(form.customer_name.data or '').strip(),
+        customer_phone=_normalize_phone(form.customer_phone.data or ''),
+        customer_address=(form.customer_address.data or '').strip(),
         customer_note=(form.customer_note.data or '').strip() or None,  # Optional: data None khi field vắng mặt
         status='Chờ xác nhận',
     )
@@ -307,7 +340,10 @@ def checkout():
     db.session.flush()  # lấy order.id
 
     # GOM-01: nếu có đơn cùng SĐT đang Chờ xác nhận, gộp item vào đơn đó, lấy thông tin từ đơn này.
-    existing = _merge_into_existing_order(order, items_to_save)
+    # CHỈ gộp khi SĐT hợp lệ (>= 8 chữ số) — tránh gộp đơn vào nhau khi cả 2 cùng rỗng.
+    existing = None
+    if order.customer_phone and len(order.customer_phone) >= 8:
+        existing = _merge_into_existing_order(order, items_to_save)
 
     if not existing:
         for product, qty in items_to_save:
@@ -327,10 +363,65 @@ def checkout():
         db.session.commit()
         flash('Đơn hàng của bạn đã được gộp vào đơn trước — chúng tôi sẽ gộp gàng giao hàng.', 'success')
 
-    # BƯỚC 6 — Xóa giỏ + success + redirect về trang chi tiết sản phẩm đầu tiên.
-    # KHÔNG giảm product.quantity (ORD-12 deferred v2).
-    session['cart'] = {}
+    # BƯỚC 6 — Xóa những sản phẩm đã đặt khỏi session cart (CHECKOUT-01).
+    # Có selected_ids: chỉ xóa những sản phẩm đã chọn, giữ lại phần còn lại trong giỏ.
+    # Backward-compat: xóa tất cả (đặt tất cả như cũ).
+    for pid in pids_to_remove:
+        cart.pop(pid, None)
+    session['cart'] = cart
     return redirect(url_for('public.product_detail', product_id=items_to_save[0][0].id))
+
+
+@public_bp.route('/api/customer-suggestions', methods=['GET'])
+def customer_suggestions():
+    """Gợi ý khách cũ: query theo tên HOẶC SĐT (khớp một phần).
+
+    Trả JSON: [{name, phone, address, last_used_at}, ...]
+    - Match theo SĐT: normalize bỏ space/dash, contains (vd gõ '0912' → gợi ý SĐT bắt đầu 0912).
+    - Match theo tên: case-insensitive contains.
+    - Giới hạn 5 kết quả, sắp theo đơn mới nhất.
+    - Dedupe theo SĐT (giữ bản ghi mới nhất).
+    """
+    q = (request.args.get('q') or '').strip()
+    if not q:
+        return jsonify(suggestions=[])
+
+    qn = normalize_search_text(q)
+    qp = _normalize_phone(q)
+
+    # Lấy tất cả đơn có name/phone/address liên quan (không load cả bảng nếu lớn — Phase 2 sẽ filter SQL).
+    orders = (db.session.query(Order)
+              .order_by(Order.created_at.desc())
+              .limit(200)
+              .all())
+
+    seen_phones = set()
+    suggestions = []
+    for order in orders:
+        # Match theo tên (case-insensitive)
+        name_match = qn in normalize_search_text(order.customer_name or '')
+        # Match theo SĐT (normalize)
+        phone_match = qp and qp in _normalize_phone(order.customer_phone or '')
+        if not (name_match or phone_match):
+            continue
+        # Dedupe theo SĐT
+        norm_phone = _normalize_phone(order.customer_phone or '')
+        if not norm_phone:
+            # Không có SĐT → dedupe theo name thay thế
+            norm_phone = f'name:{normalize_search_text(order.customer_name or "")}'
+        if norm_phone in seen_phones:
+            continue
+        seen_phones.add(norm_phone)
+        suggestions.append({
+            'name': order.customer_name or '',
+            'phone': order.customer_phone or '',
+            'address': order.customer_address or '',
+            'last_used_at': order.created_at.isoformat() if order.created_at else None,
+        })
+        if len(suggestions) >= 5:
+            break
+
+    return jsonify(suggestions=suggestions)
 
 
 def _merge_into_existing_order(new_order, items_to_save):

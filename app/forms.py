@@ -30,14 +30,17 @@ class ProductForm(FlaskForm):
 
 
 class CheckoutForm(FlaskForm):
-    customer_name = StringField('Họ và tên', validators=[DataRequired(message='Vui lòng nhập họ và tên.'), Length(max=100, message='Tên không được quá 100 ký tự.')])
-    customer_phone = StringField('Số điện thoại', validators=[DataRequired(message='Vui lòng nhập số điện thoại.'), Regexp(r'^\+?[\d\s-]{8,15}$', message='Số điện thoại phải có 8–11 chữ số.')])
-    customer_address = TextAreaField('Địa chỉ', validators=[DataRequired(message='Vui lòng nhập địa chỉ.'), Length(max=500, message='Địa chỉ không được quá 500 ký tự.')])
+    customer_name = StringField('Họ và tên', validators=[Optional(), Length(max=100, message='Tên không được quá 100 ký tự.')])
+    customer_phone = StringField('Số điện thoại', validators=[Optional(), Regexp(r'^\+?[\d\s-]{8,15}$', message='Số điện thoại phải có 8–11 chữ số.')])
+    customer_address = TextAreaField('Địa chỉ', validators=[Optional(), Length(max=500, message='Địa chỉ không được quá 500 ký tự.')])
     customer_note = TextAreaField('Ghi chú', validators=[Optional(), Length(max=1000, message='Ghi chú không được quá 1000 ký tự.')])
     website = StringField()  # honeypot: bot điền -> silent reject ở route, không validator
     submit = SubmitField('Đặt hàng')
 
     def validate_customer_phone(self, field):
+        # Optional — chỉ validate format khi user có nhập.
+        if not field.data:
+            return
         # Regexp chỉ kiểm tra charset + độ dài thô; đếm chữ số là check chính (8–11 chữ số).
         digits = ''.join(ch for ch in field.data if ch.isdigit())
         if not (8 <= len(digits) <= 11):

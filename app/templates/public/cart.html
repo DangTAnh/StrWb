@@ -4,65 +4,99 @@
 <div class="container max-w-7xl mx-auto px-4 py-6">
   <h1 class="page-heading text-2xl font-semibold mb-6 text-text">Giỏ hàng</h1>
   {% if items %}
-    <div class="table-scroll overflow-x-auto">
-      <table class="data-table w-full border-collapse">
-        <caption class="visually-hidden">Giỏ hàng của bạn</caption>
-        <thead>
-          <tr>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Sản phẩm</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Đơn giá</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Số lượng</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Thành tiền</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in items %}
-          {% set is_maxed_in_cart = item.quantity >= item.product.quantity %}
-          <tr class="cart-item-row{% if is_maxed_in_cart %} is-maxed-in-cart{% endif %}">
-            <td class="py-2 px-4 border-b border-gray-200">
-              {% if item.product.primary_image %}
-              <img src="{{ url_for('static', filename='uploads/' + item.product.primary_image.thumb_filename) }}" alt="{{ item.product.name }}" width="80" height="80" class="cart-thumb w-20 h-20 object-cover rounded">
-              {% else %}
-              <span class="thumb-placeholder inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded text-gray-400">—</span>
-              {% endif %}
-              <span class="product-name text-sm font-semibold text-text ml-2">{{ item.product.name }}</span>
-              {% if is_maxed_in_cart %}
-              <span class="badge badge-maxed ml-2 cart-maxed-badge">Đã đạt tối đa</span>
-              {% endif %}
-            </td>
-            <td class="unit-price py-2 px-4 border-b border-gray-200 font-mono text-right">{{ item.product.price | format_price }}</td>
-            <td class="py-2 px-4 border-b border-gray-200">
-              <form class="cart-qty-form flex gap-2 items-center" method="post" action="{{ url_for('public.cart_update', product_id=item.product.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="number" name="quantity" min="1" max="{{ item.product.quantity }}" value="{{ item.quantity }}" class="cart-qty-input w-[60px] h-11 px-2 border border-border rounded-lg text-base font-mono text-center bg-white" data-product-id="{{ item.product.id }}" data-unit-price="{{ item.product.price }}" aria-label="Số lượng {{ item.product.name }}">
-                <noscript><button type="submit" class="btn btn-secondary">Cập nhật</button></noscript>
-              </form>
-            </td>
-            <td class="line-total py-2 px-4 border-b border-gray-200 font-mono text-right">{{ (item.product.price * item.quantity) | format_price }}</td>
-            <td class="py-2 px-4 border-b border-gray-200">
-              <form method="post" action="{{ url_for('public.cart_remove', product_id=item.product.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="link-danger text-red-600 font-semibold">Xóa</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="cart-total flex justify-between items-baseline py-4 border-t border-gray-200 mt-6">
-      <span class="cart-total-label text-sm font-semibold text-gray-500">Tổng cộng</span>
-      <span class="cart-total-value text-3xl font-semibold text-accent">{{ total | format_price }}</span>
-    </div>
-    <div class="cart-actions flex flex-wrap gap-4 mt-4">
-      <a class="btn btn-secondary" href="{{ url_for('public.home') }}">Tiếp tục mua sắm</a>
-      <a class="btn btn-primary" href="#checkout">Đặt hàng</a>
-    </div>
-    <section class="checkout-section mt-8 pt-8 border-t border-gray-200" id="checkout">
-      <h2 class="text-2xl font-semibold mb-4 text-text">Thông tin đặt hàng</h2>
-      {% include "public/_checkout_form.html" %}
-    </section>
+    <form id="checkout-form" method="post" action="{{ url_for('public.checkout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="website" class="honeypot" autocomplete="off" tabindex="-1" aria-hidden="true">
+
+      {# CHECKBOX-01: cột checkbox cho từng sản phẩm. Mặc định checked để giữ UX cũ. #}
+      <div class="table-scroll overflow-x-auto">
+        <table class="data-table w-full border-collapse">
+          <caption class="visually-hidden">Giỏ hàng của bạn</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input id="select-all" type="checkbox" checked class="cart-select-all w-4 h-4 accent-accent" aria-label="Chọn tất cả">
+                  <span>Chọn</span>
+                </label>
+              </th>
+              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Sản phẩm</th>
+              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Đơn giá</th>
+              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Số lượng</th>
+              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Thành tiền</th>
+              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            {% set is_maxed_in_cart = item.quantity >= item.product.quantity %}
+            <tr class="cart-item-row{% if is_maxed_in_cart %} is-maxed-in-cart{% endif %}">
+              <td class="py-2 px-4 border-b border-gray-200">
+                <input type="checkbox" name="selected_ids" value="{{ item.product.id }}" checked class="cart-select-item w-4 h-4 accent-accent" aria-label="Chọn {{ item.product.name }}">
+              </td>
+              <td class="py-2 px-4 border-b border-gray-200">
+                {% if item.product.primary_image %}
+                <img src="{{ url_for('static', filename='uploads/' + item.product.primary_image.thumb_filename) }}" alt="{{ item.product.name }}" width="80" height="80" class="cart-thumb w-20 h-20 object-cover rounded">
+                {% else %}
+                <span class="thumb-placeholder inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded text-gray-400">—</span>
+                {% endif %}
+                <span class="product-name text-sm font-semibold text-text ml-2">{{ item.product.name }}</span>
+                {% if is_maxed_in_cart %}
+                <span class="badge badge-maxed ml-2 cart-maxed-badge">Đã đạt tối đa</span>
+                {% endif %}
+              </td>
+              <td class="unit-price py-2 px-4 border-b border-gray-200 font-mono text-right">{{ item.product.price | format_price }}</td>
+              <td class="py-2 px-4 border-b border-gray-200">
+                <form class="cart-qty-form flex gap-2 items-center" method="post" action="{{ url_for('public.cart_update', product_id=item.product.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="number" name="quantity" min="1" max="{{ item.product.quantity }}" value="{{ item.quantity }}" class="cart-qty-input w-[60px] h-11 px-2 border border-border rounded-lg text-base font-mono text-center bg-white" data-product-id="{{ item.product.id }}" data-unit-price="{{ item.product.price }}" aria-label="Số lượng {{ item.product.name }}">
+                  <noscript><button type="submit" class="btn btn-secondary">Cập nhật</button></noscript>
+                </form>
+              </td>
+              <td class="line-total py-2 px-4 border-b border-gray-200 font-mono text-right">{{ (item.product.price * item.quantity) | format_price }}</td>
+              <td class="py-2 px-4 border-b border-gray-200">
+                <form method="post" action="{{ url_for('public.cart_remove', product_id=item.product.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="link-danger text-red-600 font-semibold">Xóa</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="cart-total flex justify-between items-baseline py-4 border-t border-gray-200 mt-6">
+        <span class="cart-total-label text-sm font-semibold text-gray-500">
+          Tổng cộng <span class="cart-selected-count text-xs text-gray-400">(đã chọn <span id="selected-count">0</span> món)</span>
+        </span>
+        <span class="cart-total-value text-3xl font-semibold text-accent">{{ total | format_price }}</span>
+      </div>
+      <div class="cart-actions flex flex-wrap gap-4 mt-4">
+        <a class="btn btn-secondary" href="{{ url_for('public.home') }}">Tiếp tục mua sắm</a>
+        <button type="button" class="btn btn-primary" id="go-to-checkout">Đặt hàng (mục đã chọn)</button>
+      </div>
+
+      <section class="checkout-section mt-8 pt-8 border-t border-gray-200" id="checkout" hidden>
+        <h2 class="text-2xl font-semibold mb-4 text-text">Thông tin đặt hàng</h2>
+
+        {# SUGG-01: ô gợi ý khách cũ (autocomplete) #}
+        <div class="form-field mb-4 relative" id="suggest-wrapper">
+          <label for="customer_suggest" class="block text-sm font-medium text-text mb-1">Khách cũ? Gõ tên hoặc SĐT để tự điền</label>
+          <input type="text" id="customer_suggest" autocomplete="off" placeholder="VD: Nguyễn Văn A hoặc 0912..." class="w-full h-11 px-3 border border-border rounded-lg text-base text-text bg-white focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:border-accent" />
+          <div id="suggest-dropdown" class="suggestions-dropdown absolute left-0 right-0 top-full mt-1 bg-white border border-border rounded-lg shadow-lg z-10 hidden max-h-72 overflow-y-auto"></div>
+          <p class="help-text text-sm text-gray-500 mt-1">Gợi ý từ các đơn trước. Bỏ trống nếu là khách mới.</p>
+        </div>
+
+        {# PARSE-01: ô smart-parse dán nhanh thông tin #}
+        <div class="form-field mb-4">
+          <label for="customer_quickpaste" class="block text-sm font-medium text-text mb-1">Hoặc dán nhanh thông tin (tên, SĐT, địa chỉ — phân cách bằng dấu phẩy, gạch đứng, xuống dòng...)</label>
+          <textarea id="customer_quickpaste" rows="2" placeholder="VD: Nguyễn Văn A, 0912 345 678, Hà Nội" class="w-full min-h-[60px] px-3 border border-border rounded-lg text-base text-text bg-white focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:border-accent py-2 resize-y"></textarea>
+          <p class="help-text text-sm text-gray-500 mt-1">Sẽ tự tách vào 3 ô bên dưới khi bạn nhập/xoá.</p>
+        </div>
+
+        {% include "public/_checkout_form.html" %}
+      </section>
+    </form>
   {% else %}
     <div class="empty-state flex flex-col items-center gap-4 p-8 text-center">
       <h2 class="text-base font-semibold text-text">Giỏ hàng trống</h2>
@@ -74,7 +108,9 @@
 
 {% if items %}
 <script>
-// Cập nhật số lượng qua AJAX — không reload trang.
+// =============================
+//  1. AJAX cập nhật số lượng (giữ nguyên từ phiên bản trước)
+// =============================
 document.addEventListener('change', function (e) {
   if (!e.target.classList.contains('cart-qty-input')) return;
   var input = e.target;
@@ -91,7 +127,7 @@ document.addEventListener('change', function (e) {
 
     var badge = tr.querySelector('.cart-maxed-badge');
     if (!badge && isMaxed) {
-      var nameCell = tr.querySelector('td');
+      var nameCell = tr.querySelector('td:nth-child(2)');
       if (nameCell) {
         badge = document.createElement('span');
         badge.className = 'badge badge-maxed ml-2 cart-maxed-badge';
@@ -119,6 +155,199 @@ document.addEventListener('change', function (e) {
       toggleRowMaxedState();
     });
 });
+
+// =============================
+//  2. CHECKBOX-01: chọn tất cả + đếm + disable nút
+// =============================
+(function () {
+  var selectAll = document.getElementById('select-all');
+  var items = document.querySelectorAll('.cart-select-item');
+  var countEl = document.getElementById('selected-count');
+  var goBtn = document.getElementById('go-to-checkout');
+
+  function updateCount() {
+    var n = document.querySelectorAll('.cart-select-item:checked').length;
+    if (countEl) countEl.textContent = n;
+    if (goBtn) {
+      goBtn.disabled = (n === 0);
+      goBtn.textContent = n > 0 ? 'Đặt hàng (' + n + ' món đã chọn)' : 'Đặt hàng (chọn ít nhất 1 món)';
+      goBtn.classList.toggle('opacity-50', n === 0);
+    }
+    if (selectAll) {
+      var totalItems = items.length;
+      var checkedItems = document.querySelectorAll('.cart-select-item:checked').length;
+      selectAll.checked = (totalItems > 0 && checkedItems === totalItems);
+      selectAll.indeterminate = (checkedItems > 0 && checkedItems < totalItems);
+    }
+  }
+
+  if (selectAll) {
+    selectAll.addEventListener('change', function () {
+      items.forEach(function (cb) { cb.checked = selectAll.checked; });
+      updateCount();
+    });
+  }
+  items.forEach(function (cb) {
+    cb.addEventListener('change', updateCount);
+  });
+  updateCount();
+})();
+
+// Nút "Đặt hàng (mục đã chọn)" → mở section checkout
+var goBtn = document.getElementById('go-to-checkout');
+if (goBtn) {
+  goBtn.addEventListener('click', function () {
+    var section = document.getElementById('checkout');
+    if (section) {
+      section.hidden = false;
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      var firstInput = section.querySelector('input, textarea');
+      if (firstInput) setTimeout(function () { firstInput.focus(); }, 300);
+    }
+  });
+}
+
+// =============================
+//  3. SUGG-01: gợi ý khách cũ (debounce + dropdown)
+// =============================
+(function () {
+  var input = document.getElementById('customer_suggest');
+  var dropdown = document.getElementById('suggest-dropdown');
+  if (!input || !dropdown) return;
+  var nameInput = document.getElementById('customer_name');
+  var phoneInput = document.getElementById('customer_phone');
+  var addressInput = document.getElementById('customer_address');
+  var timer;
+
+  function render(list) {
+    dropdown.innerHTML = '';
+    if (!list || !list.length) {
+      dropdown.classList.add('hidden');
+      return;
+    }
+    list.forEach(function (s) {
+      var row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'suggestion-item w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-0';
+      var phoneLine = s.phone ? '<span class="text-sm font-mono text-accent">' + escapeHtml(s.phone) + '</span>' : '';
+      var addrLine = s.address ? '<div class="text-xs text-gray-500 truncate">' + escapeHtml(s.address) + '</div>' : '';
+      row.innerHTML = '<div class="text-sm font-semibold text-text">' + escapeHtml(s.name) + ' ' + phoneLine + '</div>' + addrLine;
+      row.addEventListener('click', function () {
+        if (nameInput && s.name) nameInput.value = s.name;
+        if (phoneInput && s.phone) phoneInput.value = s.phone;
+        if (addressInput && s.address) addressInput.value = s.address;
+        dropdown.classList.add('hidden');
+        input.value = '';
+        if (phoneInput) phoneInput.focus();
+      });
+      dropdown.appendChild(row);
+    });
+    dropdown.classList.remove('hidden');
+  }
+
+  function escapeHtml(s) {
+    var div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    var q = input.value.trim();
+    if (q.length < 2) { dropdown.classList.add('hidden'); return; }
+    timer = setTimeout(function () {
+      fetch('/api/customer-suggestions?q=' + encodeURIComponent(q))
+        .then(function (r) { return r.json(); })
+        .then(function (data) { render(data.suggestions || []); })
+        .catch(function () { dropdown.classList.add('hidden'); });
+    }, 250);
+  });
+
+  // Ẩn dropdown khi click ra ngoài
+  document.addEventListener('click', function (e) {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+})();
+
+// =============================
+//  4. PARSE-01: smart-parse "Nguyễn Văn A, 0912 345 678, Hà Nội"
+// =============================
+(function () {
+  var quickpaste = document.getElementById('customer_quickpaste');
+  if (!quickpaste) return;
+  var nameInput = document.getElementById('customer_name');
+  var phoneInput = document.getElementById('customer_phone');
+  var addressInput = document.getElementById('customer_address');
+  var suggestInput = document.getElementById('customer_suggest');
+  var suggestDropdown = document.getElementById('suggest-dropdown');
+
+  // Regex SĐT linh hoạt: 8-15 chữ số, cho phép +, space, dash, dot giữa các số.
+  // Sau khi match sẽ bỏ hết separator để lấy số thuần (trừ + đầu).
+  var PHONE_RE = /(\+?\d[\d\s\-.]{6,18}\d)/;
+
+  function parseQuickPaste(text) {
+    var result = { name: '', phone: '', address: '' };
+    if (!text || !text.trim()) return result;
+
+    // Tìm SĐT trong text
+    var phoneMatch = text.match(PHONE_RE);
+    if (phoneMatch) {
+      var phoneRaw = phoneMatch[1];
+      // Chuẩn hóa: giữ số và +, bỏ space/dash/dot (trừ + đầu)
+      var phoneClean = phoneRaw.replace(/[\s\-.']/g, '');
+      result.phone = phoneClean;
+      // Phần text trước SĐT = name, phần sau = address
+      var before = text.slice(0, phoneMatch.index).replace(/[,.\|;\-\/]+$/, '').trim();
+      var after = text.slice(phoneMatch.index + phoneMatch[0].length).replace(/^[,.\|;\-\/\s]+/, '').trim();
+      result.name = before;
+      result.address = after;
+    } else {
+      // Không có SĐT rõ ràng: thử split theo dấu phân cách
+      var parts = text.split(/[,.\|;]+/).map(function (p) { return p.trim(); }).filter(Boolean);
+      if (parts.length >= 2) {
+        result.name = parts[0];
+        result.address = parts.slice(1).join(', ');
+      } else {
+        result.name = text.trim();
+      }
+    }
+    return result;
+  }
+
+  // Debounce nhẹ để không override khi user đang sửa từng ô
+  var pasteTimer;
+  quickpaste.addEventListener('input', function () {
+    clearTimeout(pasteTimer);
+    pasteTimer = setTimeout(function () {
+      var parsed = parseQuickPaste(quickpaste.value);
+      // Chỉ fill các ô còn rỗng (tránh ghi đè khi user đã sửa tay)
+      if (parsed.name && nameInput && !nameInput.value) nameInput.value = parsed.name;
+      if (parsed.phone && phoneInput && !phoneInput.value) phoneInput.value = parsed.phone;
+      if (parsed.address && addressInput && !addressInput.value) addressInput.value = parsed.address;
+
+      // Nếu user dán SĐT trong ô quickpaste mà chưa điền phone → auto-fill
+      if (parsed.phone && phoneInput && !phoneInput.value) {
+        phoneInput.value = parsed.phone;
+        phoneInput.dispatchEvent(new Event('change'));
+      }
+      // Ẩn suggest dropdown nếu đang mở (tránh xung đột UI)
+      if (suggestDropdown) suggestDropdown.classList.add('hidden');
+    }, 100);
+  });
+
+  // Clear quickpaste khi user sửa trực tiếp 1 trong 3 ô
+  function clearIfEdited(el) {
+    el.addEventListener('input', function () {
+      // Không xoá quickpaste, nhưng reset nếu user đã sửa khác với parse
+      // (giữ đơn giản: không reset quickpaste, để user thấy input gốc)
+    });
+  }
+  if (nameInput) clearIfEdited(nameInput);
+  if (phoneInput) clearIfEdited(phoneInput);
+  if (addressInput) clearIfEdited(addressInput);
+})();
 </script>
 {% endif %}
 {% endblock %}
