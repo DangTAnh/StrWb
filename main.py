@@ -1,78 +1,71 @@
+#!/usr/bin/env python3
+"""Kiểm tra thư mục data/uploads tồn tại; clone bản latest từ GitHub nếu thiếu.
+
+Chạy:  python main.py [thư_mục_đích_mặc_định_.]
+
+- Nếu thư mục đích chưa có `.git` → clone https://github.com/DangTAnh/StrWb vào đó.
+- Nếu đã có → pull --ff-only để lấy bản latest (không rebase/merge phức tạp).
+- Kiểm tra data/ và uploads/ tồn tại sau khi clone, tạo nếu thiếu.
+"""
 import os
-import secrets
-from pathlib import Path
+import subprocess
+import sys
 
-from app import create_app
-from app.db import resequence_product_ids
-
-
-BASE_DIR = Path(__file__).resolve().parent
-ENV_PATH = BASE_DIR / '.env'
-ENV_EXAMPLE_PATH = BASE_DIR / '.env.example'
-DATABASE_PATH = BASE_DIR / 'data' / 'app.db'
+REPO_URL = "https://github.com/DangTAnh/StrWb.git"
+# ponytail: uploads thực nằm ở app/static/uploads (xem cấu trúc dự án). data/ ở root.
+DATA_DIRS = ("data", "app/static/uploads")
 
 
-def ensure_env_file():
-    if ENV_PATH.exists():
-        lines = ENV_PATH.read_text(encoding='utf-8').splitlines()
-    elif ENV_EXAMPLE_PATH.exists():
-        lines = ENV_EXAMPLE_PATH.read_text(encoding='utf-8').splitlines()
+def run(cmd, cwd=None):
+    print(f"$ {' '.join(cmd)}")
+    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+
+
+def ensure_dir(path):
+    if os.path.isdir(path):
+        print(f"[OK] tồn tại: {path}")
+        return True
+    os.makedirs(path, exist_ok=True)
+    print(f"[CREATED] {path}")
+    return False
+
+
+def main():
+    # Windows console mặc định cp1252 — ép stdout utf-8 để in được tiếng Việt.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass  # Python < 3.7 không có reconfigure; chấp nhận constraints.
+    dest = sys.argv[1] if len(sys.argv) > 1 else "."
+    dest = os.path.abspath(dest)
+
+    if not os.path.isdir(dest):
+        os.makedirs(dest, exist_ok=True)
+        print(f"[CREATED] thư mục đích: {dest}")
+
+    git_dir = os.path.join(dest, ".git")
+    if not os.path.isdir(git_dir):
+        print(f"[CLONE] {REPO_URL} → {dest}")
+        r = run(["git", "clone", REPO_URL, dest])
+        print(r.stdout)
+        if r.returncode != 0:
+            print(r.stderr)
+            sys.exit(f"[FAIL] clone thất bại (exit {r.returncode}).")
     else:
-        lines = []
+        print(f"[PULL] lấy bản latest trong {dest}")
+        r = run(["git", "pull", "--ff-only"], cwd=dest)
+        print(r.stdout)
+        if r.returncode != 0:
+            print(r.stderr)
+            sys.exit(f"[FAIL] pull thất bại (exit {r.returncode}). Có commit local? Thử stash/push.")
 
-    secret_key = os.environ.get('SECRET_KEY', '').strip() or secrets.token_hex(32)
-    for index, line in enumerate(lines):
-        if line.startswith('SECRET_KEY='):
-            if not line.split('=', 1)[1].strip():
-                lines[index] = f'SECRET_KEY={secret_key}'
-            break
-    else:
-        lines.append(f'SECRET_KEY={secret_key}')
-
-    if not ENV_PATH.exists() or lines != ENV_PATH.read_text(encoding='utf-8').splitlines():
-        ENV_PATH.write_text('\n'.join(lines).rstrip() + '\n', encoding='utf-8')
-
-
-def load_env_file(path):
-    if not path.exists():
-        return
-
-    for raw_line in path.read_text(encoding='utf-8').splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith('#') or '=' not in line:
-            continue
-        key, value = line.split('=', 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+    print("--- kiểm tra thư mục dữ liệu ---")
+    for d in DATA_DIRS:
+        full = os.path.join(dest, d) if dest != os.getcwd() else d
+        ensure_dir(full)
+    print("[DONE] tất cả thư mục đã sẵn sàng.")
 
 
-if not DATABASE_PATH.exists():
-    ensure_env_file()
-
-load_env_file(ENV_PATH)
-
-app = create_app()
-
-
-def initialize_database_if_needed():
-    if DATABASE_PATH.exists():
-        return
-
-    from app.db import init_db_command
-
-    result = app.test_cli_runner().invoke(init_db_command)
-    if result.exit_code != 0:
-        raise RuntimeError(result.output.strip() or 'Database initialization failed.')
-    
-def resequence_product_ids_on_startup():
-    with app.app_context():
-        n = resequence_product_ids()
-        if n:
-            print(f'[resequence] compacted product ids: {n} products re-indexed')
-
-
-if __name__ == '__main__':
-    initialize_database_if_needed()
-    resequence_product_ids_on_startup()
-    app.run(host='0.0.0.0', port=int(__import__('os').environ.get('PORT', 10990)))
-
-
+if __name__ == "__main__":
+    main()
