@@ -33,6 +33,68 @@ def ensure_dir(path):
     return False
 
 
+def _clone_merge(dest):
+    """Clone repo (sparse, bỏ node_modules + ảnh uploads) vào temp rồi đè nội dung
+    vào dest, giữ .env/data/uploads an toàn. Dùng cho cả deploy mới và update code
+    khi dest có app/ nhưng không phải git repo (panel upload)."""
+    import shutil
+    print(f"[CLONE] {REPO_URL} → dest/.strwb_clone (sparse, merge)")
+    tmp = os.path.join(dest, ".strwb_clone")
+    shutil.rmtree(tmp, ignore_errors=True)
+    os.makedirs(tmp, exist_ok=True)
+    r = run(["git", "clone", "--depth", "1", "--filter=blob:none", "--sparse", REPO_URL, tmp])
+    print(r.stdout)
+    if r.returncode != 0:
+        print(r.stderr)
+        shutil.rmtree(tmp, ignore_errors=True)
+        sys.exit(f"[FAIL] clone thất bại (exit {r.returncode}).")
+    # exclude node_modules + ảnh sản phẩm uploads (giữ app/static/uploads/ trỗng).
+    r2 = run(["git", "sparse-checkout", "set", "--no-cone",
+              "/*", "!/node_modules", "!/app/static/uploads"], cwd=tmp)
+    if r2.returncode != 0:
+        print(r2.stderr)
+        shutil.rmtree(tmp, ignore_errors=True)
+        sys.exit(f"[FAIL] sparse-checkout thất bại (exit {r2.returncode}).")
+    # giữ lại các file deploy-specific của dest trước khi đè.
+    keep = {".env": None, "data": None, "app/static/uploads": None}
+    for name in list(keep):
+        p = os.path.join(dest, name)
+        if os.path.exists(p):
+            bak = os.path.join(dest, ".strwb_keep_" + name.replace("/", "_"))
+            shutil.rmtree(bak, ignore_errors=True)
+            os.makedirs(bak, exist_ok=True)
+            shutil.move(p, os.path.join(bak, name))
+            keep[name] = bak
+    # đè toàn bộ nội dung repo (đã sparse) vào dest (trừ .git).
+    for entry in os.listdir(tmp):
+        if entry == ".git":
+            continue
+        src = os.path.join(tmp, entry)
+        dst = os.path.join(dest, entry)
+        if os.path.isdir(src):
+            shutil.rmtree(dst, ignore_errors=True)
+            shutil.copytree(src, dst)
+        else:
+            shutil.copy2(src, dst)
+    # hồi sinh file đã giữ. Xóa bản repo đè (data/ rỗng, .env, uploads/) trước khi move
+    # lại — không thì shutil.move đụng FileExistsError trên thư mục đã có.
+    for name, bak in keep.items():
+        if bak:
+            dst = os.path.join(dest, name)
+            if os.path.isdir(dst):
+                shutil.rmtree(dst, ignore_errors=True)
+            else:
+                try:
+                    os.remove(dst)
+                except FileNotFoundError:
+                    pass
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.move(os.path.join(bak, name), dst)
+            shutil.rmtree(bak, ignore_errors=True)
+    shutil.rmtree(tmp, ignore_errors=True)
+    print(f"[OK] merge repo vào {dest} (đã giữ .env/data/uploads, bỏ node_modules/ảnh).")
+
+
 def main():
     # Windows console mặc định cp1252 — ép stdout utf-8 để in được tiếng Việt.
     try:
@@ -48,9 +110,9 @@ def main():
         print(f"[CREATED] thư mục đích: {dest}")
 
     git_dir = os.path.join(dest, ".git")
-    # ponytail: nếu dest đã có app package đầy đủ → chỉ pull. Nếu thiếu (panel upload
-    # mỗi main.py/.env) → clone sparse vào temp (bỏ node_modules + ảnh uploads cho
-    # nhẹ) rồi merge sang dest, giữ .env/data/uploads.
+    # ponytail: nếu dest là git repo → pull --ff-only. Không phải repo (deploy thủ công
+    # qua panel upload, có app/ nhưng không .git) → clone+merge để cập nhật code, giữ
+    # .env/data/uploads an toàn. Chưa có code → clone+merge như nhau.
     app_init = os.path.join(dest, "app", "__init__.py")
     if os.path.isdir(git_dir):
         print(f"[PULL] lấy bản latest trong {dest}")
@@ -60,64 +122,11 @@ def main():
             print(r.stderr)
             sys.exit(f"[FAIL] pull thất bại (exit {r.returncode}). Có commit local? Thử stash/push.")
     elif os.path.isfile(app_init):
-        # ponytail: code đầy đủ nhưng không phải git repo (deploy thủ công) — giữ nguyên.
-        print(f"[SKIP] {dest} đã có code app/ — bỏ qua clone, giữ code hiện có.")
+        print(f"[UPDATE] {dest} có code app/ nhưng không phải git repo — clone+merge để cập nhật.")
+        _clone_merge(dest)
     else:
-        # clone repo vào dest. dest có sẵn main.py/.env → git clone sẽ fail.
-        # ponytail: repo upstream lỡ commit node_modules + ảnh uploads (2858 files).
-        # Dùng sparse-checkout bỏ 2 thư mục đó (nhẹ + ít lỗi hơn). Clone tạm vào
-        # dest/.strwb_clone (KHÔNG vào /tmp — /tmp trên panel có thể noexec/hạn chế ghi).
-        import shutil
-        print(f"[CLONE] {REPO_URL} → dest/.strwb_clone (sparse, merge)")
-        tmp = os.path.join(dest, ".strwb_clone")
-        shutil.rmtree(tmp, ignore_errors=True)
-        os.makedirs(tmp, exist_ok=True)
-        r = run(["git", "clone", "--depth", "1", "--filter=blob:none", "--sparse", REPO_URL, tmp])
-        print(r.stdout)
-        if r.returncode != 0:
-            print(r.stderr)
-            shutil.rmtree(tmp, ignore_errors=True)
-            sys.exit(f"[FAIL] clone thất bại (exit {r.returncode}).")
-        # exclude node_modules + ảnh sản phẩm uploads (giữ app/static/uploads/ trỗng).
-        r2 = run(["git", "sparse-checkout", "set", "--no-cone",
-                  "/*", "!/node_modules", "!/app/static/uploads"], cwd=tmp)
-        if r2.returncode != 0:
-            print(r2.stderr)
-            shutil.rmtree(tmp, ignore_errors=True)
-            sys.exit(f"[FAIL] sparse-checkout thất bại (exit {r2.returncode}).")
-        # giữ lại các file deploy-specific của dest trước khi đè.
-        keep = {".env": None, "data": None, "app/static/uploads": None}
-        for name in list(keep):
-            p = os.path.join(dest, name)
-            if os.path.exists(p):
-                bak = os.path.join(dest, ".strwb_keep_" + name.replace("/", "_"))
-                shutil.rmtree(bak, ignore_errors=True)
-                os.makedirs(bak, exist_ok=True)
-                shutil.move(p, os.path.join(bak, name))
-                keep[name] = bak
-        # đè toàn bộ nội dung repo (đã sparse) vào dest (trừ .git).
-        for entry in os.listdir(tmp):
-            if entry == ".git":
-                continue
-            src = os.path.join(tmp, entry)
-            dst = os.path.join(dest, entry)
-            if os.path.isdir(src):
-                shutil.rmtree(dst, ignore_errors=True)
-                shutil.copytree(src, dst)
-            else:
-                shutil.copy2(src, dst)
-        # hồi sinh file đã giữ.
-        for name, bak in keep.items():
-            if bak:
-                os.makedirs(os.path.dirname(os.path.join(dest, name)), exist_ok=True)
-                shutil.move(os.path.join(bak, name), os.path.join(dest, name))
-                shutil.rmtree(bak, ignore_errors=True)
-        shutil.rmtree(tmp, ignore_errors=True)
-        # ponytail: cũng xóa các bak dir đã tạo trong dest.
-        for bak in keep.values():
-            if bak:
-                shutil.rmtree(bak, ignore_errors=True)
-        print(f"[OK] merge repo vào {dest} (đã giữ .env/data/uploads, bỏ node_modules/ảnh).")
+        print(f"[CLONE] {dest} chưa có code app/ — clone+merge.")
+        _clone_merge(dest)
     print("--- kiểm tra thư mục dữ liệu ---")
     for d in DATA_DIRS:
         full = os.path.join(dest, d) if dest != os.getcwd() else d
