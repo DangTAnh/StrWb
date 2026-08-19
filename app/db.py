@@ -37,6 +37,12 @@ def init_db_command():
             conn.execute(text('ALTER TABLE products ADD COLUMN cost_price INTEGER'))
             click.echo('Migrated: added products.cost_price (v1.0 -> v1.1).')
 
+        # CAT-MIG: bảng categories + product_categories đã có sẵn từ create_all() ở trên
+        # (create_all xử lý bảng mới OK). Không cần ALTER. Click chỉ echo để admin biết.
+        cat_exists = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='categories'")).fetchone()
+        if not cat_exists:
+            click.echo('Migrated: added categories + product_categories tables (v1.1 -> v1.2).')
+
         # Orders guard (06-01 / ORD-10a): rebuild the legacy Phase 5 orders table
         # (snapshot columns on orders) into the customer-only schema. Only DROP when
         # the legacy table is empty — never destroy data.

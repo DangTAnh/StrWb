@@ -15,9 +15,10 @@
           <thead>
             <tr>
               <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">
-                <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input id="select-all" type="checkbox" checked class="cart-select-all w-4 h-4 accent-accent" aria-label="Chọn tất cả">
-                  <span>Chọn</span>
+                <!-- From Uiverse.io by DaniloMGutavo --> 
+                <label class="checkbox-container">
+                    <input id="select-all" class="custom-checkbox cart-select-all" checked="" type="checkbox">
+                    <span class="checkmark"></span>
                 </label>
               </th>
               <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Sản phẩm</th>
@@ -32,7 +33,10 @@
             {% set is_maxed_in_cart = item.quantity >= item.product.quantity %}
             <tr class="cart-item-row{% if is_maxed_in_cart %} is-maxed-in-cart{% endif %}">
               <td class="py-2 px-4 border-b border-gray-200">
-                <input type="checkbox" name="selected_ids" value="{{ item.product.id }}" checked class="cart-select-item w-4 h-4 accent-accent" aria-label="Chọn {{ item.product.name }}">
+                <label class="checkbox-container">
+                  <input type="checkbox" name="selected_ids" value="{{ item.product.id }}" checked class="custom-checkbox cart-select-item" aria-label="Chọn {{ item.product.name }}">
+                  <span class="checkmark"></span>
+                </label>
               </td>
               <td class="py-2 px-4 border-b border-gray-200">
                 {% if item.product.primary_image %}

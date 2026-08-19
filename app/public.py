@@ -7,7 +7,8 @@ from flask_login import current_user
 
 from .db import db
 from .forms import CartForm, CheckoutForm
-from .models import Product, ProductImage, Order, OrderItem
+from .models import Product, ProductImage, Order, OrderItem, Category
+from .services.categorize import normalize_search_text
 
 public_bp = Blueprint('public', __name__)
 
@@ -54,12 +55,20 @@ def home():
     if not current_user.is_authenticated:
         return redirect(url_for('auth.login'))
     page = request.args.get('page', 1, type=int)
-    pagination = Product.query.order_by(Product.sort_order.asc(), Product.id.asc()).paginate(
-        page=page, per_page=12, error_out=False
-    )
+    cat_id = request.args.get('category', type=int)
+    query = Product.query.order_by(Product.sort_order.asc(), Product.id.asc())
+    if cat_id:
+        query = query.join(Product.categories).filter(Category.id == cat_id)
+    pagination = query.paginate(page=page, per_page=12, error_out=False)
     if pagination.total and pagination.page > pagination.pages:
-        return redirect(url_for('public.home', page=pagination.pages))
-    return render_template('public/index.html', pagination=pagination, products=pagination.items)
+        return redirect(url_for('public.home', page=pagination.pages, category=cat_id))
+
+    categories = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+    return render_template(
+        'public/index.html',
+        pagination=pagination, products=pagination.items,
+        categories=categories, active_category=cat_id,
+    )
 
 
 @public_bp.route('/products/<int:product_id>', methods=['GET'])
@@ -84,23 +93,36 @@ def search():
     is_ajax = request.form.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     q = (request.args.get('q') or request.form.get('q', '') or '').strip()
     nq = normalize_search_text(q)
+    cat_id = request.args.get('category', request.form.get('category'), type=int)
     page = request.args.get('page', request.form.get('page', 1), type=int)
     per_page = 12
+
+    # Lấy tất cả hoặc theo category trước
+    if cat_id:
+        all_products = Product.query.join(Product.categories).filter(Category.id == cat_id).order_by(Product.sort_order.asc(), Product.id.asc()).all()
+    else:
+        all_products = Product.query.order_by(Product.sort_order.asc(), Product.id.asc()).all()
+
     if not nq:
+        matched = all_products if cat_id else []
+    else:
+        matched = [
+            p for p in all_products
+            if nq in normalize_search_text(p.name or '')
+            or nq in normalize_search_text(p.description or '')
+        ]
+
+    if not matched and not nq and not cat_id:
         if is_ajax:
             return jsonify(q=q, html='', pagination_html='')
-        return render_template('public/search.html', q=q, products=None, pagination=None)
-    all_products = Product.query.order_by(Product.sort_order.asc(), Product.id.asc()).all()
-    matched = [
-        p for p in all_products
-        if nq in normalize_search_text(p.name or '')
-        or nq in normalize_search_text(p.description or '')
-    ]
+        categories = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+        return render_template('public/search.html', q=q, products=None, pagination=None, categories=categories, active_category=cat_id)
+
     pagination = _manual_pagination(page, per_page, len(matched))
     start = (pagination.page - 1) * per_page
     pagination.items = matched[start:start + per_page]
+
     # D-07 #2: mirror home() — out-of-range page -> 302 to last valid page (no silent clamp).
-    # _manual_pagination clamps page, so compare the raw request page, not the clamped value.
     if pagination.total and page > pagination.pages:
         page = pagination.pages
         pagination = _manual_pagination(page, per_page, len(matched))
@@ -111,12 +133,15 @@ def search():
         pagination = _manual_pagination(page, per_page, len(matched))
         start = (pagination.page - 1) * per_page
         pagination.items = matched[start:start + per_page]
+
+    categories = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+
     if is_ajax:
         # Render product cards server-side so client gets ready-to-insert HTML.
         html = render_template('public/_search_results.html', products=pagination.items)
-        pagination_html = render_template('public/_pagination.html', pagination=pagination, q=q, endpoint='public.search')
+        pagination_html = render_template('public/_pagination.html', pagination=pagination, q=q, category=cat_id, endpoint='public.search')
         return jsonify(q=q, html=html, pagination_html=pagination_html)
-    return render_template('public/search.html', q=q, products=pagination.items, pagination=pagination)
+    return render_template('public/search.html', q=q, products=pagination.items, pagination=pagination, categories=categories, active_category=cat_id)
 
 
 @public_bp.route('/cart/add/<int:product_id>', methods=['POST'])

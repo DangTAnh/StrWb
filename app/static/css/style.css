@@ -594,6 +594,10 @@ html {
     background: rgba(127, 29, 29, .96);
     border-color: rgba(248, 113, 113, .35)
 }
+.toast-info {
+    background: rgba(30, 58, 138, .96);
+    border-color: rgba(147, 197, 253, .35)
+}
 
 .toast-success {
     background: rgba(20, 83, 45, .96);
@@ -2053,10 +2057,96 @@ a {
     font-weight: 600
 }
 
+.cart-item-row td:nth-child(2) {
+    display: flex;
+    justify-content: center;
+    min-height: 60px;
+}
+
+.cart-item-row span,
+.cart-item-row img {
+    align-self: center;
+}
+
+.cart-item-row img {
+    min-width: 40px;
+    min-height: 60px;
+    margin-right: 40px;
+}
+
+/* From Uiverse.io by DaniloMGutavo */ 
+.checkbox-container {
+  display: inline-flex;
+  align-items: flex-start;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  user-select: none;
+}
+
+.custom-checkbox {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 15px;
+  width: 15px;
+  background-color: #eee;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 3px;
+  width: 3px;
+  height: 6px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+.custom-checkbox:checked ~ .checkmark {
+  background-color: #2196F3;
+  box-shadow: 0 3px 7px rgba(33, 150, 243, 0.3);
+}
+
+.custom-checkbox:checked ~ .checkmark:after {
+  display: block;
+}
+
+@keyframes checkAnim {
+  0% {
+    height: 0;
+  }
+
+  100% {
+    height: 10px;
+  }
+}
+
+.custom-checkbox:checked ~ .checkmark:after {
+  animation: checkAnim 0.2s forwards;
+}
+
+
 .cart-item-row.is-maxed-in-cart .cart-thumb,
 .cart-item-row.is-maxed-in-cart .thumb-placeholder {
     opacity: .55;
-    filter: grayscale(100%)
+    filter: grayscale(66%)
 }
 
 .cart-item-row.is-maxed-in-cart .product-name,
@@ -2135,6 +2225,8 @@ a {
     top: 12px;
     display: block;
     pointer-events: auto;
+    min-width: 36px;
+    min-height: 60px;
 }
 
 .product-card-wrapper:hover {
@@ -2165,6 +2257,9 @@ a {
 .add-cart {
     position: relative;
     display: inline-flex;
+    
+    min-width: 36px;
+    min-height: 60px;
 }
 
 .product-card-thumb img {
@@ -3938,16 +4033,6 @@ a {
 
 .stagger-children>* {
     animation-delay: calc(var(--stagger-delay, 0)*var(--i, 0))
-}
-
-.hover-elevate {
-    transition-property: box-shadow, transform;
-    transition-duration: .2s;
-    transition-timing-function: ease-in-out
-}
-
-.hover-elevate:hover {
-    transform: translateY(-2px)
 }
 
 .gallery-thumb.is-active {

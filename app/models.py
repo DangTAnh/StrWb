@@ -70,6 +70,31 @@ class ProductImage(db.Model):
         return self.filename[:-4] + '_thumb.jpg'
 
 
+class Category(db.Model):
+    __tablename__ = 'categories'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    keywords = db.Column(db.Text, nullable=True)  # CSV "áo,quần,giày" — match in product name (lowercase, bỏ dấu)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    # Many-to-many: một sp có thể thuộc nhiều danh mục.
+    products = db.relationship(
+        'Product',
+        secondary='product_categories',
+        backref=db.backref('categories', lazy='select'),
+    )
+
+
+# Bảng phụ n-n giữa products ↔ categories. Cascade từ cả 2 phía.
+product_categories = db.Table(
+    'product_categories',
+    db.Column('product_id', db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('category_id', db.Integer, db.ForeignKey('categories.id', ondelete='CASCADE'), primary_key=True),
+)
+
+
 class Order(db.Model):
     __tablename__ = 'orders'
 

@@ -17,19 +17,42 @@
   </main>
   <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
   <footer class="container mx-auto px-4 py-8 text-center text-sm text-text-muted">© {{ current_year }} Quản lý hàng</footer>
+  <script>
+    // Global toast helper: JS-triggered toasts + flash toasts (same DOM/CSS).
+    // Type: 'success' (default), 'error', 'info'. Auto-dismiss sau 4.5s.
+    window.showToast = function (message, type) {
+      var container = document.getElementById('toast-container');
+      if (!container) return;
+      var el = document.createElement('div');
+      var cls = 'toast';
+      if (type === 'error') cls += ' toast-error';
+      else if (type === 'success') cls += ' toast-success';
+      else cls += ' toast-info';
+      el.className = cls;
+      el.textContent = message;
+      container.appendChild(el);
+      // Force reflow trước khi add 'show' để trigger CSS transition.
+      void el.offsetWidth;
+      el.classList.add('show');
+      setTimeout(function () {
+        el.classList.remove('show');
+        el.classList.add('hide');
+        el.addEventListener('transitionend', function () { el.remove(); });
+      }, 4500);
+    };
+  </script>
   {% set toasts = get_flashed_messages(with_categories=true) %}
   {% if toasts %}
+  <script id="flashed-toasts" type="application/json">{{ toasts | tojson }}</script>
   <script>
-    (function (toasts) {
+    (function () {
+      var el = document.getElementById('flashed-toasts');
+      if (!el) return;
+      var toasts = JSON.parse(el.textContent);
       toasts.forEach(function (t) {
-        var el = document.createElement('div');
-        el.className = 'toast ' + (t[0] === 'error' ? 'toast-error' : t[0] === 'success' ? 'toast-success' : '');
-        el.textContent = t[1];
-        document.getElementById('toast-container').appendChild(el);
-        el.classList.add('show');
-        setTimeout(function () { el.classList.remove('show'); el.classList.add('hide'); el.addEventListener('transitionend', function () { el.remove(); }); }, 4500);
+        window.showToast(t[1], t[0] === 'error' ? 'error' : t[0] === 'success' ? 'success' : 'info');
       });
-    })({{ toasts | tojson }});
+    })();
   </script>
   {% endif %}
 </body>

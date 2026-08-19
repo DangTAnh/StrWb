@@ -1,0 +1,93 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="admin-page max-w-5xl mx-auto px-4 py-6">
+  <div class="admin-header flex justify-between items-center mb-4 flex-col sm:flex-row sm:gap-2">
+    <h1 class="text-2xl font-semibold text-text">Danh mục hàng</h1>
+    <a class="btn btn-secondary" href="{{ url_for('admin.products') }}">← Quay lại Sản phẩm</a>
+  </div>
+
+  {# Form inline: nếu edit_cat thì edit, ngược lại create #}
+  <div class="admin-card bg-card rounded-lg shadow p-4 mb-4">
+    <h2 class="text-base font-semibold text-text mb-3">
+      {% if edit_cat %}Sửa danh mục “{{ edit_cat.name }}”{% else %}Thêm danh mục mới{% endif %}
+    </h2>
+    <form method="post"
+          action="{{ url_for('admin.edit_category', category_id=edit_cat.id) if edit_cat else url_for('admin.new_category') }}"
+          class="grid gap-3 sm:grid-cols-2">
+      {{ form.hidden_tag() }}
+      <div class="form-field sm:col-span-2">
+        {{ form.name.label(class="block text-sm font-medium text-text mb-1") }}
+        {{ form.name(class="input w-full", placeholder="VD: Áo, Quần, Phụ kiện…") }}
+        {% for error in form.name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+      <div class="form-field sm:col-span-2">
+        {{ form.keywords.label(class="block text-sm font-medium text-text mb-1") }}
+        {{ form.keywords(class="input w-full min-h-[80px] py-2 resize-y", placeholder="áo, ao, shirt") }}
+        <p class="help-text text-sm text-gray-500 mt-1">Phân cách bằng dấu phẩy. Từ khóa được so khớp trong tên sản phẩm (không phân biệt hoa/thường, bỏ dấu).</p>
+        {% for error in form.keywords.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+      <div class="form-field">
+        {{ form.sort_order.label(class="block text-sm font-medium text-text mb-1") }}
+        {{ form.sort_order(class="input w-full", min="0") }}
+        <p class="help-text text-sm text-gray-500 mt-1">Số nhỏ hiện trước.</p>
+      </div>
+      <div class="form-field flex items-end gap-2">
+        {{ form.submit(class="btn btn-primary") }}
+        {% if edit_cat %}
+        <a class="btn btn-secondary" href="{{ url_for('admin.categories') }}">Hủy</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  {# Bảng danh sách danh mục #}
+  <div class="admin-card bg-card rounded-lg shadow overflow-hidden">
+    {% if categories %}
+    <div class="table-scroll overflow-x-auto">
+      <table class="data-table w-full border-collapse">
+        <caption class="visually-hidden">Danh sách danh mục</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">Tên</th>
+            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">Từ khóa</th>
+            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Thứ tự</th>
+            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Sản phẩm</th>
+            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-center">Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in categories %}
+          <tr class="border-b border-gray-200">
+            <td class="py-2 px-4 font-semibold text-text">{{ c.name }}</td>
+            <td class="py-2 px-4 text-sm text-gray-600">
+              {% if c.keywords %}
+              <span class="inline-flex flex-wrap gap-1">
+                {% for kw in c.keywords.split(',') %}<span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">{{ kw.strip() }}</span>{% endfor %}
+              </span>
+              {% else %}—{% endif %}
+            </td>
+            <td class="py-2 px-4 text-right text-gray-600">{{ c.sort_order }}</td>
+            <td class="py-2 px-4 text-right">
+              <a class="text-accent hover:underline" href="{{ url_for('admin.products', category=c.id) }}">{{ product_counts.get(c.id, 0) }}</a>
+            </td>
+            <td class="py-2 px-4 text-center whitespace-nowrap">
+              <a class="text-accent hover:text-blue-700 mr-2" href="{{ url_for('admin.categories', edit=c.id) }}">Sửa</a>
+              <form method="post" action="{{ url_for('admin.delete_category', category_id=c.id) }}" class="inline" onsubmit="return confirm('Xóa danh mục “{{ c.name }}”? Sản phẩm sẽ mất liên kết với danh mục này nhưng KHÔNG bị xóa.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="text-red-600 hover:text-red-800">Xóa</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state flex flex-col items-center gap-4 p-8 text-center">
+      <h2 class="text-base font-semibold text-text">Chưa có danh mục nào</h2>
+      <p class="text-gray-500">Tạo danh mục đầu tiên ở form phía trên. Sau đó có thể dùng từ khóa để tự động gán sản phẩm vào danh mục.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

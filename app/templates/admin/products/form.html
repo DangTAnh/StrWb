@@ -99,13 +99,16 @@
             <span class="qty-label">
               {{ form.quantity.label }}<span class="required" aria-hidden="true"> *</span>
             </span>
-            {{ form.quantity(class="input", required=True, aria_required="true", min="0", step="1", value="1") }}
+            {{ form.quantity(class="input", required=True, aria_required="true", min="0", step="1") }}
             {% for error in form.quantity.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
           </div>
           <div class="form-field checkbox-field">
             <label class="checkbox-label">
-              {{ form.discontinued(class="checkbox") }}
-              {{ form.discontinued.label.text }}
+              <span class="checkbox-container" style="margin-bottom:0">
+                {{ form.discontinued(class="custom-checkbox") }}
+                <span class="checkmark"></span>
+              </span>
+              <span>{{ form.discontinued.label.text }}</span>
             </label>
           </div>
         </div>
@@ -132,6 +135,41 @@
           <p class="help-text">Chỉ quản trị viên xem được</p>
           {% for error in form.cost_price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
         </div>
+      </div>
+    </div>
+
+    {# CAT-02: chọn danh mục thủ công cho sản phẩm. #}
+    <div class="form-group-collapsible" data-collapse-key="categories">
+      <button type="button" class="collapse-toggle" aria-expanded="true">
+        <span class="caret">▼</span>
+        <span class="collapse-title">Danh mục</span>
+      </button>
+      <div class="collapse-body">
+        {% if categories %}
+        <p class="help-text mb-3">Tick để gán sản phẩm vào danh mục. Bỏ tick để bỏ gán. Hệ thống cũng tự động gán theo từ khóa của từng danh mục.</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {% set assigned_ids = (product.categories | map(attribute='id') | list) if product else [] %}
+          {% for c in categories %}
+          <label class="flex items-start gap-2 p-2 border border-border rounded cursor-pointer hover:bg-gray-50">
+            <span class="checkbox-container" style="margin-bottom:0">
+              <input type="checkbox" name="category_ids" value="{{ c.id }}"
+                     {% if c.id in assigned_ids %}checked{% endif %}
+                     class="custom-checkbox" aria-label="Danh mục {{ c.name }}">
+              <span class="checkmark"></span>
+            </span>
+            <span class="text-sm">
+              <span class="font-semibold text-text">{{ c.name }}</span>
+              {% if c.keywords %}
+              <span class="block text-xs text-gray-500 mt-0.5">{{ c.keywords | truncate(40) }}</span>
+              {% endif %}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+        <p class="mt-3"><a class="text-accent hover:underline text-sm" href="{{ url_for('admin.categories') }}" target="_blank">+ Quản lý danh mục</a></p>
+        {% else %}
+        <p class="help-text">Chưa có danh mục nào. <a class="text-accent hover:underline" href="{{ url_for('admin.categories') }}" target="_blank">Tạo danh mục</a> trước khi gán.</p>
+        {% endif %}
       </div>
     </div>
 

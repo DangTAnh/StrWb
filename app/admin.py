@@ -2,9 +2,10 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 
 from .db import db, resequence_product_ids
-from .forms import ProductForm
+from .forms import ProductForm, CategoryForm
 from .image_utils import delete_image_files, save_image_file, validate_image_upload
-from .models import Product, ProductImage, Order, OrderItem
+from .models import Product, ProductImage, Order, OrderItem, Category
+from .services.categorize import merge_with_explicit
 
 admin_bp = Blueprint('admin', __name__, url_prefix='')
 
@@ -284,10 +285,18 @@ def update_order_status(order_id):
 @admin_bp.route('/products', methods=['GET'])
 def products():
     page = request.args.get('page', 1, type=int)
-    pagination = Product.query.order_by(Product.sort_order.asc(), Product.id.asc()).paginate(
-        page=page, per_page=20, error_out=False
+    cat_id = request.args.get('category', type=int)
+    query = Product.query.order_by(Product.sort_order.asc(), Product.id.asc())
+    if cat_id:
+        # JOIN qua bảng n-n product_categories.
+        query = query.join(Product.categories).filter(Category.id == cat_id)
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+    categories = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+    return render_template(
+        'admin/products/list.html',
+        pagination=pagination, products=pagination.items,
+        categories=categories, active_category=cat_id,
     )
-    return render_template('admin/products/list.html', pagination=pagination, products=pagination.items)
 
 
 @admin_bp.route('/products/new', methods=['GET', 'POST'])
@@ -330,12 +339,16 @@ def new_product():
         if err:
             db.session.rollback()
             flash(f'Không thể lưu ảnh: {err}. Chưa có ảnh nào được lưu.', 'error')
-            return render_template('admin/products/form.html', form=form, product=None, is_new=True, existing_images=[])
+            categories = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+            return render_template('admin/products/form.html', form=form, product=None, is_new=True, existing_images=[], categories=categories)
+        # CAT-01: gán danh mục thủ công (form) + auto-classify từ từ khóa (merge additive).
+        product.categories = merge_with_explicit(product, request.form.getlist('category_ids'))
         db.session.commit()
         resequence_product_ids()  # keep ids + auto-SKUs contiguous after add
         flash('Lưu sản phẩm thành công', 'success')
         return redirect(url_for('admin.products'))
-    return render_template('admin/products/form.html', form=form, product=None, is_new=True, existing_images=[])
+    categories = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+    return render_template('admin/products/form.html', form=form, product=None, is_new=True, existing_images=[], categories=categories)
 
 
 @admin_bp.route('/products/<int:product_id>/edit', methods=['GET', 'POST'])
@@ -356,13 +369,17 @@ def edit_product(product_id):
             db.session.rollback()
             flash(f'Không thể lưu ảnh: {err}. Chưa có ảnh nào được lưu.', 'error')
             existing_images = product.images.order_by(ProductImage.sort_order.asc()).all()
-            return render_template('admin/products/form.html', form=form, product=product, is_new=False, existing_images=existing_images)
+            categories = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+            return render_template('admin/products/form.html', form=form, product=product, is_new=False, existing_images=existing_images, categories=categories)
+        # CAT-01: gán danh mục thủ công (form) + auto-classify từ từ khóa (merge additive).
+        product.categories = merge_with_explicit(product, request.form.getlist('category_ids'))
         db.session.commit()
         resequence_product_ids()  # keep ids + auto-SKUs contiguous after edit
         flash(f'Đã cập nhật sản phẩm “{product.name}”', 'success')
         return redirect(url_for('admin.products'))
     existing_images = product.images.order_by(ProductImage.sort_order.asc()).all()
-    return render_template('admin/products/form.html', form=form, product=product, is_new=False, existing_images=existing_images)
+    categories = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+    return render_template('admin/products/form.html', form=form, product=product, is_new=False, existing_images=existing_images, categories=categories)
 
 
 @admin_bp.route('/products/<int:product_id>/delete', methods=['GET', 'POST'])
@@ -392,3 +409,106 @@ def delete_product(product_id):
             flash(f'Cảnh báo: sản phẩm đã xóa nhưng không xóa được {failed_total} file ảnh trên đĩa.', 'warning')
         return redirect(url_for('admin.products'))
     return render_template('admin/products/delete.html', product=product)
+
+
+# =============================
+#  Category CRUD (admin)
+# =============================
+
+@admin_bp.route('/categories', methods=['GET'])
+def categories():
+    """List + inline create/edit form cho danh mục."""
+    cats = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+    product_counts = dict(
+        db.session.query(Category.id, db.func.count(db.func.distinct(Product.id)))
+        .join(Product.categories)
+        .group_by(Category.id)
+        .all()
+    )
+    form = CategoryForm()
+    edit_id = request.args.get('edit', type=int)
+    edit_cat = db.session.get(Category, edit_id) if edit_id else None
+    if edit_cat:
+        # Prefill form bằng obj để admin thấy giá trị hiện tại.
+        form = CategoryForm(obj=edit_cat)
+    return render_template(
+        'admin/categories/list.html',
+        categories=cats, product_counts=product_counts,
+        form=form, edit_cat=edit_cat,
+    )
+
+
+@admin_bp.route('/categories/new', methods=['POST'])
+def new_category():
+    form = CategoryForm()
+    if form.validate_on_submit():
+        cat = Category(
+            name=form.name.data.strip(),
+            keywords=(form.keywords.data or '').strip() or None,
+            sort_order=form.sort_order.data or 0,
+        )
+        db.session.add(cat)
+        try:
+            db.session.commit()
+            flash(f'Đã tạo danh mục “{cat.name}”.', 'success')
+        except Exception:
+            db.session.rollback()
+            flash('Tên danh mục đã tồn tại.', 'error')
+        return redirect(url_for('admin.categories'))
+    # Validation fail: render lại list với lỗi.
+    cats = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+    product_counts = dict(
+        db.session.query(Category.id, db.func.count(db.func.distinct(Product.id)))
+        .join(Product.categories)
+        .group_by(Category.id)
+        .all()
+    )
+    return render_template(
+        'admin/categories/list.html',
+        categories=cats, product_counts=product_counts, form=form, edit_cat=None,
+    )
+
+
+@admin_bp.route('/categories/<int:category_id>/edit', methods=['POST'])
+def edit_category(category_id):
+    cat = db.session.get(Category, category_id)
+    if cat is None:
+        flash('Không tìm thấy danh mục.', 'error')
+        return redirect(url_for('admin.categories'))
+    form = CategoryForm()
+    if form.validate_on_submit():
+        cat.name = form.name.data.strip()
+        cat.keywords = (form.keywords.data or '').strip() or None
+        cat.sort_order = form.sort_order.data or 0
+        try:
+            db.session.commit()
+            flash(f'Đã cập nhật danh mục “{cat.name}”.', 'success')
+        except Exception:
+            db.session.rollback()
+            flash('Tên danh mục đã tồn tại.', 'error')
+        return redirect(url_for('admin.categories'))
+    cats = Category.query.order_by(Category.sort_order.asc(), Category.id.asc()).all()
+    product_counts = dict(
+        db.session.query(Category.id, db.func.count(db.func.distinct(Product.id)))
+        .join(Product.categories)
+        .group_by(Category.id)
+        .all()
+    )
+    return render_template(
+        'admin/categories/list.html',
+        categories=cats, product_counts=product_counts, form=form, edit_cat=cat,
+    )
+
+
+@admin_bp.route('/categories/<int:category_id>/delete', methods=['POST'])
+def delete_category(category_id):
+    cat = db.session.get(Category, category_id)
+    if cat is None:
+        flash('Không tìm thấy danh mục.', 'error')
+        return redirect(url_for('admin.categories'))
+    name = cat.name
+    # Cascade từ product_categories sẽ tự xóa các row n-n.
+    db.session.delete(cat)
+    db.session.commit()
+    flash(f'Đã xóa danh mục “{name}”.', 'success')
+    return redirect(url_for('admin.categories'))

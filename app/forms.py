@@ -45,3 +45,10 @@ class CheckoutForm(FlaskForm):
         digits = ''.join(ch for ch in field.data if ch.isdigit())
         if not (8 <= len(digits) <= 11):
             raise ValidationError('Số điện thoại phải có 8–11 chữ số.')
+
+
+class CategoryForm(FlaskForm):
+    name = StringField('Tên danh mục', validators=[InputRequired(message='Vui lòng nhập tên danh mục.'), Length(max=80, message='Tên không được quá 80 ký tự.')])
+    keywords = TextAreaField('Từ khóa (CSV)', validators=[Optional(), Length(max=500, message='Từ khóa không được quá 500 ký tự.')])
+    sort_order = IntegerField('Thứ tự hiển thị', validators=[Optional()], default=0)
+    submit = SubmitField('Lưu danh mục')
