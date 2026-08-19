@@ -14,3 +14,7 @@ MEMORY.md
 
 # Uploaded product images (user data, never committed)
 app/static/uploads/
+
+# Node deps (Tailwind build tooling) — never commit, regenerated via npm install
+node_modules/
+
