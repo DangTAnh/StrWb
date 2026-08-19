@@ -15,7 +15,7 @@ REPO_URL = "https://github.com/DangTAnh/StrWb.git"
 # ponytail: uploads thực nằm ở app/static/uploads (xem cấu trúc dự án). data/ ở root.
 DATA_DIRS = ("data", "app/static/uploads")
 # port + debug mặc định; ghi đè qua env FLASK_PORT / FLASK_DEBUG.
-PORT = int(os.environ.get("FLASK_PORT", "5000"))
+PORT = int(os.environ.get("FLASK_PORT", "10990"))
 DEBUG = os.environ.get("FLASK_DEBUG", "0") in ("1", "true", "yes")
 
 
