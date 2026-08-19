@@ -59,6 +59,23 @@ def init_db_command():
                 conn.execute(text('DROP TABLE orders'))
                 click.echo('Migrated: rebuilt orders table (legacy snapshot schema -> customer-only schema).')
 
+        # SHIP-01 migration guard: create_all never ALTERs an existing table, so add
+        # shipping_fee + paid_amount to v1.2 order tables manually. Idempotent (PRAGMA check).
+        # Re-check existence: legacy DROP ở trên có thể đã xóa table, lúc này tạo lại qua
+        # db.create_all() ở dưới; không ALTER table không tồn tại.
+        orders_still_exists = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='orders'")).fetchone()
+        if orders_still_exists:
+            ocols = [row[1] for row in conn.execute(text('PRAGMA table_info(orders)'))]
+            if 'shipping_fee' not in ocols:
+                conn.execute(text('ALTER TABLE orders ADD COLUMN shipping_fee INTEGER NOT NULL DEFAULT 11000'))
+                click.echo('Migrated: added orders.shipping_fee (default 11000).')
+            if 'paid_amount' not in ocols:
+                conn.execute(text('ALTER TABLE orders ADD COLUMN paid_amount INTEGER NOT NULL DEFAULT 0'))
+                click.echo('Migrated: added orders.paid_amount (default 0).')
+            if 'shipping_paid' not in ocols:
+                conn.execute(text('ALTER TABLE orders ADD COLUMN shipping_paid BOOLEAN NOT NULL DEFAULT 0'))
+                click.echo('Migrated: added orders.shipping_paid (default 0).')
+
     # Recreate the orders table (new schema) after the legacy DROP; no-op otherwise.
     db.create_all()
 

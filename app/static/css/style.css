@@ -665,6 +665,14 @@ html {
     padding: 4px
 }
 
+.admin-card--wide {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1.5rem;
+    max-width: 80rem;
+    padding: 4px
+}
+
 .\!btn,
 .btn {
     display: inline-flex;
@@ -805,6 +813,17 @@ html {
     border-color: rgb(229 231 235/var(--tw-border-opacity, 1));
     padding: .5rem 4px;
     text-align: center
+}
+
+td .checkbox-container {
+    flex-wrap: wrap;
+    padding-bottom: 16px;
+}
+
+td input {
+    width: 100%;
+    border: none;
+    text-align: right;
 }
 
 .data-table thead th {
@@ -2077,13 +2096,14 @@ a {
 /* From Uiverse.io by DaniloMGutavo */ 
 .checkbox-container {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   position: relative;
   padding-left: 35px;
   margin-bottom: 12px;
   cursor: pointer;
   font-size: 16px;
   user-select: none;
+  min-height: 15px;
 }
 
 .custom-checkbox {

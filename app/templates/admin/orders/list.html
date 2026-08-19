@@ -39,7 +39,7 @@
       </div>
     </div>
   </div>
-  <div class="admin-card bg-card rounded-lg shadow overflow-hidden">
+  <div class="admin-card--wide bg-card rounded-lg shadow overflow-hidden">
     {% if orders %}
     <div class="table-scroll overflow-x-auto">
       <table class="data-table w-full border-collapse">
@@ -49,17 +49,44 @@
             <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">ID</th>
             <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">Khách hàng</th>
             <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Tổng tiền</th>
+            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-center">Đã CK ship</th>
+            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Phí ship</th>
+            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Đã CK</th>
+            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">COD cần thu</th>
             <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">Trạng thái</th>
             <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">Ngày tạo</th>
           </tr>
         </thead>
         <tbody>
           {% for order in orders %}
-          <tr class="border-b border-gray-200">
+          <tr class="border-b border-gray-200" data-order-id="{{ order.id }}">
             <td class="py-2 px-4"><a class="order-id text-accent hover:text-blue-700 font-medium" href="{{ url_for('admin.order_detail', order_id=order.id) }}">#{{ order.id }}</a></td>
             <td class="py-2 px-4">{{ order.customer_name }}</td>
             <td class="price-cell py-2 px-4 font-mono text-right">{{ _order_total(order) | format_price }}</td>
-            <td class="py-2 px-4"><span class="badge {{ order_badge_class(order.status) }}">{{ order.status }}</span></td>
+            <td class="py-2 px-4 text-center">
+              <label class="checkbox-container" style="margin:0">
+                <input type="checkbox" class="custom-checkbox pay-ship-paid" data-order-id="{{ order.id }}" {% if _order_shipping_paid(order) %}checked{% endif %} aria-label="Đã CK phí ship đơn #{{ order.id }}">
+                <span class="checkmark"></span>
+              </label>
+            </td>
+            <td class="py-2 px-4 text-right"><input type="number" min="0" step="1" value="{{ _order_shipping(order) }}" class="pay-input pay-ship text-right" data-order-id="{{ order.id }}" aria-label="Phí ship đơn #{{ order.id }}"></td>
+            <td class="py-2 px-4 text-right"><input type="number" min="0" step="1" value="{{ _order_paid(order) }}" class="pay-input pay-paid text-right" data-order-id="{{ order.id }}" aria-label="Đã CK đơn #{{ order.id }}"></td>
+            <td class="cod-cell py-2 px-4 font-mono text-right font-semibold text-accent">{{ _order_cod(order) | format_price }}</td>
+            <td class="status-cell py-2 px-4">
+              <div class="status-inline flex flex-wrap items-center gap-2">
+                <span class="badge {{ order_badge_class(order.status) }}">{{ order.status }}</span>
+                {% set nexts = order_next_transitions(order.status) %}
+                {% if nexts %}
+                {% for s in nexts if s != 'Đã hủy' %}
+                <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.id) }}" class="status-form inline-form" data-order-id="{{ order.id }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="next_status" value="{{ s }}">
+                  <button type="submit" class="status-btn btn btn-sm {% if s == 'Đã hủy' %}btn-danger{% else %}btn-secondary{% endif %}" data-order-id="{{ order.id }}" data-next="{{ s }}" {% if s == 'Đã hủy' %}onclick="return confirm('Hủy đơn #{{ order.id }}? Không thể hoàn tác.');"{% endif %}>{{ s }}</button>
+                </form>
+                {% endfor %}
+                {% endif %}
+              </div>
+            </td>
             <td class="qty-muted py-2 px-4 text-gray-500">{{ order.created_at.strftime('%d/%m/%Y') }}</td>
           </tr>
           {% endfor %}
@@ -167,5 +194,159 @@ document.querySelectorAll('[data-select-root]').forEach(function (root) {
   var currentStatus = urlParams.get('status') || '';
   syncLabel(currentStatus);
 });
+</script>
+
+<script>
+// =============================
+//  AJAX cập nhật phí ship / đã CK / đã CK ship (SHIP-01 inline)
+//  - input number: debounce 500ms sau khi gõ xong (tránh spam khi sửa nhanh)
+//  - checkbox: gửi ngay khi toggle
+//  - gửi kèm cả 3 trường để server validate đầy đủ (OrderPaymentForm)
+//  - cập nhật ô COD + chú thích "(chưa ship)" từ response JSON
+// =============================
+(function () {
+  var csrfToken = '{{ csrf_token() }}';
+  var urlFor = function (id) { return '/orders/' + id + '/payment'; };
+
+  function fmtVND(n) {
+    return Number(n || 0).toLocaleString('vi-VN') + 'đ';
+  }
+
+  function updateCOD(row, data) {
+    var cod = row.querySelector('.cod-cell');
+    if (!cod || !data) return;
+    cod.textContent = fmtVND(data.cod);
+  }
+
+  function send(orderId, body, row, inputEl) {
+    body.append('csrf_token', csrfToken);
+    fetch(urlFor(orderId), {
+      method: 'POST', body: body, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.d.success) {
+          showToast((res.d && res.d.error) || 'Không cập nhật được.', 'error');
+          return;
+        }
+        updateCOD(row, res.d);
+        showToast('Đã cập nhật đơn #' + orderId + '.', 'success');
+      })
+      .catch(function () { showToast('Lỗi mạng khi cập nhật đơn #' + orderId + '.', 'error'); });
+  }
+
+  function collectBody(row) {
+    // ponytail: gửi cả 3 trường mỗi lần để OrderPaymentForm validate đầy đủ
+    var fd = new FormData();
+    var ship = row.querySelector('.pay-ship');
+    var paid = row.querySelector('.pay-paid');
+    var shipPaid = row.querySelector('.pay-ship-paid');
+    fd.append('shipping_fee', ship ? ship.value : '11000');
+    fd.append('paid_amount', paid ? paid.value : '0');
+    if (shipPaid && shipPaid.checked) fd.append('shipping_paid', 'y');
+    return fd;
+  }
+
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t.classList || !t.classList.contains('pay-input')) return;
+    clearTimeout(t._payTimer);
+    t._payTimer = setTimeout(function () {
+      var row = t.closest('tr[data-order-id]');
+      if (!row) return;
+      var orderId = t.dataset.orderId;
+      send(orderId, collectBody(row), row, t);
+    }, 500);
+  });
+
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (!t.classList || !t.classList.contains('pay-ship-paid')) return;
+    var row = t.closest('tr[data-order-id]');
+    if (!row) return;
+    var orderId = t.dataset.orderId;
+    send(orderId, collectBody(row), row, t);
+  });
+})();
+</script>
+
+<script>
+// =============================
+//  AJAX chuyển trạng thái đơn (inline tại /orders)
+//  - submit form .status-form qua fetch, thay badge + nút từ response JSON
+//  - next_transitions trả về danh sách hợp lệ kế tiếp → render lại nút
+// =============================
+(function () {
+  var STATUS_BTN_CLASS = {
+    'Chờ xác nhận': 'badge-order-pending',
+    'Đã xác nhận': 'badge-order-confirmed',
+    'Đã gói': 'badge-order-packed',
+    'Đã gửi': 'badge-order-shipped',
+    'Đã nhận': 'badge-order-delivered',
+    'Đã hủy': 'badge-order-cancelled'
+  };
+  var DANGER_STATUSES = ['Đã hủy'];
+
+  function badgeClass(s) { return STATUS_BTN_CLASS[s] || ''; }
+
+  function renderStatusCell(cell, data) {
+    var badge = cell.querySelector('.badge');
+    if (badge) {
+      badge.className = 'badge ' + badgeClass(data.status);
+      badge.textContent = data.status;
+    }
+    // gỡ form cũ
+    cell.querySelectorAll('.status-form').forEach(function (f) { f.remove(); });
+    var inline = cell.querySelector('.status-inline');
+    if (!inline) return;
+    var nexts = (data.next_transitions || []).filter(function (s) { return s !== 'Đã hủy'; });
+    nexts.forEach(function (s) {
+      var form = document.createElement('form');
+      form.method = 'post';
+      form.action = '/orders/' + data.order_id + '/status';
+      form.className = 'status-form inline-form';
+      form.dataset.orderId = data.order_id;
+      var csrf = document.createElement('input');
+      csrf.type = 'hidden'; csrf.name = 'csrf_token'; csrf.value = '{{ csrf_token() }}';
+      var ns = document.createElement('input');
+      ns.type = 'hidden'; ns.name = 'next_status'; ns.value = s;
+      var btn = document.createElement('button');
+      btn.type = 'submit';
+      btn.className = 'status-btn btn btn-sm ' + (DANGER_STATUSES.indexOf(s) >= 0 ? 'btn-danger' : 'btn-secondary');
+      btn.dataset.orderId = data.order_id;
+      btn.dataset.next = s;
+      btn.textContent = s;
+      if (DANGER_STATUSES.indexOf(s) >= 0) {
+        btn.onclick = function () { return confirm('Hủy đơn #' + data.order_id + '? Không thể hoàn tác.'); };
+      }
+      form.appendChild(csrf); form.appendChild(ns); form.appendChild(btn);
+      inline.appendChild(form);
+    });
+  }
+
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form.classList || !form.classList.contains('status-form')) return;
+    e.preventDefault();
+    var orderId = form.dataset.orderId;
+    var btn = form.querySelector('.status-btn');
+    var nextStatus = btn ? btn.dataset.next : '';
+    var fd = new FormData(form);
+    fetch(form.action, {
+      method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.d.success) {
+          showToast((res.d && res.d.error) || 'Không chuyển trạng thái được.', 'error');
+          return;
+        }
+        var row = form.closest('tr[data-order-id]');
+        if (row) renderStatusCell(row.querySelector('.status-cell'), res.d);
+        showToast('Đơn #' + orderId + ' → ' + res.d.status + '.', 'success');
+      })
+      .catch(function () { showToast('Lỗi mạng khi chuyển trạng thái.', 'error'); });
+  });
+})();
 </script>
 {% endblock %}

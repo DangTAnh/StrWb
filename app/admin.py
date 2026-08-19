@@ -1,8 +1,8 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import login_required
 
 from .db import db, resequence_product_ids
-from .forms import ProductForm, CategoryForm
+from .forms import ProductForm, CategoryForm, OrderPaymentForm
 from .image_utils import delete_image_files, save_image_file, validate_image_upload
 from .models import Product, ProductImage, Order, OrderItem, Category
 from .services.categorize import merge_with_explicit
@@ -34,6 +34,44 @@ def _order_total(order):
 
 
 @admin_bp.app_template_global()
+def _order_shipping(order):
+    """Phí ship (fallback default 11000 nếu NULL — cho đơn cũ trước SHIP-01)."""
+    return order.shipping_fee if order.shipping_fee is not None else 11000
+
+
+@admin_bp.app_template_global()
+def _order_paid(order):
+    """Tiền khách đã chuyển khoản (fallback 0 nếu NULL)."""
+    return order.paid_amount or 0
+
+
+@admin_bp.app_template_global()
+def _order_shipping_paid(order):
+    """True nếu khách đã CK phí ship (fallback False)."""
+    return bool(order.shipping_paid)
+
+
+@admin_bp.app_template_global()
+def _order_cod_including_ship(order):
+    """COD cần thu = tổng sp + ship - đã CK. ponytail: không sàn 0 (admin tự xử lý âm)."""
+    return _order_total(order) + _order_shipping(order) - _order_paid(order)
+
+
+@admin_bp.app_template_global()
+def _order_cod_excluding_ship(order):
+    """COD chỉ tính tiền sp = tổng sp - đã CK (không gồm ship). ponytail: không sàn 0."""
+    return _order_total(order) - _order_paid(order)
+
+
+@admin_bp.app_template_global()
+def _order_cod(order):
+    """COD hiện hành: nếu đã CK phí ship → không cộng ship, ngược lại cộng ship (SHIP-02)."""
+    if _order_shipping_paid(order):
+        return _order_cod_excluding_ship(order)
+    return _order_cod_including_ship(order)
+
+
+@admin_bp.app_template_global()
 def order_badge_class(status):
     return {
         'Chờ xác nhận': 'badge-order-pending',
@@ -43,6 +81,12 @@ def order_badge_class(status):
         'Đã nhận': 'badge-order-delivered',
         'Đã hủy': 'badge-order-cancelled',
     }.get(status, '')
+
+
+@admin_bp.app_template_global()
+def order_next_transitions(status):
+    """Danh sách trạng thái kế tiếp hợp lệ cho 1 đơn (từ TRANSITION_MAP)."""
+    return sorted(TRANSITION_MAP.get(status, set()))
 
 
 @admin_bp.before_request
@@ -255,12 +299,17 @@ def delete_order(order_id):
 @admin_bp.route('/orders/<int:order_id>/status', methods=['POST'])
 def update_order_status(order_id):
     order = db.session.get(Order, order_id)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     if order is None:
+        if is_ajax:
+            return jsonify(success=False, error='Không tìm thấy đơn.'), 404
         flash('Không tìm thấy đơn.', 'error')
         return redirect(url_for('admin.orders'))
     next_status = request.form.get('next_status', '')
     valid = TRANSITION_MAP.get(order.status, set())
     if next_status not in valid:
+        if is_ajax:
+            return jsonify(success=False, error=f'Không thể chuyển trạng thái đơn #{order.id}.'), 400
         flash(f'Không thể chuyển trạng thái đơn #{order.id}.', 'error')
         return redirect(url_for('admin.order_detail', order_id=order.id))
     if next_status == 'Đã xác nhận':
@@ -275,10 +324,55 @@ def update_order_status(order_id):
                 item.product.quantity = max(0, item.product.quantity - item.quantity)
     order.status = next_status
     db.session.commit()
+    if is_ajax:
+        return jsonify(
+            success=True,
+            order_id=order.id,
+            status=order.status,
+            badge_class=order_badge_class(order.status),
+            next_transitions=list(TRANSITION_MAP.get(order.status, set())),
+        )
     if next_status == 'Đã hủy':
         flash(f'Đã hủy đơn #{order.id}.', 'success')
     else:
         flash(f'Đã chuyển đơn #{order.id} sang trạng thái “{next_status}”.', 'success')
+    return redirect(url_for('admin.order_detail', order_id=order.id))
+
+
+@admin_bp.route('/orders/<int:order_id>/payment', methods=['POST'])
+def update_order_payment(order_id):
+    """SHIP-01: admin chỉnh phí ship + tiền đã CK + flag đã CK ship.
+    AJAX (X-Requested-With) -> JSON response; else redirect về detail (form đầy đủ)."""
+    order = db.session.get(Order, order_id)
+    if order is None:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, error='Không tìm thấy đơn.'), 404
+        flash('Không tìm thấy đơn.', 'error')
+        return redirect(url_for('admin.orders'))
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    form = OrderPaymentForm()
+    if form.validate_on_submit():
+        order.shipping_fee = form.shipping_fee.data
+        order.paid_amount = form.paid_amount.data
+        order.shipping_paid = form.shipping_paid.data
+        db.session.commit()
+        if is_ajax:
+            return jsonify(
+                success=True,
+                order_id=order.id,
+                shipping_fee=order.shipping_fee,
+                paid_amount=order.paid_amount,
+                shipping_paid=bool(order.shipping_paid),
+                cod=_order_cod(order),
+                cod_including_ship=_order_cod_including_ship(order),
+                cod_excluding_ship=_order_cod_excluding_ship(order),
+                shipping=_order_shipping(order),
+            )
+        flash(f'Đã cập nhật phí ship/CK cho đơn #{order.id}.', 'success')
+    else:
+        if is_ajax:
+            return jsonify(success=False, error='Giá trị phí ship/CK không hợp lệ.'), 400
+        flash('Giá trị phí ship/CK không hợp lệ.', 'error')
     return redirect(url_for('admin.order_detail', order_id=order.id))
 
 

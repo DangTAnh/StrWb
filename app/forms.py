@@ -3,6 +3,8 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms import IntegerField, TextAreaField, BooleanField, ValidationError
 from wtforms.validators import DataRequired, InputRequired, Optional, Length, NumberRange, Regexp
 
+DEFAULT_SHIPPING_FEE = 11000
+
 
 class LoginForm(FlaskForm):
     username = StringField('Tên đăng nhập', validators=[DataRequired(message='Vui lòng nhập tên đăng nhập')])
@@ -52,3 +54,12 @@ class CategoryForm(FlaskForm):
     keywords = TextAreaField('Từ khóa (CSV)', validators=[Optional(), Length(max=500, message='Từ khóa không được quá 500 ký tự.')])
     sort_order = IntegerField('Thứ tự hiển thị', validators=[Optional()], default=0)
     submit = SubmitField('Lưu danh mục')
+
+
+class OrderPaymentForm(FlaskForm):
+    """SHIP-01: admin chỉnh phí ship + tiền đã chuyển khoản cho 1 đơn."""
+    shipping_fee = IntegerField('Phí ship (VND)', validators=[InputRequired(message='Vui lòng nhập phí ship'), NumberRange(min=0, message='Phí ship không được âm')], default=11000)
+    paid_amount = IntegerField('Đã chuyển khoản (VND)', validators=[InputRequired(message='Vui lòng nhập tiền đã CK'), NumberRange(min=0, message='Tiền CK không được âm')], default=0)
+    # SHIP-02: tick = khách đã CK phí ship → COD không cộng phí ship.
+    shipping_paid = BooleanField('Đã chuyển khoản phí ship')
+    submit = SubmitField('Cập nhật')

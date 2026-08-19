@@ -42,9 +42,43 @@
         </table>
       </div>
       <div class="cart-total flex justify-between items-baseline py-4 border-t border-gray-200 mt-4">
-        <span class="cart-total-label text-sm font-semibold text-gray-500">Tổng cộng</span>
+        <span class="cart-total-label text-sm font-semibold text-gray-500">Tổng tiền hàng</span>
         <span class="cart-total-value text-3xl font-semibold text-accent">{{ _order_total(order) | format_price }}</span>
       </div>
+    </section>
+
+    {# SHIP-01: phí ship + tiền đã CK + COD còn lại (gồm/không gồm ship) #}
+    <section class="order-section border-t border-gray-200 pt-6 mt-6">
+      <h2 class="text-sm font-semibold mb-2 text-text">Ship & thanh toán</h2>
+      <dl class="order-meta grid grid-cols-[180px_1fr] gap-2">
+        <dt class="text-sm text-gray-500">Phí ship</dt><dd class="text-base font-mono text-text m-0">{{ _order_shipping(order) | format_price }}</dd>
+        <dt class="text-sm text-gray-500">Đã chuyển khoản</dt><dd class="text-base font-mono text-text m-0">{{ _order_paid(order) | format_price }}</dd>
+        <dt class="text-sm text-gray-500">Đã CK phí ship</dt><dd class="text-base text-text m-0">{{ 'Rồi' if _order_shipping_paid(order) else 'Chưa' }}</dd>
+        <dt class="text-sm text-gray-500">COD cần thu (gồm ship)</dt><dd class="text-base font-mono font-semibold text-accent m-0">{{ _order_cod_including_ship(order) | format_price }}</dd>
+        <dt class="text-sm text-gray-500">COD cần thu (không gồm ship)</dt><dd class="text-base font-mono text-text m-0">{{ _order_cod_excluding_ship(order) | format_price }}</dd>
+        <dt class="text-sm text-gray-500">COD cần thu (hiện hành)</dt><dd class="text-base font-mono font-semibold text-accent m-0">{{ _order_cod(order) | format_price }}</dd>
+      </dl>
+      <form method="post" action="{{ url_for('admin.update_order_payment', order_id=order.id) }}" class="payment-form mt-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="flex flex-wrap items-end gap-4">
+          <div class="form-field" style="margin:0; width:10rem">
+            <label for="shipping_paid" class="block text-sm font-medium text-text mb-1">Đã CK phí ship</label>
+            <label for="shipping_paid" class="checkbox-container" style="margin:0; display:inline-flex; align-items:center;">
+              <input type="checkbox" name="shipping_paid" value="y" id="shipping_paid" class="custom-checkbox" {% if _order_shipping_paid(order) %}checked{% endif %}>
+              <span class="checkmark"></span>
+            </label>
+          </div>
+          <div class="form-field" style="margin:0">
+            <label for="shipping_fee" class="block text-sm font-medium text-text mb-1">Phí ship (VND)</label>
+            <input type="number" id="shipping_fee" name="shipping_fee" min="0" step="1" value="{{ _order_shipping(order) }}" class="input w-40" required>
+          </div>
+          <div class="form-field" style="margin:0">
+            <label for="paid_amount" class="block text-sm font-medium text-text mb-1">Đã chuyển khoản (VND)</label>
+            <input type="number" id="paid_amount" name="paid_amount" min="0" step="1" value="{{ _order_paid(order) }}" class="input w-40" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Cập nhật</button>
+        </div>
+      </form>
     </section>
     <section class="order-section border-t border-gray-200 pt-6 mt-6">
       <h2 class="text-sm font-semibold mb-2 text-text">Hành động</h2>

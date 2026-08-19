@@ -104,6 +104,11 @@ class Order(db.Model):
     customer_address = db.Column(db.Text, nullable=False)
     customer_note = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default='Chờ xác nhận', nullable=False)  # VN label (decision); forward-only in Phase 7
+    # SHIP-01: phí ship (mặc định 11.000đ) + tiền khách đã chuyển khoản (COD tính từ đó).
+    shipping_fee = db.Column(db.Integer, default=11000, nullable=False)  # VND, Integer only (D-05)
+    paid_amount = db.Column(db.Integer, default=0, nullable=False)  # VND, Integer; tiền đã CK → tính COD còn lại
+    # SHIP-02: true = khách đã CK phí ship → COD không cộng phí ship.
+    shipping_paid = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
