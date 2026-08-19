@@ -5,7 +5,7 @@ from .db import db, resequence_product_ids
 from .forms import ProductForm, CategoryForm, OrderPaymentForm
 from .image_utils import delete_image_files, save_image_file, validate_image_upload
 from .models import Product, ProductImage, Order, OrderItem, Category
-from .services.categorize import merge_with_explicit
+from .services.categorize import auto_assign_products, merge_with_explicit
 
 admin_bp = Blueprint('admin', __name__, url_prefix='')
 
@@ -561,7 +561,9 @@ def new_category():
         db.session.add(cat)
         try:
             db.session.commit()
-            flash(f'Đã tạo danh mục “{cat.name}”.', 'success')
+            n = auto_assign_products(cat)
+            db.session.commit()
+            flash(f'Đã tạo danh mục “{cat.name}”.{(" Tự động gán " + str(n) + " sản phẩm khớp từ khóa.") if n else ""}', 'success')
         except Exception:
             db.session.rollback()
             flash('Tên danh mục đã tồn tại.', 'error')
@@ -593,7 +595,9 @@ def edit_category(category_id):
         cat.sort_order = form.sort_order.data or 0
         try:
             db.session.commit()
-            flash(f'Đã cập nhật danh mục “{cat.name}”.', 'success')
+            n = auto_assign_products(cat)
+            db.session.commit()
+            flash(f'Đã cập nhật danh mục “{cat.name}”.{(" Tự động gán " + str(n) + " sản phẩm khớp từ khóa.") if n else ""}', 'success')
         except Exception:
             db.session.rollback()
             flash('Tên danh mục đã tồn tại.', 'error')

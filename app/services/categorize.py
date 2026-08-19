@@ -42,6 +42,17 @@ def _keyword_match(keyword: str, text: str) -> bool:
     return False
 
 
+def _category_matches(category: Category, name_norm: str) -> bool:
+    """Category khớp tên sản phẩm (đã normalize) theo keywords CSV."""
+    if not category or not category.keywords:
+        return False
+    for kw in category.keywords.split(','):
+        kw_norm = normalize_search_text(kw.strip())
+        if kw_norm and _keyword_match(kw_norm, name_norm):
+            return True
+    return False
+
+
 def auto_classify(product: Product) -> list[Category]:
     """Compute which categories a product should belong to based on keyword match.
 
@@ -53,16 +64,23 @@ def auto_classify(product: Product) -> list[Category]:
 
     name_norm = normalize_search_text(product.name)
     cats = Category.query.all()
-    matched = []
-    for cat in cats:
-        if not cat.keywords:
-            continue
-        for kw in cat.keywords.split(','):
-            kw_norm = normalize_search_text(kw.strip())
-            if kw_norm and _keyword_match(kw_norm, name_norm):
-                matched.append(cat)
-                break
-    return matched
+    return [cat for cat in cats if _category_matches(cat, name_norm)]
+
+
+def auto_assign_products(category: Category) -> int:
+    """Gán category vào tất cả sản phẩm có tên khớp keywords (additive — không bỏ gán cũ).
+
+    Dùng khi tạo/sửa danh mục để back-fill sản phẩm đã có sẵn. Trả về số sản phẩm mới gán.
+    """
+    if category is None or not category.keywords:
+        return 0
+    count = 0
+    for product in Product.query.all():
+        name_norm = normalize_search_text(product.name)
+        if category not in product.categories and _category_matches(category, name_norm):
+            product.categories.append(category)
+            count += 1
+    return count
 
 
 def merge_with_explicit(product: Product, explicit_ids: list) -> list[Category]:
