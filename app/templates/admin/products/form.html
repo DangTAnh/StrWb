@@ -95,12 +95,14 @@
         </div>
 
         <div class="form-row-2">
-          <div class="form-field">
-            <span class="qty-label">
-              {{ form.quantity.label }}<span class="required" aria-hidden="true"> *</span>
-            </span>
-            {{ form.quantity(class="input", required=True, aria_required="true", min="0", step="1") }}
-            {% for error in form.quantity.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+          <div class="form-field checkbox-field">
+            <label class="checkbox-label">
+              <span class="checkbox-container" style="margin-bottom:0">
+                {{ form.in_stock(class="custom-checkbox") }}
+                <span class="checkmark"></span>
+              </span>
+              <span>{{ form.in_stock.label.text }}</span>
+            </label>
           </div>
           <div class="form-field checkbox-field">
             <label class="checkbox-label">

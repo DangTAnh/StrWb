@@ -393,6 +393,19 @@ def products():
     )
 
 
+@admin_bp.route('/products/<int:product_id>/in-stock', methods=['POST'])
+@login_required
+def toggle_in_stock(product_id):
+    """Bật/tắt trạng thái còn hàng ngay trên list (AJAX). Map sang quantity 1/0."""
+    product = db.session.get(Product, product_id)
+    if product is None:
+        return jsonify(success=False, error='Không tìm thấy sản phẩm.'), 404
+    in_stock = request.form.get('in_stock', '').lower() in ('1', 'true', 'on')
+    product.quantity = 1 if in_stock else 0
+    db.session.commit()
+    return jsonify(success=True, in_stock=product.quantity > 0, status=product.status)
+
+
 @admin_bp.route('/products/new', methods=['GET', 'POST'])
 def new_product():
     form = ProductForm()
@@ -417,7 +430,7 @@ def new_product():
             brand=form.brand.data or None,
             measurements=form.measurements.data or None,
             description=form.description.data or None,
-            quantity=form.quantity.data or 0,
+            quantity=1 if form.in_stock.data else 0,
             discontinued=form.discontinued.data,
             sku=raw_sku or None,
             sort_order=form.sort_order.data or 0,
@@ -452,8 +465,12 @@ def edit_product(product_id):
         flash('Không tìm thấy sản phẩm.', 'error')
         return redirect(url_for('admin.products'))
     form = ProductForm(obj=product)
+    if not form.is_submitted():
+        # GET: map quantity (>0 = còn) vào checkbox in_stock (field tên khác attr)
+        form.in_stock.data = (product.quantity or 0) > 0
     if form.validate_on_submit():
         form.populate_obj(product)
+        product.quantity = 1 if form.in_stock.data else 0
         if product.sort_order is None:
             product.sort_order = 0  # populate_obj writes None for empty Optional() -> NOT NULL violation; mirror new_product's `or 0`
         delete_ids = [int(x) for x in request.form.get('delete_images', '').split(',') if x.strip().lstrip('-').isdigit()]
