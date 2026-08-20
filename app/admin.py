@@ -13,6 +13,10 @@ ORDER_STATUSES = ('Chờ xác nhận', 'Đã xác nhận', 'Đã gói', 'Đã g�
 # STAT-01 locked: only shipped + received orders count toward revenue. Tuple (not set)
 # keeps iteration order deterministic for the IN-clause filter.
 REVENUE_STATUSES = ('Đã gửi', 'Đã nhận')
+# Phạm vi "đã xác nhận trở lên": doanh thu/lợi nhuận đã xác nhận + doanh thu đã nhận
+# đều lọc theo nhóm này. Tính ngược từ ORDER_STATUSES để tự cập nhật khi thêm status.
+CONFIRMED_STATUSES = ('Đã xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận')
+NON_CONFIRMED_STATUSES = tuple(s for s in ORDER_STATUSES if s not in CONFIRMED_STATUSES)
 
 # Forward-only status transition map (ORD-08, ORD-09).
 # Server-side single source of truth — never trust client-supplied next_status.
@@ -208,8 +212,6 @@ def stats():
     # (Đã xác nhận, Đã gói, Đã gửi, Đã nhận). Excludes Chờ xác nhận and Đã hủy.
     # Implemented as NOT IN to stay in sync with REVENUE_STATUSES growth — keeps the
     # two aggregates complementary (confirmed + pending/cancelled = total).
-    CONFIRMED_STATUSES = ('Đã xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận')
-    NON_CONFIRMED_STATUSES = tuple(s for s in ORDER_STATUSES if s not in CONFIRMED_STATUSES)
     confirmed_revenue = (
         db.session.query(db.func.coalesce(db.func.sum(OrderItem.product_price * OrderItem.quantity), 0))
         .join(Order, OrderItem.order_id == Order.id)
@@ -251,6 +253,16 @@ def stats():
     if total_qual_items - profit_items > 0:
         profit_note = f'Lợi nhuận tính trên {profit_items} sản phẩm có giá nhập.'
 
+    # Q4.5 — doanh thu đã nhận (tổng Đã CK): tổng tiền khách đã chuyển khoản cho
+    # các đơn đã xác nhận trở lên (Đã xác nhận, Đã gói, Đã gửi, Đã nhận). Loại trừ
+    # Chờ xác nhận + Đã hủy. Tính từ Order.paid_amount (không phải OrderItem) vì
+    # mỗi đơn có một cột thanh toán duy nhất.
+    received_revenue = (
+        db.session.query(db.func.coalesce(db.func.sum(Order.paid_amount), 0))
+        .filter(Order.status.notin_(NON_CONFIRMED_STATUSES))
+        .scalar()
+    )
+
     # Q4 — orders by status. Same group_by pattern as admin.orders() (Phase 7 line 133-135).
     # group_by omits statuses with zero orders (Pitfall 2): template MUST use
     # status_counts.get(s, 0), never subscript.
@@ -270,6 +282,7 @@ def stats():
         'admin/stats.html',
         revenue=revenue, profit=profit, profit_note=profit_note, units_sold=units_sold,
         confirmed_revenue=confirmed_revenue, confirmed_profit=confirmed_profit,
+        received_revenue=received_revenue,
         status_counts=status_counts, total_orders=total_orders,
         total_products=total_products, in_stock=in_stock, out_of_stock=out_of_stock, discontinued=discontinued
     )
