@@ -27,12 +27,12 @@
         <article class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
           <p class="stat-label text-sm text-gray-500">Doanh thu đã xác nhận</p>
           <p class="stat-value stat-value--display text-3xl font-semibold mt-1 text-accent">{{ confirmed_revenue | format_price }}</p>
-          <p class="stat-hint text-sm text-gray-500 mt-2">Chỉ tính đơn Đã xác nhận (chưa gửi).</p>
+          <p class="stat-hint text-sm text-gray-500 mt-2">Tính các đơn Đã xác nhận trở lên (Đã xác nhận, Đã gói, Đã gửi, Đã nhận). Loại trừ Chờ xác nhận và Đã hủy.</p>
         </article>
         <article class="stat-card bg-gray-50 border border-gray-200 rounded-lg p-4">
           <p class="stat-label text-sm text-gray-500">Lợi nhuận đã xác nhận</p>
           <p class="stat-value text-2xl font-semibold mt-1">{{ confirmed_profit | format_price }}</p>
-          <p class="stat-hint text-sm text-gray-500 mt-2">Doanh thu trừ giá nhập (chỉ đơn Đã xác nhận).</p>
+          <p class="stat-hint text-sm text-gray-500 mt-2">Doanh thu trừ giá nhập (các đơn Đã xác nhận trở lên).</p>
         </article>
       </div>
     </section>

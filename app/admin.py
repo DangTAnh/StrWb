@@ -204,12 +204,16 @@ def stats():
         .one()
     )
 
-    # Q1b — confirmed revenue: orders sitting at "Đã xác nhận" (not yet shipped).
-    # Same aggregate as Q1, filtered to the single confirmed status.
+    # Q1b — confirmed revenue: orders that have been confirmed by admin onward
+    # (Đã xác nhận, Đã gói, Đã gửi, Đã nhận). Excludes Chờ xác nhận and Đã hủy.
+    # Implemented as NOT IN to stay in sync with REVENUE_STATUSES growth — keeps the
+    # two aggregates complementary (confirmed + pending/cancelled = total).
+    CONFIRMED_STATUSES = ('Đã xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận')
+    NON_CONFIRMED_STATUSES = tuple(s for s in ORDER_STATUSES if s not in CONFIRMED_STATUSES)
     confirmed_revenue = (
         db.session.query(db.func.coalesce(db.func.sum(OrderItem.product_price * OrderItem.quantity), 0))
         .join(Order, OrderItem.order_id == Order.id)
-        .filter(Order.status == 'Đã xác nhận')
+        .filter(Order.status.notin_(NON_CONFIRMED_STATUSES))
         .scalar()
     )
 
@@ -225,12 +229,14 @@ def stats():
         .one()
     )
 
-    # Q2b — confirmed profit: same aggregate as Q2, but filtered to "Đã xác nhận" orders only.
-    # NULL cost items excluded (same STAT-02 rule) — never treated as 0.
+    # Q2b — confirmed profit: same aggregate as Q2, but restricted to orders that have
+    # been confirmed by admin onward (Đã xác nhận, Đã gói, Đã gửi, Đã nhận). Excludes
+    # Chờ xác nhận and Đã hủy. NULL cost items excluded (same STAT-02 rule) — never
+    # treated as 0.
     confirmed_profit = (
         db.session.query(db.func.coalesce(db.func.sum((OrderItem.product_price - OrderItem.product_cost_price) * OrderItem.quantity), 0))
         .join(Order, OrderItem.order_id == Order.id)
-        .filter(Order.status == 'Đã xác nhận', OrderItem.product_cost_price.isnot(None))
+        .filter(Order.status.notin_(NON_CONFIRMED_STATUSES), OrderItem.product_cost_price.isnot(None))
         .scalar()
     )
 
