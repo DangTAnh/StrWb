@@ -4,8 +4,8 @@ milestone: v1.2
 milestone_name: milestone
 status: Defining roadmap
 stopped_at: context exhaustion at 75% (2026-08-08)
-last_updated: "2026-08-08T17:55:56.999Z"
-last_activity: "2026-08-04 — Completed quick task 260804-2iv: chỉnh layout header (drop brand, nav left of search)"
+last_updated: "2026-08-24T08:04:32.225Z"
+last_activity: "2026-08-24 — Completed quick task 260824-kxs: thiết kế lại toàn bộ web UI (loại bỏ Tailwind, design system \"Đất nung\" thuần CSS)"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 Phase: Phase 10 (not started)
 Plan: TBD
 Status: Defining roadmap
-Last activity: 2026-08-04 — Completed quick task 260804-2iv: chỉnh layout header (drop brand, nav left of search)
+Last activity: 2026-08-24 — Completed quick task 260824-kxs: thiết kế lại toàn bộ web UI (loại bỏ Tailwind, design system "Đất nung" thuần CSS)
 
 ## Performance Metrics
 
@@ -83,6 +83,7 @@ None yet.
 | 260803-w8p | sửa lại thành web internal cho admin (cửa hàng → quản lí hàng) | 2026-08-03 | e982481 | [260803-w8p-s-a-l-i-th-nh-web-internal-cho-admin-ch-](./quick/260803-w8p-s-a-l-i-th-nh-web-internal-cho-admin-ch-/) |
 | 260804-10g | bỏ /admin prefix + nav/logout header wiring | 2026-08-04 | 3fa4b7a, eeefb1a | [260804-10g-b-ti-n-t-admin-kh-i-c-c-route-admin-admi](./quick/260804-10g-b-ti-n-t-admin-kh-i-c-c-route-admin-admi/) |
 | 260804-2iv | chỉnh layout header: bỏ brand, nav trái thanh tìm kiếm | 2026-08-04 | bd3bd0d | [260804-2iv-ch-nh-layout-header-b-n-t-qu-n-l-h-ng-ch](./quick/260804-2iv-ch-nh-layout-header-b-n-t-qu-n-l-h-ng-ch/) |
+| 260824-kxs | Thiết kế lại toàn bộ web UI thành một chỉnh thể thống nhất (HTML + CSS), loại bỏ Tailwind | 2026-08-24 | 355ffb3, 986e6d7, b5047c3 | [260824-kxs-thi-t-k-l-i-to-n-b-web-ui-th-nh-m-t-ch-n](./quick/260824-kxs-thi-t-k-l-i-to-n-b-web-ui-th-nh-m-t-ch-n/) |
 
 ## Deferred Items
 
