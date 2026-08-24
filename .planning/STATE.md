@@ -4,8 +4,8 @@ milestone: v1.2
 milestone_name: milestone
 status: Defining roadmap
 stopped_at: context exhaustion at 75% (2026-08-08)
-last_updated: "2026-08-24T09:30:00.000Z"
-last_activity: "2026-08-24 — Completed quick tasks 260824-nof + 260824-nxr: product card đều cao, nav bar desktop 1 dòng"
+last_updated: "2026-08-24T15:55:00.000Z"
+last_activity: "2026-08-24 — Completed quick task 260824-v9m: sửa xlsx export (file mở được bằng Excel, đúng mẫu 30 cột Viettel Post)"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 Phase: Phase 10 (not started)
 Plan: TBD
 Status: Defining roadmap
-Last activity: 2026-08-24 — Completed quick tasks 260824-nof + 260824-nxr: product card đều cao, nav bar desktop 1 dòng
+Last activity: 2026-08-24 — Completed quick task 260824-v9m: sửa xlsx export (file mở được bằng Excel, đúng mẫu 30 cột Viettel Post)
 
 ## Performance Metrics
 
@@ -87,6 +87,7 @@ None yet.
 | 260824-n6i | Fix bug lọc đơn hàng AJAX: selector .admin-card không khớp wrapper admin-card--wide | 2026-08-24 | dd704cb | [260824-n6i-fix-bug-loc-don-hang-ajax-selector-admin](./quick/260824-n6i-fix-bug-loc-don-hang-ajax-selector-admin/) |
 | 260824-nof | Product card không đều cao: card hết hàng thấp hơn, nút Sửa rơi khỏi mép card | 2026-08-24 | 4267a98 | [260824-nof-product-card-khong-deu-cao-card-het-hang](./quick/260824-nof-product-card-khong-deu-cao-card-het-hang/) |
 | 260824-nxr | Sửa nav bar desktop: ẩn nút Tìm kiếm mobile-only, bỏ trùng Giỏ hàng/Đăng xuất → nav 1 dòng | 2026-08-24 | 4267a98 | [260824-nxr-sua-nav-bar-desktop-an-nut-tim-kiem-bi-t](./quick/260824-nxr-sua-nav-bar-desktop-an-nut-tim-kiem-bi-t/) |
+| 260824-v9m | Sửa xlsx export: file mở được bằng Excel + đúng mẫu 30 cột tạo đơn Viettel Post | 2026-08-24 | 2ec2f86 | [260824-v9m-sua-xlsx-export-file-excel-xuat-ra-bi-lo](./quick/260824-v9m-sua-xlsx-export-file-excel-xuat-ra-bi-lo/) |
 
 ## Deferred Items
 
