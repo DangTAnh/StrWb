@@ -1,131 +1,150 @@
 {% extends "admin/base.html" %}
 {% block content %}
-<div class="admin-page max-w-7xl mx-auto px-4 py-6">
-  <a class="back-link inline-block mb-4 text-sm text-accent hover:text-blue-700" href="{{ url_for('admin.orders') }}">← Quay lại</a>
-  <div class="admin-header flex items-center justify-between mb-4">
-    <h1 class="text-2xl font-semibold text-text">Đơn #{{ order.id }}</h1>
+<div class="admin-page">
+  <a class="back-link" href="{{ url_for('admin.orders') }}">← Quay lại</a>
+  <div class="admin-header">
+    <h1>Đơn #{{ order.id }}</h1>
     <span class="badge {{ order_badge_class(order.status) }}">{{ order.status }}</span>
   </div>
-  <div class="admin-card bg-card rounded-lg shadow p-6">
-    <section class="order-section border-t border-gray-200 pt-6 mt-6">
-      <h2 class="text-sm font-semibold mb-2 text-text">Thông tin khách</h2>
-      <dl class="order-meta grid grid-cols-[120px_1fr] gap-2">
-        <dt class="text-sm text-gray-500">Họ và tên</dt><dd class="text-base text-text m-0">{{ order.customer_name }}</dd>
-        <dt class="text-sm text-gray-500">Số điện thoại</dt><dd class="text-base text-text m-0">{{ order.customer_phone }}</dd>
-        <dt class="text-sm text-gray-500">Địa chỉ</dt><dd class="text-base text-text m-0">{{ order.customer_address }}</dd>
-        {% if order.customer_note %}<dt class="text-sm text-gray-500">Ghi chú</dt><dd class="text-base text-text m-0">{{ order.customer_note }}</dd>{% endif %}
+  <div class="admin-card">
+    <section class="order-section">
+      <h2>Thông tin khách</h2>
+      <dl class="order-meta">
+        <dt>Họ và tên</dt><dd>{{ order.customer_name }}</dd>
+        <dt>Số điện thoại</dt><dd>{{ order.customer_phone }}</dd>
+        <dt>Địa chỉ</dt><dd>{{ order.customer_address }}</dd>
+        {% if order.customer_note %}<dt>Ghi chú</dt><dd>{{ order.customer_note }}</dd>{% endif %}
       </dl>
     </section>
-    <section class="order-section border-t border-gray-200 pt-6 mt-6">
-      <h2 class="text-sm font-semibold mb-2 text-text">Sản phẩm</h2>
-      <div class="table-scroll overflow-x-auto">
-        <table class="data-table w-full border-collapse">
+    <section class="order-section">
+      <h2>Sản phẩm</h2>
+      <div class="table-scroll">
+        <table class="data-table">
           <caption class="visually-hidden">Sản phẩm trong đơn</caption>
           <thead>
             <tr>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">Sản phẩm</th>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-center">Số lượng</th>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Đơn giá</th>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Thành tiền</th>
+              <th scope="col">Sản phẩm</th>
+              <th scope="col" class="text-center">Số lượng</th>
+              <th scope="col" class="text-right">Đơn giá</th>
+              <th scope="col" class="text-right">Thành tiền</th>
             </tr>
           </thead>
           <tbody>
             {% for item in order.items %}
-            <tr class="border-b border-gray-200">
-              <td class="py-2 px-4">{{ item.product_name }}</td>
-              <td class="py-2 px-4 text-center">{{ item.quantity }}</td>
-              <td class="unit-price py-2 px-4 font-mono text-right">{{ item.product_price | format_price }}</td>
-              <td class="line-total py-2 px-4 font-mono text-right">{{ (item.product_price * item.quantity) | format_price }}</td>
+            <tr>
+              <td>{{ item.product_name }}</td>
+              <td class="text-center">{{ item.quantity }}</td>
+              <td class="unit-price">{{ item.product_price | format_price }}</td>
+              <td class="line-total">{{ (item.product_price * item.quantity) | format_price }}</td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-      <div class="cart-total flex justify-between items-baseline py-4 border-t border-gray-200 mt-4">
-        <span class="cart-total-label text-sm font-semibold text-gray-500">Tổng tiền hàng</span>
-        <span class="cart-total-value text-3xl font-semibold text-accent">{{ _order_total(order) | format_price }}</span>
+      <div class="cart-total">
+        <span class="cart-total-label">Tổng tiền hàng</span>
+        <span class="cart-total-value">{{ _order_total(order) | format_price }}</span>
       </div>
     </section>
 
     {# SHIP-01: phí ship + tiền đã CK + COD còn lại (gồm/không gồm ship) #}
-    <section class="order-section border-t border-gray-200 pt-6 mt-6">
-      <h2 class="text-sm font-semibold mb-2 text-text">Ship & thanh toán</h2>
-      <dl class="order-meta grid grid-cols-[180px_1fr] gap-2">
-        <dt class="text-sm text-gray-500">Phí ship</dt><dd class="text-base font-mono text-text m-0">{{ _order_shipping(order) | format_price }}</dd>
-        <dt class="text-sm text-gray-500">Đã chuyển khoản</dt><dd class="text-base font-mono text-text m-0">{{ _order_paid(order) | format_price }}</dd>
-        <dt class="text-sm text-gray-500">Đã CK phí ship</dt><dd class="text-base text-text m-0">{{ 'Rồi' if _order_shipping_paid(order) else 'Chưa' }}</dd>
-        <dt class="text-sm text-gray-500">COD cần thu (gồm ship)</dt><dd class="text-base font-mono font-semibold text-accent m-0">{{ _order_cod_including_ship(order) | format_price }}</dd>
-        <dt class="text-sm text-gray-500">COD cần thu (không gồm ship)</dt><dd class="text-base font-mono text-text m-0">{{ _order_cod_excluding_ship(order) | format_price }}</dd>
-        <dt class="text-sm text-gray-500">COD cần thu (hiện hành)</dt><dd class="text-base font-mono font-semibold text-accent m-0">{{ _order_cod(order) | format_price }}</dd>
+    <section class="order-section">
+      <h2>Ship & thanh toán</h2>
+      <dl class="order-meta order-meta-wide">
+        <dt>Phí ship</dt><dd class="mono">{{ _order_shipping(order) | format_price }}</dd>
+        <dt>Đã chuyển khoản</dt><dd class="mono">{{ _order_paid(order) | format_price }}</dd>
+        <dt>Đã CK phí ship</dt><dd>{{ 'Rồi' if _order_shipping_paid(order) else 'Chưa' }}</dd>
+        <dt>COD cần thu (gồm ship)</dt><dd class="mono cod-cell-inline">{{ _order_cod_including_ship(order) | format_price }}</dd>
+        <dt>COD cần thu (không gồm ship)</dt><dd class="mono">{{ _order_cod_excluding_ship(order) | format_price }}</dd>
+        <dt>COD cần thu (hiện hành)</dt><dd class="mono cod-cell-inline">{{ _order_cod(order) | format_price }}</dd>
       </dl>
-      <form method="post" action="{{ url_for('admin.update_order_payment', order_id=order.id) }}" class="payment-form mt-4">
+      <form method="post" action="{{ url_for('admin.update_order_payment', order_id=order.id) }}" class="payment-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="flex flex-wrap items-end gap-4">
+        <div class="payment-row">
           <div class="form-field" style="margin:0; width:10rem">
-            <label for="shipping_paid" class="block text-sm font-medium text-text mb-1">Đã CK phí ship</label>
-            <label for="shipping_paid" class="checkbox-container" style="margin:0; display:inline-flex; align-items:center;">
+            <label for="shipping_paid">Đã CK phí ship</label>
+            <label for="shipping_paid" class="checkbox-container checkbox-label" style="margin:0">
               <input type="checkbox" name="shipping_paid" value="y" id="shipping_paid" class="custom-checkbox" {% if _order_shipping_paid(order) %}checked{% endif %}>
               <span class="checkmark"></span>
             </label>
           </div>
           <div class="form-field" style="margin:0">
-            <label for="shipping_fee" class="block text-sm font-medium text-text mb-1">Phí ship (VND)</label>
-            <input type="number" id="shipping_fee" name="shipping_fee" min="0" step="1" value="{{ _order_shipping(order) }}" class="input w-40" required>
+            <label for="shipping_fee">Phí ship (VND)</label>
+            <input type="number" id="shipping_fee" name="shipping_fee" min="0" step="1" value="{{ _order_shipping(order) }}" class="input input-narrow" required>
           </div>
           <div class="form-field" style="margin:0">
-            <label for="paid_amount" class="block text-sm font-medium text-text mb-1">Đã chuyển khoản (VND)</label>
-            <input type="number" id="paid_amount" name="paid_amount" min="0" step="1" value="{{ _order_paid(order) }}" class="input w-40" required>
+            <label for="paid_amount">Đã chuyển khoản (VND)</label>
+            <input type="number" id="paid_amount" name="paid_amount" min="0" step="1" value="{{ _order_paid(order) }}" class="input input-narrow" required>
           </div>
           <button type="submit" class="btn btn-primary">Cập nhật</button>
         </div>
       </form>
     </section>
-    <section class="order-section border-t border-gray-200 pt-6 mt-6">
-      <h2 class="text-sm font-semibold mb-2 text-text">Hành động</h2>
-      <div class="action-row">
+    <section class="order-section">
+      <h2>Hành động</h2>
+      <div class="action-row" style="margin-top:0">
         <a href="{{ url_for('admin.delete_order', order_id=order.id) }}" class="btn btn-danger btn-sm">Xóa đơn hàng</a>
       </div>
     </section>
 
-    <section class="order-section border-t border-gray-200 pt-6 mt-6">
-      <h2 class="text-sm font-semibold mb-2 text-text">Thời gian</h2>
-      <dl class="order-meta grid grid-cols-[120px_1fr] gap-2">
-        <dt class="text-sm text-gray-500">Ngày tạo</dt><dd class="text-base text-text m-0">{{ order.created_at | strftime('%d/%m/%Y %H:%M') }}</dd>
-        <dt class="text-sm text-gray-500">Cập nhật</dt><dd class="text-base text-text m-0">{{ order.updated_at | strftime('%d/%m/%Y %H:%M') }}</dd>
+    <section class="order-section">
+      <h2>Thông tin gửi hàng (xuất Excel)</h2>
+      <dl class="order-meta">
+        <dt>Tổng cân nặng (KG)</dt><dd>{{ order.total_weight or '—' }}</dd>
+        <dt>Cho phép thử</dt><dd>{{ 'Có' if order.allow_try else 'Không' }}</dd>
+        <dt>Cho xem, không thử</dt><dd>{{ 'Có' if order.allow_view_only else 'Không' }}</dd>
+      </dl>
+      <form method="post" action="{{ url_for('admin.update_order_export_fields', order_id=order.id) }}" class="payment-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="payment-row">
+          <div class="form-field" style="margin:0; width:8rem">
+            <label for="total_weight">Cân nặng (KG)</label>
+            <input type="number" id="total_weight" name="total_weight" min="0" step="0.01" value="{{ order.total_weight or 1 }}" class="input" required>
+          </div>
+          <label class="checkbox-container checkbox-label" style="margin:0">
+            <input type="checkbox" name="allow_try" value="y" class="custom-checkbox" {% if order.allow_try %}checked{% endif %}>
+            <span class="checkmark"></span>
+            <span>Cho phép thử</span>
+          </label>
+          <label class="checkbox-container checkbox-label" style="margin:0">
+            <input type="checkbox" name="allow_view_only" value="y" class="custom-checkbox" {% if order.allow_view_only %}checked{% endif %}>
+            <span class="checkmark"></span>
+            <span>Cho xem, không thử</span>
+          </label>
+          <button type="submit" class="btn btn-primary btn-sm">Lưu</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="order-section">
+      <h2>Thời gian</h2>
+      <dl class="order-meta">
+        <dt>Ngày tạo</dt><dd>{{ order.created_at | strftime('%d/%m/%Y %H:%M') }}</dd>
+        <dt>Cập nhật</dt><dd>{{ order.updated_at | strftime('%d/%m/%Y %H:%M') }}</dd>
       </dl>
     </section>
 
-    <section class="order-section border-t border-gray-200 pt-6 mt-6">
-      <h2 class="text-sm font-semibold mb-2 text-text">Cập nhật trạng thái</h2>
+    <section class="order-section">
+      <h2>Cập nhật trạng thái</h2>
       {% if order.status == 'Đã hủy' %}
-        <p class="order-terminal text-gray-500">Đơn đã bị hủy.</p>
+        <p class="order-terminal">Đơn đã bị hủy.</p>
       {% elif order.status == 'Đã nhận' %}
-        <ol class="order-progress flex items-center gap-2 m-0 pb-8 overflow-x-auto">
-          <li class="flex items-center gap-2 relative text-sm text-green-600 whitespace-nowrap is-done">
-            <span class="dot w-3 h-3 rounded-full bg-success flex-shrink-0"></span>Chờ xác nhận
-          </li>
-          <li class="flex items-center gap-2 relative text-sm text-green-600 whitespace-nowrap is-done">
-            <span class="dot w-3 h-3 rounded-full bg-success flex-shrink-0"></span>Đã xác nhận
-          </li>
-          <li class="flex items-center gap-2 relative text-sm text-green-600 whitespace-nowrap is-done">
-            <span class="dot w-3 h-3 rounded-full bg-success flex-shrink-0"></span>Đã gói
-          </li>
-          <li class="flex items-center gap-2 relative text-sm text-green-600 whitespace-nowrap is-done">
-            <span class="dot w-3 h-3 rounded-full bg-success flex-shrink-0"></span>Đã gửi
-          </li>
-          <li class="flex items-center gap-2 relative text-sm text-green-600 whitespace-nowrap is-done">
-            <span class="dot w-3 h-3 rounded-full bg-success flex-shrink-0"></span>Đã nhận
-          </li>
+        <ol class="order-progress">
+          <li class="is-done"><span class="dot"></span>Chờ xác nhận</li>
+          <li class="is-done"><span class="dot"></span>Đã xác nhận</li>
+          <li class="is-done"><span class="dot"></span>Đã gói</li>
+          <li class="is-done"><span class="dot"></span>Đã gửi</li>
+          <li class="is-done"><span class="dot"></span>Đã nhận</li>
         </ol>
-        <p class="order-terminal text-gray-500">Đơn đã hoàn thành.</p>
+        <p class="order-terminal">Đơn đã hoàn thành.</p>
       {% else %}
-        <ol class="order-progress flex items-center gap-2 m-0 pb-8 overflow-x-auto">
+        <ol class="order-progress">
           {% set flow = ['Chờ xác nhận', 'Đã xác nhận', 'Đã gói', 'Đã gửi', 'Đã nhận'] %}
           {% for s in flow %}
-          <li {% if s == order.status %}class="flex items-center gap-2 relative text-sm text-text font-semibold is-current" aria-current="step"{% elif loop.index0 < flow.index(order.status) %}class="flex items-center gap-2 relative text-sm text-gray-500 is-done"{% else %}class="flex items-center gap-2 relative text-sm text-gray-500"{% endif %}><span class="dot w-3 h-3 rounded-full bg-border flex-shrink-0"></span>{{ s }}</li>
+          <li {% if s == order.status %}class="is-current" aria-current="step"{% elif loop.index0 < flow.index(order.status) %}class="is-done"{% endif %}><span class="dot"></span>{{ s }}</li>
           {% endfor %}
         </ol>
-        <div class="action-row flex items-center gap-4 mt-6">
+        <div class="action-row">
           {% if order.status == 'Chờ xác nhận' %}
             <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.id) }}" class="inline-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

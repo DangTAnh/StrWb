@@ -1,13 +1,13 @@
 {% extends "admin/base.html" %}
 {% from "_pagination.html" import pagination_nav %}
 {% block content %}
-<div class="admin-page max-w-7xl mx-auto px-4 py-6">
-  <div class="admin-header flex justify-between items-center mb-4">
-    <h1 class="text-2xl font-semibold text-text">Đơn hàng</h1>
+<div class="admin-page">
+  <div class="admin-header">
+    <h1>Đơn hàng</h1>
   </div>
-  <div class="order-filter flex items-center gap-4 mb-4">
+  <div class="order-filter">
     <label class="visually-hidden" for="status-filter">Lọc theo trạng thái</label>
-    <select id="status-filter" name="status" class="order-filter-native h-11 px-3 border border-border rounded-lg text-base bg-white">
+    <select id="status-filter" name="status" class="order-filter-native">
       <option value="">Tất cả ({{ total_orders }})</option>
       {% for s in order_statuses %}
       <option value="{{ s }}" {% if current_status == s %}selected{% endif %}>{{ s }} ({{ status_counts.get(s, 0) }})</option>
@@ -38,42 +38,43 @@
         {% endfor %}
       </div>
     </div>
+    <a href="{{ url_for('admin.export_orders_xlsx') }}?status={{ current_status or '' }}" class="btn btn-secondary btn-sm" target="_blank">Xuất Excel (.xlsx)</a>
   </div>
-  <div class="admin-card--wide bg-card rounded-lg shadow overflow-hidden">
+  <div class="admin-card--wide">
     {% if orders %}
-    <div class="table-scroll overflow-x-auto">
-      <table class="data-table w-full border-collapse">
+    <div class="table-scroll">
+      <table class="data-table">
         <caption class="visually-hidden">Danh sách đơn hàng</caption>
         <thead>
           <tr>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">ID</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">Khách hàng</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Tổng tiền</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-center">Đã CK ship</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Phí ship</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">Đã CK</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-right">COD cần thu</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">Trạng thái</th>
-            <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500 text-left">Ngày tạo</th>
+            <th scope="col">ID</th>
+            <th scope="col">Khách hàng</th>
+            <th scope="col" class="text-right">Tổng tiền</th>
+            <th scope="col" class="text-center">Đã CK ship</th>
+            <th scope="col" class="text-right">Phí ship</th>
+            <th scope="col" class="text-right">Đã CK</th>
+            <th scope="col" class="text-right">COD cần thu</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Ngày tạo</th>
           </tr>
         </thead>
         <tbody>
           {% for order in orders %}
-          <tr class="border-b border-gray-200" data-order-id="{{ order.id }}">
-            <td class="py-2 px-4"><a class="order-id text-accent hover:text-blue-700 font-medium" href="{{ url_for('admin.order_detail', order_id=order.id) }}">#{{ order.id }}</a></td>
-            <td class="py-2 px-4">{{ order.customer_name }}</td>
-            <td class="price-cell py-2 px-4 font-mono text-right">{{ _order_total(order) | format_price }}</td>
-            <td class="py-2 px-4 text-center">
+          <tr data-order-id="{{ order.id }}">
+            <td><a class="order-id link-accent" href="{{ url_for('admin.order_detail', order_id=order.id) }}">#{{ order.id }}</a></td>
+            <td>{{ order.customer_name }}</td>
+            <td class="price-cell">{{ _order_total(order) | format_price }}</td>
+            <td class="text-center">
               <label class="checkbox-container" style="margin:0">
                 <input type="checkbox" class="custom-checkbox pay-ship-paid" data-order-id="{{ order.id }}" {% if _order_shipping_paid(order) %}checked{% endif %} aria-label="Đã CK phí ship đơn #{{ order.id }}">
                 <span class="checkmark"></span>
               </label>
             </td>
-            <td class="py-2 px-4 text-right"><input type="number" min="0" step="1" value="{{ _order_shipping(order) }}" class="pay-input pay-ship text-right" data-order-id="{{ order.id }}" aria-label="Phí ship đơn #{{ order.id }}"></td>
-            <td class="py-2 px-4 text-right"><input type="number" min="0" step="1" value="{{ _order_paid(order) }}" class="pay-input pay-paid text-right" data-order-id="{{ order.id }}" aria-label="Đã CK đơn #{{ order.id }}"></td>
-            <td class="cod-cell py-2 px-4 font-mono text-right font-semibold text-accent">{{ _order_cod(order) | format_price }}</td>
-            <td class="status-cell py-2 px-4">
-              <div class="status-inline flex flex-wrap items-center gap-2">
+            <td class="text-right"><input type="number" min="0" step="1" value="{{ _order_shipping(order) }}" class="pay-input pay-ship" data-order-id="{{ order.id }}" aria-label="Phí ship đơn #{{ order.id }}"></td>
+            <td class="text-right"><input type="number" min="0" step="1" value="{{ _order_paid(order) }}" class="pay-input pay-paid" data-order-id="{{ order.id }}" aria-label="Đã CK đơn #{{ order.id }}"></td>
+            <td class="cod-cell">{{ _order_cod(order) | format_price }}</td>
+            <td class="status-cell">
+              <div class="status-inline">
                 <span class="badge {{ order_badge_class(order.status) }}">{{ order.status }}</span>
                 {% set nexts = order_next_transitions(order.status) %}
                 {% if nexts %}
@@ -87,7 +88,7 @@
                 {% endif %}
               </div>
             </td>
-            <td class="qty-muted py-2 px-4 text-gray-500">{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+            <td class="qty-muted">{{ order.created_at.strftime('%d/%m/%Y') }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -95,13 +96,13 @@
     </div>
     {{ pagination_nav(pagination, 'admin.orders', kwargs={'status': current_status or None}) }}
     {% else %}
-    <div class="empty-state flex flex-col items-center gap-4 p-8 text-center">
+    <div class="empty-state">
       {% if current_status %}
-      <h2 class="text-base font-semibold text-text">Không có đơn nào ở trạng thái "{{ current_status }}"</h2>
-      <p class="text-gray-500">Thử chọn trạng thái khác hoặc chọn "Tất cả".</p>
+      <h2>Không có đơn nào ở trạng thái "{{ current_status }}"</h2>
+      <p>Thử chọn trạng thái khác hoặc chọn "Tất cả".</p>
       {% else %}
-      <h2 class="text-base font-semibold text-text">Chưa có đơn nào</h2>
-      <p class="text-gray-500">Khách đặt hàng qua web sẽ hiện ở đây.</p>
+      <h2>Chưa có đơn nào</h2>
+      <p>Khách đặt hàng qua web sẽ hiện ở đây.</p>
       {% endif %}
     </div>
     {% endif %}
@@ -113,7 +114,7 @@ document.querySelectorAll('[data-select-root]').forEach(function (root) {
   var toggle = root.querySelector('[data-select-toggle]');
   var label = root.querySelector('.custom-select__label');
   var options = root.querySelectorAll('.custom-select__option');
-  
+
   if (!toggle || !label) return;
 
   function closeDropdown() {
@@ -135,7 +136,7 @@ document.querySelectorAll('[data-select-root]').forEach(function (root) {
 
   function loadFilteredOrders(statusValue) {
     var url = '/orders?status=' + encodeURIComponent(statusValue) + '&ajax=1';
-    
+
     fetch(url, {
       method: 'GET',
       headers: {

@@ -1,18 +1,18 @@
 {% extends "admin/base.html" %}
 {% block content %}
-<div class="admin-page max-w-7xl mx-auto px-4">
-  <div class="max-w-lg mx-auto bg-card rounded-lg shadow p-8">
-    <h1 class="text-2xl font-semibold text-text mb-4">Xóa sản phẩm</h1>
-    <p class="text-gray-600 mb-4">Bạn có chắc muốn xóa sản phẩm "<strong class="text-text">{{ product.name }}</strong>"?</p>
+<div class="admin-page">
+  <div class="card narrow-card">
+    <h1>Xóa sản phẩm</h1>
+    <p>Bạn có chắc muốn xóa sản phẩm "<strong>{{ product.name }}</strong>"?</p>
     {% if product.images.count() > 0 %}
-    <p class="text-gray-600 mb-4">Sản phẩm có {{ product.images.count() }} ảnh và sẽ bị xóa cùng.</p>
+    <p>Sản phẩm có {{ product.images.count() }} ảnh và sẽ bị xóa cùng.</p>
     {% endif %}
-    <p class="text-destructive font-semibold mb-6">Hành động này không thể hoàn tác.</p>
-    <div class="flex gap-4">
-      <a class="btn btn-secondary flex-1" href="{{ url_for('admin.products') }}">Hủy</a>
-      <form method="post" action="{{ url_for('admin.delete_product', product_id=product.id) }}" class="flex-1">
+    <p class="link-danger">Hành động này không thể hoàn tác.</p>
+    <div class="action-row">
+      <a class="btn btn-secondary" href="{{ url_for('admin.products') }}">Hủy</a>
+      <form method="post" action="{{ url_for('admin.delete_product', product_id=product.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-danger w-full">Xóa sản phẩm</button>
+        <button type="submit" class="btn btn-danger">Xóa sản phẩm</button>
       </form>
     </div>
   </div>

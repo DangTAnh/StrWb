@@ -5,8 +5,8 @@
     <h1>{% if is_new %}Thêm sản phẩm{% else %}Sửa sản phẩm{% endif %}</h1>
     {{ form.hidden_tag() }}
     {% if form.errors %}
-    <div class="flash-zone mb-4">
-      <div class="flash px-4 py-2 rounded text-sm text-red-700 bg-red-50 border border-red-200">Vui lòng kiểm tra lại các trường nhập.</div>
+    <div class="flash-zone">
+      <div class="alert alert-error">Vui lòng kiểm tra lại các trường nhập.</div>
     </div>
     {% endif %}
 
@@ -148,29 +148,29 @@
       </button>
       <div class="collapse-body">
         {% if categories %}
-        <p class="help-text mb-3">Tick để gán sản phẩm vào danh mục. Bỏ tick để bỏ gán. Hệ thống cũng tự động gán theo từ khóa của từng danh mục.</p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <p class="help-text">Tick để gán sản phẩm vào danh mục. Bỏ tick để bỏ gán. Hệ thống cũng tự động gán theo từ khóa của từng danh mục.</p>
+        <div class="category-grid">
           {% set assigned_ids = (product.categories | map(attribute='id') | list) if product else [] %}
           {% for c in categories %}
-          <label class="flex items-start gap-2 p-2 border border-border rounded cursor-pointer hover:bg-gray-50">
+          <label class="category-check">
             <span class="checkbox-container" style="margin-bottom:0">
               <input type="checkbox" name="category_ids" value="{{ c.id }}"
                      {% if c.id in assigned_ids %}checked{% endif %}
                      class="custom-checkbox" aria-label="Danh mục {{ c.name }}">
               <span class="checkmark"></span>
             </span>
-            <span class="text-sm">
-              <span class="font-semibold text-text">{{ c.name }}</span>
+            <span>
+              <span class="cat-name">{{ c.name }}</span>
               {% if c.keywords %}
-              <span class="block text-xs text-gray-500 mt-0.5">{{ c.keywords | truncate(40) }}</span>
+              <span class="cat-keywords">{{ c.keywords | truncate(40) }}</span>
               {% endif %}
             </span>
           </label>
           {% endfor %}
         </div>
-        <p class="mt-3"><a class="text-accent hover:underline text-sm" href="{{ url_for('admin.categories') }}" target="_blank">+ Quản lý danh mục</a></p>
+        <p><a class="link-accent" href="{{ url_for('admin.categories') }}" target="_blank">+ Quản lý danh mục</a></p>
         {% else %}
-        <p class="help-text">Chưa có danh mục nào. <a class="text-accent hover:underline" href="{{ url_for('admin.categories') }}" target="_blank">Tạo danh mục</a> trước khi gán.</p>
+        <p class="help-text">Chưa có danh mục nào. <a class="link-accent" href="{{ url_for('admin.categories') }}" target="_blank">Tạo danh mục</a> trước khi gán.</p>
         {% endif %}
       </div>
     </div>
