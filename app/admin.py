@@ -2,7 +2,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from flask_login import login_required
 
 from .db import db, resequence_product_ids
-from .forms import ProductForm, CategoryForm, OrderPaymentForm
+from .forms import ProductForm, CategoryForm, OrderPaymentForm, OrderExportFieldsForm
 from .image_utils import delete_image_files, save_image_file, validate_image_upload
 from .models import Product, ProductImage, Order, OrderItem, Category
 from .services.categorize import auto_assign_products, merge_with_explicit
@@ -393,6 +393,57 @@ def update_order_payment(order_id):
             return jsonify(success=False, error='Giá trị phí ship/CK không hợp lệ.'), 400
         flash('Giá trị phí ship/CK không hợp lệ.', 'error')
     return redirect(url_for('admin.order_detail', order_id=order.id))
+
+
+@admin_bp.route('/orders/<int:order_id>/export-fields', methods=['POST'])
+def update_order_export_fields(order_id):
+    """EXPORT-01: cập nhật 3 trường bắt buộc cho mẫu xuất Excel (cân nặng + 2 checkbox)."""
+    order = db.session.get(Order, order_id)
+    if order is None:
+        flash('Không tìm thấy đơn.', 'error')
+        return redirect(url_for('admin.orders'))
+    form = OrderExportFieldsForm()
+    if form.validate_on_submit():
+        order.total_weight = form.total_weight.data
+        order.allow_try = form.allow_try.data
+        order.allow_view_only = form.allow_view_only.data
+        db.session.commit()
+        flash(f'Đã cập nhật thông tin gửi hàng cho đơn #{order.id}.', 'success')
+    else:
+        flash('Cân nặng không hợp lệ.', 'error')
+    return redirect(url_for('admin.order_detail', order_id=order.id))
+
+
+@admin_bp.route('/orders/export.xlsx', methods=['GET'])
+def export_orders_xlsx():
+    """EXPORT-01: xuất Excel gửi hàng loạt theo mẫu (mã đơn tự đánh 1..n).
+    Lọc theo ?status=... (mặc định: Đã gói + Đã gửi + Đã nhận).
+    Dùng stdlib zipfile + xml — không thêm dependency (openpyxl chưa có sẵn)."""
+    from .xlsx_export import build_orders_xlsx
+
+    requested = request.args.get('status', '').strip()
+    # Mặc định: đơn đã gói trở đi (đã sẵn sàng giao cho shipper)
+    allowed = ('Đã gói', 'Đã gửi', 'Đã nhận')
+    if requested and requested in allowed:
+        statuses = (requested,)
+    else:
+        statuses = allowed
+
+    orders = (
+        Order.query
+        .filter(Order.status.in_(statuses))
+        .order_by(Order.id.asc())
+        .all()
+    )
+    xlsx_bytes = build_orders_xlsx(orders)
+    from flask import Response
+    return Response(
+        xlsx_bytes,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={
+            'Content-Disposition': 'attachment; filename="don-hang-gui-hang.xlsx"',
+        },
+    )
 
 
 @admin_bp.route('/products', methods=['GET'])

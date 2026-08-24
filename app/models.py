@@ -109,6 +109,10 @@ class Order(db.Model):
     paid_amount = db.Column(db.Integer, default=0, nullable=False)  # VND, Integer; tiền đã CK → tính COD còn lại
     # SHIP-02: true = khách đã CK phí ship → COD không cộng phí ship.
     shipping_paid = db.Column(db.Boolean, default=False, nullable=False)
+    # EXPORT-01: 3 trường bắt buộc cho mẫu xuất Excel gửi hàng loạt.
+    total_weight = db.Column(db.Integer, nullable=True)  # KG; NULL = chưa nhập
+    allow_try = db.Column(db.Boolean, default=False, nullable=False)  # Cho phép thử hàng Y/N
+    allow_view_only = db.Column(db.Boolean, default=False, nullable=False)  # Cho xem, không cho thử Y/N
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 

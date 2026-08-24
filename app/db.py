@@ -75,6 +75,16 @@ def init_db_command():
             if 'shipping_paid' not in ocols:
                 conn.execute(text('ALTER TABLE orders ADD COLUMN shipping_paid BOOLEAN NOT NULL DEFAULT 0'))
                 click.echo('Migrated: added orders.shipping_paid (default 0).')
+            # EXPORT-01 migration guard: 3 trường xuất Excel gửi hàng loạt.
+            if 'total_weight' not in ocols:
+                conn.execute(text('ALTER TABLE orders ADD COLUMN total_weight INTEGER'))
+                click.echo('Migrated: added orders.total_weight.')
+            if 'allow_try' not in ocols:
+                conn.execute(text('ALTER TABLE orders ADD COLUMN allow_try BOOLEAN NOT NULL DEFAULT 0'))
+                click.echo('Migrated: added orders.allow_try.')
+            if 'allow_view_only' not in ocols:
+                conn.execute(text('ALTER TABLE orders ADD COLUMN allow_view_only BOOLEAN NOT NULL DEFAULT 0'))
+                click.echo('Migrated: added orders.allow_view_only.')
 
     # Recreate the orders table (new schema) after the legacy DROP; no-op otherwise.
     db.create_all()

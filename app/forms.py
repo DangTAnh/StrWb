@@ -63,3 +63,11 @@ class OrderPaymentForm(FlaskForm):
     # SHIP-02: tick = khách đã CK phí ship → COD không cộng phí ship.
     shipping_paid = BooleanField('Đã chuyển khoản phí ship')
     submit = SubmitField('Cập nhật')
+
+
+class OrderExportFieldsForm(FlaskForm):
+    """EXPORT-01: 3 trường bắt buộc cho mẫu xuất Excel gửi hàng loạt."""
+    total_weight = IntegerField('Tổng cân nặng (KG)', validators=[InputRequired(message='Vui lòng nhập cân nặng'), NumberRange(min=0, message='Cân nặng không được âm')], default=1)
+    allow_try = BooleanField('Cho phép thử hàng')
+    allow_view_only = BooleanField('Cho xem hàng, không cho thử')
+    submit = SubmitField('Cập nhật')
