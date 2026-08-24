@@ -6,17 +6,17 @@
   <title>{% block title %}Quản lý hàng{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+VN:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="font-sans text-text bg-bg">
-  <a class="skip-link absolute left-[-9999px] top-0 p-2 bg-card z-50 focus:left-0" href="#main-content">Bỏ qua đến nội dung chính</a>
+<body>
+  <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
   {% block header %}{% endblock %}
   <main id="main-content">
     {% block content %}{% endblock %}
   </main>
   <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
-  <footer class="container mx-auto px-4 py-8 text-center text-sm text-text-muted">© {{ current_year }} Quản lý hàng</footer>
+  <footer class="site-footer">© {{ current_year }} Quản lý hàng</footer>
   <script>
     // Global toast helper: JS-triggered toasts + flash toasts (same DOM/CSS).
     // Type: 'success' (default), 'error', 'info'. Auto-dismiss sau 4.5s.
