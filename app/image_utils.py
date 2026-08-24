@@ -11,7 +11,7 @@ from PIL import Image
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(BASE_DIR, 'app', 'static', 'uploads')
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
-MAX_DIMENSION = 2000  # Pitfall 7: decompression-bomb cap (D-16)
+MAX_DIMENSION = 10000  # Pitfall 7: decompression-bomb cap (D-16)
 THUMBNAIL_SIZE = (400, 400)  # serves 48px table cell + 96px gallery preview
 
 _JPEG_MAGIC = b'\xff\xd8\xff'
