@@ -276,9 +276,42 @@ main { min-height: 60vh; }
 .logout-form { display: inline-flex; }
 
 @media (max-width: 767px) {
-  .search-toggle { display: inline-flex; }
-  .mobile-search-shell .search-form { display: none; max-width: none; }
-  .mobile-search-shell.is-open { flex: 1 0 100%; justify-content: flex-start; }
+  .site-header__inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mobile-search-shell { flex: 0 0 auto; }
+  .search-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+  .search-toggle:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  /* Form neo vào .site-header (sticky = positioned): trượt ngay dưới header */
+  .search-form {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-width: none;
+    padding: var(--space-2) var(--space-4) var(--space-3);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+  }
   .mobile-search-shell.is-open .search-form { display: flex; }
 }
 @media (min-width: 768px) {
