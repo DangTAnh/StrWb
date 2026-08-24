@@ -4,8 +4,8 @@ milestone: v1.2
 milestone_name: milestone
 status: Defining roadmap
 stopped_at: context exhaustion at 75% (2026-08-08)
-last_updated: "2026-08-24T17:10:00.000Z"
-last_activity: "2026-08-24 — Completed quick task 260824-wx4: nav tìm kiếm mobile (icon 1 hàng + fix nút Tìm không submit)"
+last_updated: "2026-08-25T00:20:00.000Z"
+last_activity: "2026-08-25 — Completed quick task 260825-01f: export Excel chỉ lấy đơn Đã gói"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 Phase: Phase 10 (not started)
 Plan: TBD
 Status: Defining roadmap
-Last activity: 2026-08-24 — Completed quick task 260824-wx4: nav tìm kiếm mobile (icon 1 hàng + fix nút Tìm không submit)
+Last activity: 2026-08-25 — Completed quick task 260825-01f: export Excel chỉ lấy đơn Đã gói
 
 ## Performance Metrics
 
@@ -89,6 +89,7 @@ None yet.
 | 260824-nxr | Sửa nav bar desktop: ẩn nút Tìm kiếm mobile-only, bỏ trùng Giỏ hàng/Đăng xuất → nav 1 dòng | 2026-08-24 | 4267a98 | [260824-nxr-sua-nav-bar-desktop-an-nut-tim-kiem-bi-t](./quick/260824-nxr-sua-nav-bar-desktop-an-nut-tim-kiem-bi-t/) |
 | 260824-v9m | Sửa xlsx export: file mở được bằng Excel + đúng mẫu 30 cột tạo đơn Viettel Post | 2026-08-24 | 2ec2f86 | [260824-v9m-sua-xlsx-export-file-excel-xuat-ra-bi-lo](./quick/260824-v9m-sua-xlsx-export-file-excel-xuat-ra-bi-lo/) |
 | 260824-wx4 | Nav tìm kiếm mobile: icon cạnh hamburger 1 hàng + fix nút Tìm chỉ ẩn thanh không submit | 2026-08-24 | 99c89eb | [260824-wx4-sua-navbar-tim-kiem-ban-mobile-css-va-ch](./quick/260824-wx4-sua-navbar-tim-kiem-ban-mobile-css-va-ch/) |
+| 260825-01f | Export Excel gửi hàng chỉ lấy đơn "Đã gói" (bỏ ?status=, tránh trùng khi upload Viettel Post) | 2026-08-25 | dadce81 | [260825-01f-export-excel-chi-lay-don-da-goi](./quick/260825-01f-export-excel-chi-lay-don-da-goi/) |
 
 ## Deferred Items
 
