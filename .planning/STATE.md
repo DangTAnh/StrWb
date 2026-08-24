@@ -84,6 +84,7 @@ None yet.
 | 260804-10g | bỏ /admin prefix + nav/logout header wiring | 2026-08-04 | 3fa4b7a, eeefb1a | [260804-10g-b-ti-n-t-admin-kh-i-c-c-route-admin-admi](./quick/260804-10g-b-ti-n-t-admin-kh-i-c-c-route-admin-admi/) |
 | 260804-2iv | chỉnh layout header: bỏ brand, nav trái thanh tìm kiếm | 2026-08-04 | bd3bd0d | [260804-2iv-ch-nh-layout-header-b-n-t-qu-n-l-h-ng-ch](./quick/260804-2iv-ch-nh-layout-header-b-n-t-qu-n-l-h-ng-ch/) |
 | 260824-kxs | Thiết kế lại toàn bộ web UI thành một chỉnh thể thống nhất (HTML + CSS), loại bỏ Tailwind | 2026-08-24 | 355ffb3, 986e6d7, b5047c3 | [260824-kxs-thi-t-k-l-i-to-n-b-web-ui-th-nh-m-t-ch-n](./quick/260824-kxs-thi-t-k-l-i-to-n-b-web-ui-th-nh-m-t-ch-n/) |
+| 260824-n6i | Fix bug lọc đơn hàng AJAX: selector .admin-card không khớp wrapper admin-card--wide | 2026-08-24 | dd704cb | [260824-n6i-fix-bug-loc-don-hang-ajax-selector-admin](./quick/260824-n6i-fix-bug-loc-don-hang-ajax-selector-admin/) |
 
 ## Deferred Items
 
