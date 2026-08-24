@@ -416,22 +416,15 @@ def update_order_export_fields(order_id):
 
 @admin_bp.route('/orders/export.xlsx', methods=['GET'])
 def export_orders_xlsx():
-    """EXPORT-01: xuất Excel gửi hàng loạt theo mẫu (mã đơn tự đánh 1..n).
-    Lọc theo ?status=... (mặc định: Đã gói + Đã gửi + Đã nhận).
+    """EXPORT-01/02: xuất Excel gửi hàng loạt theo mẫu (mã đơn tự đánh 1..n).
+    Chỉ đơn trạng thái "Đã gói" — chưa tạo đơn trên hệ thống vận chuyển,
+    tránh trùng lặp khi upload file lên Viettel Post.
     Dùng stdlib zipfile + xml — không thêm dependency (openpyxl chưa có sẵn)."""
     from .xlsx_export import build_orders_xlsx
 
-    requested = request.args.get('status', '').strip()
-    # Mặc định: đơn đã gói trở đi (đã sẵn sàng giao cho shipper)
-    allowed = ('Đã gói', 'Đã gửi', 'Đã nhận')
-    if requested and requested in allowed:
-        statuses = (requested,)
-    else:
-        statuses = allowed
-
     orders = (
         Order.query
-        .filter(Order.status.in_(statuses))
+        .filter(Order.status == 'Đã gói')
         .order_by(Order.id.asc())
         .all()
     )
