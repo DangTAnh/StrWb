@@ -40,7 +40,7 @@
     </div>
     <a href="{{ url_for('admin.export_orders_xlsx') }}?status={{ current_status or '' }}" class="btn btn-secondary btn-sm" target="_blank">Xuất Excel (.xlsx)</a>
   </div>
-  <div class="admin-card--wide">
+  <div class="admin-card admin-card--wide" id="orders-table-card">
     {% if orders %}
     <div class="table-scroll">
       <table class="data-table">
@@ -148,7 +148,7 @@ document.querySelectorAll('[data-select-root]').forEach(function (root) {
       return response.text();
     })
     .then(function (html) {
-      var container = document.querySelector('.admin-card');
+      var container = document.getElementById('orders-table-card');
       if (container) {
         container.innerHTML = html;
       }

@@ -1,68 +1,66 @@
-<div class="admin-card--wide">
-  {% if orders %}
-  <div class="table-scroll">
-    <table class="data-table">
-      <caption class="visually-hidden">Danh sách đơn hàng</caption>
-      <thead>
-        <tr>
-          <th scope="col">ID</th>
-          <th scope="col">Khách hàng</th>
-          <th scope="col" class="text-right">Tổng tiền</th>
-          <th scope="col" class="text-center">Đã CK ship</th>
-          <th scope="col" class="text-right">Phí ship</th>
-          <th scope="col" class="text-right">Đã CK</th>
-          <th scope="col" class="text-right">COD cần thu</th>
-          <th scope="col">Trạng thái</th>
-          <th scope="col">Ngày tạo</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for order in orders %}
-        <tr data-order-id="{{ order.id }}">
-          <td><a class="order-id link-accent" href="{{ url_for('admin.order_detail', order_id=order.id) }}">#{{ order.id }}</a></td>
-          <td>{{ order.customer_name }}</td>
-          <td class="price-cell">{{ _order_total(order) | format_price }}</td>
-          <td class="text-center">
-            <label class="checkbox-container" style="margin:0">
-              <input type="checkbox" class="custom-checkbox pay-ship-paid" data-order-id="{{ order.id }}" {% if _order_shipping_paid(order) %}checked{% endif %} aria-label="Đã CK phí ship đơn #{{ order.id }}">
-              <span class="checkmark"></span>
-            </label>
-          </td>
-          <td class="text-right"><input type="number" min="0" step="1" value="{{ _order_shipping(order) }}" class="pay-input pay-ship" data-order-id="{{ order.id }}" aria-label="Phí ship đơn #{{ order.id }}"></td>
-          <td class="text-right"><input type="number" min="0" step="1" value="{{ _order_paid(order) }}" class="pay-input pay-paid" data-order-id="{{ order.id }}" aria-label="Đã CK đơn #{{ order.id }}"></td>
-          <td class="cod-cell">{{ _order_cod(order) | format_price }}</td>
-          <td class="status-cell">
-            <div class="status-inline">
-              <span class="badge {{ order_badge_class(order.status) }}">{{ order.status }}</span>
-              {% set nexts = order_next_transitions(order.status) %}
-              {% if nexts %}
-              {% for s in nexts if s != 'Đã hủy' %}
-              <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.id) }}" class="status-form inline-form" data-order-id="{{ order.id }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="next_status" value="{{ s }}">
-                <button type="submit" class="status-btn btn btn-sm {% if s == 'Đã hủy' %}btn-danger{% else %}btn-secondary{% endif %}" data-order-id="{{ order.id }}" data-next="{{ s }}" {% if s == 'Đã hủy' %}onclick="return confirm('Hủy đơn #{{ order.id }}? Không thể hoàn tác.');"{% endif %}>{{ s }}</button>
-              </form>
-              {% endfor %}
-              {% endif %}
-            </div>
-          </td>
-          <td class="qty-muted">{{ order.created_at.strftime('%d/%m/%Y') }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% from "_pagination.html" import pagination_nav %}
-  {{ pagination_nav(pagination, 'admin.orders', kwargs={'status': current_status or None}) }}
+{% if orders %}
+<div class="table-scroll">
+  <table class="data-table">
+    <caption class="visually-hidden">Danh sách đơn hàng</caption>
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Khách hàng</th>
+        <th scope="col" class="text-right">Tổng tiền</th>
+        <th scope="col" class="text-center">Đã CK ship</th>
+        <th scope="col" class="text-right">Phí ship</th>
+        <th scope="col" class="text-right">Đã CK</th>
+        <th scope="col" class="text-right">COD cần thu</th>
+        <th scope="col">Trạng thái</th>
+        <th scope="col">Ngày tạo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr data-order-id="{{ order.id }}">
+        <td><a class="order-id link-accent" href="{{ url_for('admin.order_detail', order_id=order.id) }}">#{{ order.id }}</a></td>
+        <td>{{ order.customer_name }}</td>
+        <td class="price-cell">{{ _order_total(order) | format_price }}</td>
+        <td class="text-center">
+          <label class="checkbox-container" style="margin:0">
+            <input type="checkbox" class="custom-checkbox pay-ship-paid" data-order-id="{{ order.id }}" {% if _order_shipping_paid(order) %}checked{% endif %} aria-label="Đã CK phí ship đơn #{{ order.id }}">
+            <span class="checkmark"></span>
+          </label>
+        </td>
+        <td class="text-right"><input type="number" min="0" step="1" value="{{ _order_shipping(order) }}" class="pay-input pay-ship" data-order-id="{{ order.id }}" aria-label="Phí ship đơn #{{ order.id }}"></td>
+        <td class="text-right"><input type="number" min="0" step="1" value="{{ _order_paid(order) }}" class="pay-input pay-paid" data-order-id="{{ order.id }}" aria-label="Đã CK đơn #{{ order.id }}"></td>
+        <td class="cod-cell">{{ _order_cod(order) | format_price }}</td>
+        <td class="status-cell">
+          <div class="status-inline">
+            <span class="badge {{ order_badge_class(order.status) }}">{{ order.status }}</span>
+            {% set nexts = order_next_transitions(order.status) %}
+            {% if nexts %}
+            {% for s in nexts if s != 'Đã hủy' %}
+            <form method="post" action="{{ url_for('admin.update_order_status', order_id=order.id) }}" class="status-form inline-form" data-order-id="{{ order.id }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="next_status" value="{{ s }}">
+              <button type="submit" class="status-btn btn btn-sm {% if s == 'Đã hủy' %}btn-danger{% else %}btn-secondary{% endif %}" data-order-id="{{ order.id }}" data-next="{{ s }}" {% if s == 'Đã hủy' %}onclick="return confirm('Hủy đơn #{{ order.id }}? Không thể hoàn tác.');"{% endif %}>{{ s }}</button>
+            </form>
+            {% endfor %}
+            {% endif %}
+          </div>
+        </td>
+        <td class="qty-muted">{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% from "_pagination.html" import pagination_nav %}
+{{ pagination_nav(pagination, 'admin.orders', kwargs={'status': current_status or None}) }}
+{% else %}
+<div class="empty-state">
+  {% if current_status %}
+  <h2>Không có đơn nào ở trạng thái "{{ current_status }}"</h2>
+  <p>Thử chọn trạng thái khác hoặc chọn "Tất cả".</p>
   {% else %}
-  <div class="empty-state">
-    {% if current_status %}
-    <h2>Không có đơn nào ở trạng thái "{{ current_status }}"</h2>
-    <p>Thử chọn trạng thái khác hoặc chọn "Tất cả".</p>
-    {% else %}
-    <h2>Chưa có đơn nào</h2>
-    <p>Khách đặt hàng qua web sẽ hiện ở đây.</p>
-    {% endif %}
-  </div>
+  <h2>Chưa có đơn nào</h2>
+  <p>Khách đặt hàng qua web sẽ hiện ở đây.</p>
   {% endif %}
 </div>
+{% endif %}
