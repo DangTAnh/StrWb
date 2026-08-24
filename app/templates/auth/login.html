@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="login-wrapper">
-  <div class="login-card max-w-md w-full p-8">
-    <h1 class="text-2xl font-semibold text-text mb-6">Đăng nhập quản trị</h1>
+  <div class="card login-card">
+    <h1>Đăng nhập quản trị</h1>
     {% if form.errors %}
-    <div class="flash-zone mb-4">
-      <div class="flash px-4 py-2 rounded text-sm text-red-700 bg-red-50 border border-red-200">Vui lòng kiểm tra lại thông tin đăng nhập.</div>
+    <div class="flash-zone">
+      <div class="alert alert-error">Vui lòng kiểm tra lại thông tin đăng nhập.</div>
     </div>
     {% endif %}
     <form method="post" action="{{ url_for('auth.login') }}">
@@ -20,7 +20,7 @@
         {{ form.password() }}
       </div>
       <div class="form-field">
-        {{ form.submit(class="btn btn-primary w-full") }}
+        {{ form.submit(class="btn btn-primary btn-block") }}
       </div>
     </form>
   </div>

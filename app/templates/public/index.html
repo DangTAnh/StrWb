@@ -1,16 +1,16 @@
 {% extends "public/base.html" %}
 {% from "_pagination.html" import pagination_nav %}
 {% block content %}
-<div class="container max-w-7xl mx-auto px-4 py-6">
-  <h1 class="page-heading text-2xl font-semibold mb-6 text-text">Sản phẩm</h1>
+<div class="container">
+  <h1 class="page-heading">Sản phẩm</h1>
 
   {# CAT-04: filter chips theo danh mục #}
   {% if categories %}
-  <nav class="category-filter flex flex-wrap gap-2 mb-6" aria-label="Lọc theo danh mục">
-    <a class="chip text-sm px-3 py-1.5 rounded-full border border-border transition-colors {% if not active_category %}bg-accent text-white border-accent{% else %}bg-white text-text hover:bg-gray-100{% endif %}"
+  <nav class="category-filter" aria-label="Lọc theo danh mục">
+    <a class="chip {% if not active_category %}is-active{% endif %}"
        href="{{ url_for('public.home') }}">Tất cả</a>
     {% for c in categories %}
-    <a class="chip text-sm px-3 py-1.5 rounded-full border border-border transition-colors {% if active_category == c.id %}bg-accent text-white border-accent{% else %}bg-white text-text hover:bg-gray-100{% endif %}"
+    <a class="chip {% if active_category == c.id %}is-active{% endif %}"
        href="{{ url_for('public.home', category=c.id) }}">{{ c.name }}</a>
     {% endfor %}
   </nav>
@@ -18,26 +18,26 @@
 
   {% if products %}
   <h2 class="visually-hidden">Danh sách sản phẩm</h2>
-  <div class="product-grid stagger-children grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6" style="--stagger-delay: 40ms">
+  <div class="product-grid stagger-children" style="--stagger-delay: 40ms">
     {% for p in products %}{% include "public/_product_card.html" %}{% endfor %}
   </div>
   {{ pagination_nav(pagination, 'public.home', kwargs={'category': active_category}, center=True) }}
   {% else %}
-  <div class="empty-state animate-fade-in-down flex flex-col items-center gap-4 p-8 text-center">
+  <div class="empty-state animate-fade-in-down">
     {% if active_category %}
-    <h2 class="text-base font-semibold text-text">Chưa có sản phẩm trong danh mục này</h2>
-    <p class="text-gray-500">Thử danh mục khác hoặc quay lại xem tất cả sản phẩm.</p>
+    <h2>Chưa có sản phẩm trong danh mục này</h2>
+    <p>Thử danh mục khác hoặc quay lại xem tất cả sản phẩm.</p>
     <a class="btn btn-primary" href="{{ url_for('public.home') }}">Xem tất cả</a>
     {% else %}
-    <h2 class="text-base font-semibold text-text">Chưa có sản phẩm nào</h2>
-    <p class="text-gray-500">Quản lý hàng đang cập nhật sản phẩm mới. Vui lòng quay lại sau.</p>
+    <h2>Chưa có sản phẩm nào</h2>
+    <p>Quản lý hàng đang cập nhật sản phẩm mới. Vui lòng quay lại sau.</p>
     {% endif %}
   </div>
   {% endif %}
-  <section class="contact-strip animate-fade-in-up mt-16 bg-white p-8 rounded-lg text-center">
-    <h2 class="text-sm font-semibold mb-1 text-text">Nhận đơn qua Messenger</h2>
-    <p class="text-gray-500 mb-6">Đơn của khách gửi qua Messenger — mở để xem và nhận đơn.</p>
-    <a class="btn btn-primary min-w-[200px] inline-flex justify-center" href="{{ config['MESSENGER_URL'] }}" target="_blank" rel="noopener">Mở Messenger để nhận đơn</a>
+  <section class="contact-strip">
+    <h2>Nhận đơn qua Messenger</h2>
+    <p>Đơn của khách gửi qua Messenger — mở để xem và nhận đơn.</p>
+    <a class="btn btn-primary btn-wide" href="{{ config['MESSENGER_URL'] }}" target="_blank" rel="noopener">Mở Messenger để nhận đơn</a>
   </section>
 </div>
 {% endblock %}

@@ -1,67 +1,67 @@
 {% extends "public/base.html" %}
 {% block title %}Giỏ hàng — Quản lý hàng{% endblock %}
 {% block content %}
-<div class="container max-w-7xl mx-auto px-4 py-6">
-  <h1 class="page-heading text-2xl font-semibold mb-6 text-text">Giỏ hàng</h1>
+<div class="container">
+  <h1 class="page-heading">Giỏ hàng</h1>
   {% if items %}
     <form id="checkout-form" method="post" action="{{ url_for('public.checkout') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="text" name="website" class="honeypot" autocomplete="off" tabindex="-1" aria-hidden="true">
 
       {# CHECKBOX-01: cột checkbox cho từng sản phẩm. Mặc định checked để giữ UX cũ. #}
-      <div class="table-scroll overflow-x-auto">
-        <table class="data-table w-full border-collapse">
+      <div class="table-scroll">
+        <table class="data-table">
           <caption class="visually-hidden">Giỏ hàng của bạn</caption>
           <thead>
             <tr>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">
-                <!-- From Uiverse.io by DaniloMGutavo --> 
+              <th scope="col" class="text-center">
+                <!-- From Uiverse.io by DaniloMGutavo -->
                 <label class="checkbox-container">
                     <input id="select-all" class="custom-checkbox cart-select-all" checked="" type="checkbox">
                     <span class="checkmark"></span>
                 </label>
               </th>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Sản phẩm</th>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Đơn giá</th>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Số lượng</th>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500">Thành tiền</th>
-              <th scope="col" class="py-2 px-4 bg-gray-50 text-xs font-semibold text-gray-500"></th>
+              <th scope="col">Sản phẩm</th>
+              <th scope="col">Đơn giá</th>
+              <th scope="col">Số lượng</th>
+              <th scope="col">Thành tiền</th>
+              <th scope="col"></th>
             </tr>
           </thead>
           <tbody>
             {% for item in items %}
             {% set is_maxed_in_cart = item.quantity >= item.product.quantity %}
             <tr class="cart-item-row{% if is_maxed_in_cart %} is-maxed-in-cart{% endif %}">
-              <td class="py-2 px-4 border-b border-gray-200">
+              <td class="text-center">
                 <label class="checkbox-container">
                   <input type="checkbox" name="selected_ids" value="{{ item.product.id }}" checked class="custom-checkbox cart-select-item" aria-label="Chọn {{ item.product.name }}">
                   <span class="checkmark"></span>
                 </label>
               </td>
-              <td class="py-2 px-4 border-b border-gray-200">
+              <td>
                 {% if item.product.primary_image %}
-                <img src="{{ url_for('static', filename='uploads/' + item.product.primary_image.thumb_filename) }}" alt="{{ item.product.name }}" width="80" height="80" class="cart-thumb w-20 h-20 object-cover rounded">
+                <img src="{{ url_for('static', filename='uploads/' + item.product.primary_image.thumb_filename) }}" alt="{{ item.product.name }}" width="80" height="80" class="cart-thumb">
                 {% else %}
-                <span class="thumb-placeholder inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded text-gray-400">—</span>
+                <span class="thumb-placeholder cart-thumb-size">—</span>
                 {% endif %}
-                <span class="product-name text-sm font-semibold text-text ml-2">{{ item.product.name }}</span>
+                <span class="product-name">{{ item.product.name }}</span>
                 {% if is_maxed_in_cart %}
-                <span class="badge badge-maxed ml-2 cart-maxed-badge">Đã đạt tối đa</span>
+                <span class="badge badge-maxed cart-maxed-badge">Đã đạt tối đa</span>
                 {% endif %}
               </td>
-              <td class="unit-price py-2 px-4 border-b border-gray-200 font-mono text-right">{{ item.product.price | format_price }}</td>
-              <td class="py-2 px-4 border-b border-gray-200">
-                <form class="cart-qty-form flex gap-2 items-center" method="post" action="{{ url_for('public.cart_update', product_id=item.product.id) }}">
+              <td class="unit-price">{{ item.product.price | format_price }}</td>
+              <td>
+                <form class="cart-qty-form" method="post" action="{{ url_for('public.cart_update', product_id=item.product.id) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <input type="number" name="quantity" min="1" max="{{ item.product.quantity }}" value="{{ item.quantity }}" class="cart-qty-input w-[60px] h-11 px-2 border border-border rounded-lg text-base font-mono text-center bg-white" data-product-id="{{ item.product.id }}" data-unit-price="{{ item.product.price }}" aria-label="Số lượng {{ item.product.name }}">
+                  <input type="number" name="quantity" min="1" max="{{ item.product.quantity }}" value="{{ item.quantity }}" class="cart-qty-input" data-product-id="{{ item.product.id }}" data-unit-price="{{ item.product.price }}" aria-label="Số lượng {{ item.product.name }}">
                   <noscript><button type="submit" class="btn btn-secondary">Cập nhật</button></noscript>
                 </form>
               </td>
-              <td class="line-total py-2 px-4 border-b border-gray-200 font-mono text-right">{{ (item.product.price * item.quantity) | format_price }}</td>
-              <td class="py-2 px-4 border-b border-gray-200">
+              <td class="line-total">{{ (item.product.price * item.quantity) | format_price }}</td>
+              <td>
                 <form method="post" action="{{ url_for('public.cart_remove', product_id=item.product.id) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="link-danger text-red-600 font-semibold">Xóa</button>
+                  <button type="submit" class="link-danger">Xóa</button>
                 </form>
               </td>
             </tr>
@@ -69,42 +69,42 @@
           </tbody>
         </table>
       </div>
-      <div class="cart-total flex justify-between items-baseline py-4 border-t border-gray-200 mt-6">
-        <span class="cart-total-label text-sm font-semibold text-gray-500">
-          Tổng cộng <span class="cart-selected-count text-xs text-gray-400">(đã chọn <span id="selected-count">0</span> món)</span>
+      <div class="cart-total">
+        <span class="cart-total-label">
+          Tổng cộng <span class="cart-selected-count">(đã chọn <span id="selected-count">0</span> món)</span>
         </span>
-        <span class="cart-total-value text-3xl font-semibold text-accent">{{ total | format_price }}</span>
+        <span class="cart-total-value">{{ total | format_price }}</span>
       </div>
-      <div class="cart-actions flex flex-wrap gap-4 mt-4">
+      <div class="cart-actions">
         <a class="btn btn-secondary" href="{{ url_for('public.home') }}">Tiếp tục mua sắm</a>
         <button type="button" class="btn btn-primary" id="go-to-checkout">Đặt hàng (mục đã chọn)</button>
       </div>
 
-      <section class="checkout-section mt-8 pt-8 border-t border-gray-200" id="checkout" hidden>
-        <h2 class="text-2xl font-semibold mb-4 text-text">Thông tin đặt hàng</h2>
+      <section class="checkout-section" id="checkout" hidden>
+        <h2>Thông tin đặt hàng</h2>
 
         {# SUGG-01: ô gợi ý khách cũ (autocomplete) #}
-        <div class="form-field mb-4 relative" id="suggest-wrapper">
-          <label for="customer_suggest" class="block text-sm font-medium text-text mb-1">Khách cũ? Gõ tên hoặc SĐT để tự điền</label>
-          <input type="text" id="customer_suggest" autocomplete="off" placeholder="VD: Nguyễn Văn A hoặc 0912..." class="w-full h-11 px-3 border border-border rounded-lg text-base text-text bg-white focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:border-accent" />
-          <div id="suggest-dropdown" class="suggestions-dropdown absolute left-0 right-0 top-full mt-1 bg-white border border-border rounded-lg shadow-lg z-10 hidden max-h-72 overflow-y-auto"></div>
-          <p class="help-text text-sm text-gray-500 mt-1">Gợi ý từ các đơn trước. Bỏ trống nếu là khách mới.</p>
+        <div class="form-field suggest-wrapper" id="suggest-wrapper">
+          <label for="customer_suggest">Khách cũ? Gõ tên hoặc SĐT để tự điền</label>
+          <input type="text" id="customer_suggest" autocomplete="off" placeholder="VD: Nguyễn Văn A hoặc 0912..." />
+          <div id="suggest-dropdown" class="suggestions-dropdown hidden"></div>
+          <p class="help-text">Gợi ý từ các đơn trước. Bỏ trống nếu là khách mới.</p>
         </div>
 
         {# PARSE-01: ô smart-parse dán nhanh thông tin #}
-        <div class="form-field mb-4">
-          <label for="customer_quickpaste" class="block text-sm font-medium text-text mb-1">Hoặc dán nhanh thông tin (tên, SĐT, địa chỉ — phân cách bằng dấu phẩy, gạch đứng, xuống dòng...)</label>
-          <textarea id="customer_quickpaste" rows="2" placeholder="VD: Nguyễn Văn A, 0912 345 678, Hà Nội" class="w-full min-h-[60px] px-3 border border-border rounded-lg text-base text-text bg-white focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:border-accent py-2 resize-y"></textarea>
-          <p class="help-text text-sm text-gray-500 mt-1">Sẽ tự tách vào 3 ô bên dưới khi bạn nhập/xoá.</p>
+        <div class="form-field">
+          <label for="customer_quickpaste">Hoặc dán nhanh thông tin (tên, SĐT, địa chỉ — phân cách bằng dấu phẩy, gạch đứng, xuống dòng...)</label>
+          <textarea id="customer_quickpaste" rows="2" placeholder="VD: Nguyễn Văn A, 0912 345 678, Hà Nội"></textarea>
+          <p class="help-text">Sẽ tự tách vào 3 ô bên dưới khi bạn nhập/xoá.</p>
         </div>
 
         {% include "public/_checkout_form.html" %}
       </section>
     </form>
   {% else %}
-    <div class="empty-state flex flex-col items-center gap-4 p-8 text-center">
-      <h2 class="text-base font-semibold text-text">Giỏ hàng trống</h2>
-      <p class="text-gray-500">Bạn chưa thêm sản phẩm nào vào giỏ.</p>
+    <div class="empty-state">
+      <h2>Giỏ hàng trống</h2>
+      <p>Bạn chưa thêm sản phẩm nào vào giỏ.</p>
       <a class="btn btn-primary" href="{{ url_for('public.home') }}">Tiếp tục mua sắm</a>
     </div>
   {% endif %}
@@ -134,7 +134,7 @@ document.addEventListener('change', function (e) {
       var nameCell = tr.querySelector('td:nth-child(2)');
       if (nameCell) {
         badge = document.createElement('span');
-        badge.className = 'badge badge-maxed ml-2 cart-maxed-badge';
+        badge.className = 'badge badge-maxed cart-maxed-badge';
         badge.textContent = 'Đã đạt tối đa';
         nameCell.appendChild(badge);
       }
@@ -175,7 +175,7 @@ document.addEventListener('change', function (e) {
     if (goBtn) {
       goBtn.disabled = (n === 0);
       goBtn.textContent = n > 0 ? 'Đặt hàng (' + n + ' món đã chọn)' : 'Đặt hàng (chọn ít nhất 1 món)';
-      goBtn.classList.toggle('opacity-50', n === 0);
+      goBtn.classList.toggle('is-disabled', n === 0);
     }
     if (selectAll) {
       var totalItems = items.length;
@@ -232,10 +232,10 @@ if (goBtn) {
     list.forEach(function (s) {
       var row = document.createElement('button');
       row.type = 'button';
-      row.className = 'suggestion-item w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-0';
-      var phoneLine = s.phone ? '<span class="text-sm font-mono text-accent">' + escapeHtml(s.phone) + '</span>' : '';
-      var addrLine = s.address ? '<div class="text-xs text-gray-500 truncate">' + escapeHtml(s.address) + '</div>' : '';
-      row.innerHTML = '<div class="text-sm font-semibold text-text">' + escapeHtml(s.name) + ' ' + phoneLine + '</div>' + addrLine;
+      row.className = 'suggestion-item';
+      var phoneLine = s.phone ? '<span class="suggestion-phone">' + escapeHtml(s.phone) + '</span>' : '';
+      var addrLine = s.address ? '<div class="suggestion-address">' + escapeHtml(s.address) + '</div>' : '';
+      row.innerHTML = '<div class="suggestion-name">' + escapeHtml(s.name) + ' ' + phoneLine + '</div>' + addrLine;
       row.addEventListener('click', function () {
         if (nameInput && s.name) nameInput.value = s.name;
         if (phoneInput && s.phone) phoneInput.value = s.phone;
