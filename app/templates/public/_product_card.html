@@ -20,7 +20,7 @@
     <div class="product-card-body">
       <h3 class="product-card-name">{{ p.name }}</h3>
       <p class="product-card-price">{{ p.price | format_price }}</p>
-      {% if p.status == 'available' %}<p class="product-card-stock">Còn: {{ p.quantity }}</p>{% endif %}
+      <p class="product-card-stock">{% if p.status == 'available' %}Còn: {{ p.quantity }}{% endif %}</p>
     </div>
   </a>
 
