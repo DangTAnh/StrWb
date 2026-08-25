@@ -4,8 +4,8 @@ milestone: v1.2
 milestone_name: milestone
 status: Defining roadmap
 stopped_at: context exhaustion at 75% (2026-08-08)
-last_updated: "2026-08-25T00:20:00.000Z"
-last_activity: "2026-08-25 — Completed quick task 260825-01f: export Excel chỉ lấy đơn Đã gói"
+last_updated: "2026-08-26T00:05:00.000Z"
+last_activity: "2026-08-26 — Completed quick task 260825-t5m: fix tìm kiếm AJAX (CSRF chặn POST, phân trang đứng trang 1)"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-08-02)
 Phase: Phase 10 (not started)
 Plan: TBD
 Status: Defining roadmap
-Last activity: 2026-08-25 — Completed quick task 260825-01f: export Excel chỉ lấy đơn Đã gói
+Last activity: 2026-08-26 — Completed quick task 260825-t5m: fix tìm kiếm AJAX (CSRF chặn POST, phân trang đứng trang 1)
 
 ## Performance Metrics
 
@@ -90,6 +90,7 @@ None yet.
 | 260824-v9m | Sửa xlsx export: file mở được bằng Excel + đúng mẫu 30 cột tạo đơn Viettel Post | 2026-08-24 | 2ec2f86 | [260824-v9m-sua-xlsx-export-file-excel-xuat-ra-bi-lo](./quick/260824-v9m-sua-xlsx-export-file-excel-xuat-ra-bi-lo/) |
 | 260824-wx4 | Nav tìm kiếm mobile: icon cạnh hamburger 1 hàng + fix nút Tìm chỉ ẩn thanh không submit | 2026-08-24 | 99c89eb | [260824-wx4-sua-navbar-tim-kiem-ban-mobile-css-va-ch](./quick/260824-wx4-sua-navbar-tim-kiem-ban-mobile-css-va-ch/) |
 | 260825-01f | Export Excel gửi hàng chỉ lấy đơn "Đã gói" (bỏ ?status=, tránh trùng khi upload Viettel Post) | 2026-08-25 | dadce81 | [260825-01f-export-excel-chi-lay-don-da-goi](./quick/260825-01f-export-excel-chi-lay-don-da-goi/) |
+| 260825-t5m | Fix tìm kiếm mobile: AJAX POST bị CSRF chặn 400 → chuyển GET; phân trang luôn về trang 1; pagination_html rỗng + path sai; ép int page/category | 2026-08-26 | eb5ccaa | [260825-t5m-search-mobile-tim-khong-chay-phan-trang-dung-y](./quick/260825-t5m-search-mobile-tim-khong-chay-phan-trang-dung-y/) |
 
 ## Deferred Items
 
