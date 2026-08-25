@@ -90,11 +90,17 @@ def product_detail(product_id):
 
 @public_bp.route('/search', methods=['GET', 'POST'])
 def search():
-    is_ajax = request.form.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    is_ajax = (
+        request.args.get('ajax') == '1'
+        or request.form.get('ajax') == '1'
+        or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    )
     q = (request.args.get('q') or request.form.get('q', '') or '').strip()
     nq = normalize_search_text(q)
-    cat_id = request.args.get('category', request.form.get('category'), type=int)
-    page = request.args.get('page', request.form.get('page', 1), type=int)
+    # get(key, default, type=int) trả default NGUYÊN TRẠNG khi key vắng —
+    # gọi get(type=int) từng nguồn rồi or lại để luôn ra int/None.
+    cat_id = request.args.get('category', type=int) or request.form.get('category', type=int)
+    page = request.args.get('page', type=int) or request.form.get('page', type=int) or 1
     per_page = 12
 
     # Lấy tất cả hoặc theo category trước
@@ -139,7 +145,7 @@ def search():
     if is_ajax:
         # Render product cards server-side so client gets ready-to-insert HTML.
         html = render_template('public/_search_results.html', products=pagination.items)
-        pagination_html = render_template('public/_pagination.html', pagination=pagination, q=q, category=cat_id, endpoint='public.search')
+        pagination_html = render_template('_pagination.html', pagination=pagination, q=q, category=cat_id, endpoint='public.search')
         return jsonify(q=q, html=html, pagination_html=pagination_html)
     return render_template('public/search.html', q=q, products=pagination.items, pagination=pagination, categories=categories, active_category=cat_id)
 

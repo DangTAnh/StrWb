@@ -2,7 +2,8 @@
 //
 // Behavior:
 // - Intercept .search-form submit, prevent default reload
-// - POST form data with X-Requested-With: XMLHttpRequest (matches Flask is_ajax)
+// - GET querystring with X-Requested-With: XMLHttpRequest (matches Flask is_ajax;
+//   GET avoids CSRFProtect which blocks token-less POSTs with 400)
 // - Server returns JSON: { q, html, pagination } — full <article> markup already rendered server-side
 // - Replace .product-grid innerHTML with new markup (include _product_card.html duplicated)
 // - Update pagination <nav> with rendered links
@@ -54,19 +55,13 @@
     const paginationEl = document.querySelector('.search-results .pagination');
     if (!form || !grid) return;
 
-    const fd = new FormData(form);
-    fd.set('q', q);
-    fd.set('page', String(page));
-    fd.set('ajax', '1');
+    const params = new URLSearchParams({ q: q, page: String(page), ajax: '1' });
+    const url = (form.getAttribute('action') || window.location.pathname) + '?' + params.toString();
 
     // Show subtle loading state.
     grid.style.opacity = '0.5';
 
-    fetch(form.getAttribute('action') || window.location.pathname, {
-      method: 'POST',
-      body: fd,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         grid.innerHTML = data.html || '';
@@ -79,8 +74,8 @@
       .catch(function (err) {
         console.error('search AJAX failed', err);
         grid.style.opacity = '1';
-        // Fallback: submit form normally (full reload).
-        form.submit();
+        // Fallback: full navigation with q+page intact (form.submit() would drop page).
+        window.location.href = url;
       });
   }
 

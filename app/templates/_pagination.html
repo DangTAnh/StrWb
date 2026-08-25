@@ -33,3 +33,7 @@
 </nav>
 {% endif %}
 {% endmacro %}
+{# ponytail: render trực tiếp (route AJAX gọi render_template file này) — mọi chỗ khác import macro bằng {% from %} nên context trống, guard này bỏ qua. #}
+{% if pagination is defined and endpoint is defined %}
+{{ pagination_nav(pagination, endpoint, kwargs={'q': q|default(''), 'category': category}, center=True) }}
+{% endif %}
