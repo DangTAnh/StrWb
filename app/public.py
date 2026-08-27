@@ -56,7 +56,7 @@ def home():
         return redirect(url_for('auth.login'))
     page = request.args.get('page', 1, type=int)
     cat_id = request.args.get('category', type=int)
-    query = Product.query.order_by(Product.sort_order.asc(), Product.id.asc())
+    query = Product.query.order_by(Product.sort_order.asc(), Product.id.desc())
     if cat_id:
         query = query.join(Product.categories).filter(Category.id == cat_id)
     pagination = query.paginate(page=page, per_page=12, error_out=False)
